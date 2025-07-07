@@ -3,8 +3,8 @@ import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import Login from './pages/Login';
 import { getCurrentUser, getUserRole } from './lib/auth';
 import type { UserRole } from './types';
-import EditPage from './pages/edit';
-import AdminPage from './pages/admin';
+import EditPage from './pages/Edit';
+import AdminPage from './pages/Admin';
 
 function PrivateRoute({ allowedRoles }: { allowedRoles: UserRole[] }) {
   const [role, setRole] = useState<UserRole | null>(null);
