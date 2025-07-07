@@ -98,7 +98,6 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], onDeleteIt
       if (selectedId === item.id) {
         fabricCanvas.setActiveObject(img);
       }
-      img.on('selected', () => setSelectedId(item.id));
       img.on('modified', () => {
         setItemStates(states => ({
           ...states,
@@ -113,7 +112,27 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], onDeleteIt
       });
     });
     fabricCanvas.renderAll();
-  }, [items, itemStates, selectedId, scale]);
+
+    // --- NUEVO: listeners globales de selección ---
+    const handleSelection = (e: any) => {
+      const obj = e.selected?.[0] || e.target;
+      if (obj && typeof (obj as any).id === 'number') {
+        setSelectedId((obj as any).id);
+      }
+    };
+    const handleCleared = () => {
+      setSelectedId(null);
+    };
+    fabricCanvas.on('selection:created', handleSelection);
+    fabricCanvas.on('selection:updated', handleSelection);
+    fabricCanvas.on('selection:cleared', handleCleared);
+    // Limpieza
+    return () => {
+      fabricCanvas.off('selection:created', handleSelection);
+      fabricCanvas.off('selection:updated', handleSelection);
+      fabricCanvas.off('selection:cleared', handleCleared);
+    };
+  }, [items, itemStates, scale]);
 
   // Handlers de rotación y centrado (ajustados para escala)
   const handleRotate = (id: number, angle: number) => {

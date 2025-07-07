@@ -20,6 +20,18 @@ export const ELEMENTS: any[] = [
     name: 'Element 1',
     image: '/elements/HM - Elemento 1.svg',
   },
+  {
+    name: 'Element 1',
+    image: '/elements/HM - Elemento 2.svg',
+  },
+  {
+    name: 'Element 1',
+    image: '/elements/HM - Elemento 3.svg',
+  },
+  {
+    name: 'Element 1',
+    image: '/elements/HM - Elemento 4.svg',
+  },
 ];
 
 export const TABS = [
