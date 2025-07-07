@@ -11,7 +11,7 @@ export const PRODUCTS = [
     image: '/products/mochila.png',
     imageWidth: 400,
     imageHeight: 400,
-    canvas: { width: 220, height: 220, left: 35, top: 55 },
+    canvas: { width: 190, height: 230, left: 100, top: 80 },
   },
 ];
 
