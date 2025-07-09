@@ -21,15 +21,15 @@ export const ELEMENTS: any[] = [
     image: '/elements/HM - Elemento 1.svg',
   },
   {
-    name: 'Element 1',
+    name: 'Element 2',
     image: '/elements/HM - Elemento 2.svg',
   },
   {
-    name: 'Element 1',
+    name: 'Element 3',
     image: '/elements/HM - Elemento 3.svg',
   },
   {
-    name: 'Element 1',
+    name: 'Element 4',
     image: '/elements/HM - Elemento 4.svg',
   },
 ];

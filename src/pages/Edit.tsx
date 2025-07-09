@@ -12,19 +12,22 @@ const EditPage: React.FC = () => {
   const [productIdx, setProductIdx] = useState(0);
   const [activeTab, setActiveTab] = useState('product');
   const [canvasItems, setCanvasItems] = useState<CanvasItem[]>([]);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const product = PRODUCTS[productIdx];
 
   const handleAddElement = (element: { name: string; image: string }) => {
+    const newId = Date.now();
     setCanvasItems(items => [
       ...items,
       {
-        id: Date.now(),
+        id: newId,
         src: element.image,
         x: 0,
         y: 0,
       },
     ]);
+    setSelectedId(newId);
   };
 
   const handleDeleteItem = (id: number) => {
@@ -49,7 +52,7 @@ const EditPage: React.FC = () => {
     <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between">
       <NavBar />
       <div className=" w-full max-w-4xl flex flex-row justify-center items-center relative bg-white mt-2 mb-5">
-        <CanvasArea product={product} items={canvasItems} onDeleteItem={handleDeleteItem} onMoveItem={handleMoveItem} />
+        <CanvasArea product={product} items={canvasItems} onDeleteItem={handleDeleteItem} onMoveItem={handleMoveItem} selectedId={selectedId} setSelectedId={setSelectedId} />
       </div>
       <div className="w-full bg-pink-500 pt-6 px-2 pb-2 flex flex-col items-center sticky bottom-0 z-10">
         <div className="relative w-full flex justify-center">
