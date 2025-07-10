@@ -3,7 +3,7 @@ import React from 'react';
 type Product = {
   name: string;
   image: string;
-  canvas: { width: number; height: number; left: number; top: number };
+  canvas: { width: number; height: number; top: number };
 };
 
 type ProductSelectorProps = {

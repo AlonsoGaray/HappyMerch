@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import NavBar from '../components/NavBar';
 import { PRODUCTS, ELEMENTS, TABS } from '../constants';
 import ProductSelector from '../components/ProductSelector';
@@ -7,12 +7,19 @@ import TextTools from '../components/TextTools';
 import CanvasArea from '../components/CanvasArea';
 import Tabs from '../components/Tabs';
 import type { CanvasItem } from '../types';
+import Sidebar from '../components/Sidebar';
+import { Canvas } from 'fabric';
+
+const DEFAULT_SIZE = 60;
 
 const EditPage: React.FC = () => {
   const [productIdx, setProductIdx] = useState(0);
   const [activeTab, setActiveTab] = useState('product');
   const [canvasItems, setCanvasItems] = useState<CanvasItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [itemStates, setItemStates] = useState<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean } }>({});
+  const fabricRef = useRef<Canvas | null>(null);
+  const [scale, setScale] = useState(1);
 
   const product = PRODUCTS[productIdx];
 
@@ -48,25 +55,126 @@ const EditPage: React.FC = () => {
     });
   };
 
+  // Handlers para Sidebar
+  const handleRotate = (id: number, angle: number) => {
+    setItemStates(states => ({
+      ...states,
+      [id]: { ...states[id], rotation: angle },
+    }));
+    const fabricCanvas = fabricRef.current;
+    if (fabricCanvas) {
+      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
+      if (obj) {
+        obj.set('angle', angle);
+        fabricCanvas.renderAll();
+      }
+    }
+  };
+  const handleCenter = (id: number) => {
+    const fabricCanvas = fabricRef.current;
+    if (fabricCanvas) {
+      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
+      if (obj) {
+        const centerX = (product.canvas.width * scale) / 2;
+        const centerY = (product.canvas.height * scale) / 2;
+        obj.set({ left: centerX, top: centerY });
+        setItemStates(states => ({
+          ...states,
+          [id]: { ...states[id], x: (centerX / scale) - ((obj.width ?? DEFAULT_SIZE) / 2), y: (centerY / scale) - ((obj.height ?? DEFAULT_SIZE) / 2) },
+        }));
+        fabricCanvas.renderAll();
+      }
+    }
+  };
+  const handleFlipX = (id: number) => {
+    const fabricCanvas = fabricRef.current;
+    if (fabricCanvas) {
+      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
+      if (obj) {
+        obj.set('flipX', !obj.flipX);
+        fabricCanvas.renderAll();
+      }
+    }
+  };
+  const handleResize = (id: number, factor: number) => {
+    setItemStates(states => {
+      const curr = states[id]?.size ?? DEFAULT_SIZE;
+      const newSize = factor > 1 ? curr * factor : Math.max(curr * factor, 10);
+      return {
+        ...states,
+        [id]: { ...states[id], size: newSize },
+      };
+    });
+  };
+  const handleLockToggle = (id: number) => {
+    const fabricCanvas = fabricRef.current;
+    if (fabricCanvas) {
+      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
+      if (obj) {
+        const locked = !itemStates[id]?.locked;
+        obj.set({
+          lockMovementX: locked,
+          lockMovementY: locked,
+          lockScalingX: locked,
+          lockScalingY: locked,
+          lockRotation: locked,
+          hasControls: !locked,
+          hoverCursor: locked ? 'default' : 'move',
+        });
+        fabricCanvas.renderAll();
+        setItemStates(states => ({
+          ...states,
+          [id]: { ...states[id], locked },
+        }));
+      }
+    }
+  };
+  const isLocked = (id: number) => !!itemStates[id]?.locked;
+
   return (
-    <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between">
-      <NavBar />
-      <div className=" w-full max-w-4xl flex flex-row justify-center items-center relative bg-white mt-2 mb-5">
-        <CanvasArea product={product} items={canvasItems} onDeleteItem={handleDeleteItem} onMoveItem={handleMoveItem} selectedId={selectedId} setSelectedId={setSelectedId} />
-      </div>
-      <div className="w-full bg-pink-500 pt-6 px-2 pb-2 flex flex-col items-center sticky bottom-0 z-10">
-        <div className="relative w-full flex justify-center">
-          <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+    <>
+      <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between">
+        <NavBar />
+        <div className="flex w-full h-full justify-center">
+          <CanvasArea
+            product={product}
+            items={canvasItems}
+            selectedId={selectedId}
+            setSelectedId={setSelectedId}
+            fabricRef={fabricRef}
+            itemStates={itemStates}
+            setItemStates={setItemStates}
+            scale={scale}
+            setScale={setScale}
+          />
+          <Sidebar
+            selectedId={selectedId}
+            canvasItems={canvasItems}
+            setSelectedId={setSelectedId}
+            onDeleteItem={handleDeleteItem}
+            onMoveItem={handleMoveItem}
+            onRotate={handleRotate}
+            onFlipX={handleFlipX}
+            onCenter={handleCenter}
+            onResize={handleResize}
+            onLockToggle={handleLockToggle}
+            isLocked={isLocked}
+          />
         </div>
-        {activeTab === 'product' && (
-          <ProductSelector products={PRODUCTS} selectedIdx={productIdx} onSelect={setProductIdx} />
-        )}
-        {activeTab === 'elements' && (
-          <ElementSelector elements={ELEMENTS} onSelect={handleAddElement} />
-        )}
-        {activeTab === 'text' && <TextTools />}
+        <div className="w-full bg-pink-500 pt-6 px-2 pb-2 flex flex-col items-center sticky bottom-0 z-10">
+          <div className="relative w-full flex justify-center">
+            <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+          </div>
+          {activeTab === 'product' && (
+            <ProductSelector products={PRODUCTS} selectedIdx={productIdx} onSelect={setProductIdx} />
+          )}
+          {activeTab === 'elements' && (
+            <ElementSelector elements={ELEMENTS} onSelect={handleAddElement} />
+          )}
+          {activeTab === 'text' && <TextTools />}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

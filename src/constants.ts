@@ -4,14 +4,14 @@ export const PRODUCTS = [
     image: '/products/bolso.png',
     imageWidth: 400,
     imageHeight: 400,
-    canvas: { width: 183, height: 190, left: 110, top: 175 },
+    canvas: { width: 183, height: 190, top: 300 },
   },
   {
     name: 'Mochila',
     image: '/products/mochila.png',
     imageWidth: 400,
     imageHeight: 400,
-    canvas: { width: 190, height: 230, left: 100, top: 80 },
+    canvas: { width: 190, height: 230, top: 225 },
   },
 ];
 
