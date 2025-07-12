@@ -18,7 +18,6 @@ const ElementSelector: React.FC<ElementSelectorProps> = ({ elements, onSelect })
         <div className="rounded-lg bg-white p-2 shadow-md w-24 h-24 flex items-center justify-center">
           <img src={el.image} alt={el.name} className="object-contain max-w-full max-h-full" draggable={false} />
         </div>
-        <span className="mt-2 text-xs text-white font-semibold">{el.name}</span>
       </div>
     ))}
   </div>

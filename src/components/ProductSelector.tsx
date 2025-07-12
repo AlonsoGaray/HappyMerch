@@ -1,5 +1,3 @@
-import React from 'react';
-
 type Product = {
   name: string;
   image: string;

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import NavBar from '../components/NavBar';
-import { PRODUCTS, ELEMENTS, TABS } from '../constants';
+import { PRODUCTS, ELEMENTS, TABS, FONDOS } from '../constants';
 import ProductSelector from '../components/ProductSelector';
 import ElementSelector from '../components/ElementSelector';
 import TextTools from '../components/TextTools';
@@ -9,12 +9,14 @@ import Tabs from '../components/Tabs';
 import type { CanvasItem } from '../types';
 import Sidebar from '../components/Sidebar';
 import { Canvas } from 'fabric';
+import BgSelector from '../components/BgSelector';
 
 const DEFAULT_SIZE = 60;
 
 const EditPage: React.FC = () => {
   const [productIdx, setProductIdx] = useState(0);
   const [activeTab, setActiveTab] = useState('product');
+  const [selectedBgIdx, setSelectedBgIdx] = useState(-1);
   const [canvasItems, setCanvasItems] = useState<CanvasItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [itemStates, setItemStates] = useState<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean } }>({});
@@ -135,7 +137,7 @@ const EditPage: React.FC = () => {
     <>
       <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between">
         <NavBar />
-        <div className="flex w-full h-full justify-center">
+        <div className="relative flex w-full h-full justify-center">
           <CanvasArea
             product={product}
             items={canvasItems}
@@ -146,6 +148,7 @@ const EditPage: React.FC = () => {
             setItemStates={setItemStates}
             scale={scale}
             setScale={setScale}
+            selectedBg={selectedBgIdx >= 0 && selectedBgIdx < FONDOS.length ? FONDOS[selectedBgIdx] : null}
           />
           <Sidebar
             selectedId={selectedId}
@@ -167,6 +170,9 @@ const EditPage: React.FC = () => {
           </div>
           {activeTab === 'product' && (
             <ProductSelector products={PRODUCTS} selectedIdx={productIdx} onSelect={setProductIdx} />
+          )}
+          {activeTab === 'fondos' && (
+            <BgSelector fondos={FONDOS} selectedIdx={selectedBgIdx} onSelect={setSelectedBgIdx} />
           )}
           {activeTab === 'elements' && (
             <ElementSelector elements={ELEMENTS} onSelect={handleAddElement} />

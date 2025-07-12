@@ -1,5 +1,3 @@
-import React from 'react';
-
 type Tab = { key: string; label: string };
 
 type TabsProps = {

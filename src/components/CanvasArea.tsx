@@ -18,12 +18,13 @@ type CanvasAreaProps = {
   setItemStates: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean } }>>;
   scale: number;
   setScale: React.Dispatch<React.SetStateAction<number>>;
+  selectedBg?: { name: string; image: string } | null;
 };
 
 const DEFAULT_SIZE = 60;
 
 // CanvasArea component renders the product image, a canvas for editing, and a sidebar for layer controls.
-const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId, setSelectedId, fabricRef, itemStates, setItemStates, scale, setScale }) => {
+const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId, setSelectedId, fabricRef, itemStates, setItemStates, scale, setScale, selectedBg }) => {
   const isControlled = typeof selectedId !== 'undefined' && typeof setSelectedId === 'function';
   const [internalSelectedId, internalSetSelectedId] = useState<number | null>(null);
   const actualSelectedId = isControlled ? selectedId : internalSelectedId;
@@ -89,9 +90,48 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
     fabricCanvas.clear();
     fabricCanvas.backgroundColor = 'rgba(0,0,0,0)';
     fabricCanvas.renderAll();
+
+    // Limpiar fondo anterior si existe
+    const bgObj = fabricCanvas.getObjects().find(obj => (obj as any).id === 'background');
+    if (bgObj) {
+      fabricCanvas.remove(bgObj);
+    }
+
+    // Agregar fondo si hay uno seleccionado
+    if (selectedBg) {
+      Image.fromURL(selectedBg.image).then((bgImg) => {
+        // Escalado exacto al canvas
+        const scaleX = (product.canvas.width * scale) / (bgImg.width ?? 1);
+        const scaleY = (product.canvas.height * scale) / (bgImg.height ?? 1);
+        bgImg.set({
+          left: 0,
+          top: 0,
+          scaleX,
+          scaleY,
+          selectable: false,
+          hasControls: false,
+          hasBorders: false,
+          lockMovementX: true,
+          lockMovementY: true,
+          lockScalingX: true,
+          lockScalingY: true,
+          lockRotation: true,
+          objectCaching: false,
+          originX: 'left',
+          originY: 'top',
+        });
+        (bgImg as any).id = 'background';
+        fabricCanvas.add(bgImg);
+        // Alternativa para enviar al fondo sin error de linter
+        const lastObj = fabricCanvas._objects.pop();
+        if (lastObj) fabricCanvas._objects.unshift(lastObj);
+        fabricCanvas.renderAll();
+      });
+    }
+
+    // Agregar los elementos normales
     items.forEach(async item => {
       const img = await Image.fromURL(item.src);
-      // Apply scale to position and size
       img.set({
         left: ((itemStates[item.id]?.x ?? item.x) + ((img.width ?? DEFAULT_SIZE) / 2)) * scale,
         top: ((itemStates[item.id]?.y ?? item.y) + ((img.height ?? DEFAULT_SIZE) / 2)) * scale,
@@ -118,7 +158,6 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
       if (actualSelectedId === item.id) {
         fabricCanvas.setActiveObject(img);
       }
-      // Update item state when modified on canvas
       img.on('modified', () => {
         setItemStates(states => ({
           ...states,
@@ -153,7 +192,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
       fabricCanvas.off('selection:updated', handleSelection);
       fabricCanvas.off('selection:cleared', handleCleared);
     };
-  }, [items, itemStates, scale, actualSelectedId, fabricRef, setItemStates, actualSetSelectedId]);
+  }, [items, itemStates, scale, actualSelectedId, fabricRef, setItemStates, actualSetSelectedId, selectedBg]);
 
   // Ensure every item has an entry in itemStates so the action bar appears immediately
   useEffect(() => {

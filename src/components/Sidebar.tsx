@@ -1,3 +1,4 @@
+import { Eye, LockKeyhole, LockKeyholeOpen, SquareSplitHorizontal, StretchHorizontal, Trash } from 'lucide-react';
 import React from 'react';
 
 interface SidebarProps {
@@ -10,8 +11,8 @@ interface SidebarProps {
   onFlipX: (id: number) => void;
   onCenter: (id: number) => void;
   onResize: (id: number, factor: number) => void;
-  onLockToggle?: (id: number) => void;
-  isLocked?: (id: number) => boolean;
+  onLockToggle: (id: number) => void;
+  isLocked: (id: number) => boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -27,7 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onLockToggle,
   isLocked,
 }) => (
-  <div className="fixed right-0 top-1/2 -translate-y-1/2 flex gap-2 items-center bg-white/80 shadow-lg rounded-l-lg p-2 min-w-[56px] z-20">
+  <div className="absolute right-10 top-1/2 -translate-y-1/2 flex gap-2 items-center bg-white/80 shadow-lg rounded-lg p-2 min-w-[56px] z-20">
     {/* Controles para el ítem seleccionado */}
     {selectedId && (
       <div className="flex flex-col gap-1 items-center mr-2">
@@ -36,9 +37,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
         <button className="text-xs bg-pink-500 text-white rounded px-2 py-1" onClick={() => onRotate(selectedId, 90)}>
           Rotate 90°
-        </button>
-        <button className="text-xs bg-pink-500 text-white rounded px-2 py-1" onClick={() => onFlipX(selectedId)}>
-          Flip X ↔️
         </button>
         <button className="text-xs bg-pink-500 text-white rounded px-2 py-1 mt-1" onClick={() => onCenter(selectedId)}>
           Centrar
@@ -49,36 +47,56 @@ const Sidebar: React.FC<SidebarProps> = ({
         <button className="w-9 h-9 flex items-center justify-center bg-pink-500 text-white rounded-full text-xl mb-2 shadow" onClick={() => onResize(selectedId, 0.85)} title="Reducir">
           ➖
         </button>
-        <button className="w-9 h-9 flex items-center justify-center bg-red-500 text-white rounded-full text-xl mb-2 shadow" onClick={() => { onDeleteItem(selectedId); setSelectedId(null); }} title="Borrar">
-          🗑️
-        </button>
         <button className="w-9 h-9 flex items-center justify-center bg-gray-500 text-white rounded-full text-xl mb-1 shadow" onClick={() => onMoveItem(selectedId, 'up')} title="Subir capa">
           ⬆️
         </button>
         <button className="w-9 h-9 flex items-center justify-center bg-gray-500 text-white rounded-full text-xl mb-2 shadow" onClick={() => onMoveItem(selectedId, 'down')} title="Bajar capa">
           ⬇️
         </button>
-        {onLockToggle && isLocked && (
-          <button
-            className={`w-9 h-9 flex items-center justify-center ${isLocked(selectedId) ? 'bg-yellow-500' : 'bg-gray-300'} text-white rounded-full text-xl mb-2 shadow`}
-            onClick={() => onLockToggle(selectedId)}
-            title={isLocked(selectedId) ? 'Unlock' : 'Lock'}
-          >
-            {isLocked(selectedId) ? '🔓' : '🔒'}
-          </button>
-        )}
       </div>
     )}
     {/* Lista de capas */}
-    <div className="flex flex-col gap-2 items-center">
+    <div className="flex flex-col gap-1 items-center">
       {canvasItems.length === 0 && <span className="text-xs text-gray-400">Sin capas</span>}
       {canvasItems.map(item => (
         <button
           key={item.id}
-          className={`w-10 h-10 flex items-center justify-center rounded border ${selectedId === item.id ? 'border-pink-500 bg-pink-100' : 'border-gray-300 bg-white'} transition`}
+          className={`w-24 h-27 flex flex-col items-center pt-0.5 justify-between rounded border ${selectedId === item.id ? 'border-pink-500 bg-pink-100' : 'border-gray-300 bg-gray-200'} transition`}
           onClick={() => setSelectedId(item.id)}
         >
-          <img src={item.src} alt="icon" className="w-7 h-7 object-contain" />
+          <StretchHorizontal size={17} color="white" fill='white' />
+          <img src={item.src} alt="icon" className="w-14 h-14 object-contain" />
+          <div className='flex bg-gray-500 w-full h-6 rounded-b items-center justify-around px-0.5'>
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                onFlipX(item.id);
+              }}
+              title="Flip horizontal"
+            >
+              <SquareSplitHorizontal size={17} color="white" />
+            </button>
+            <Eye size={17} color="white" />
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                onLockToggle(item.id); 
+              }}
+              title={isLocked(item.id) ? 'Unlock' : 'Lock'}
+            >
+              {isLocked(item.id) ? <LockKeyhole size={17} color="white" /> : <LockKeyholeOpen size={17} color="white" />}
+            </button>
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                onDeleteItem(item.id); 
+                if (selectedId === item.id) setSelectedId(null); 
+              }}
+              title="Borrar"
+            >
+              <Trash size={17} color="white" />
+            </button>
+          </div>
         </button>
       )).reverse()}
     </div>

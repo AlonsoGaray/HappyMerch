@@ -34,8 +34,20 @@ export const ELEMENTS: any[] = [
   },
 ];
 
+export const FONDOS: any[] = [
+  {
+    name: 'Fondo 1',
+    image: '/fondos/Fondo 1.jpg',
+  },
+  {
+    name: 'Fondo 2',
+    image: '/fondos/Fondo 2.jpg',
+  },
+];
+
 export const TABS = [
-  { key: 'product', label: 'PRODUCT' },
-  { key: 'elements', label: 'ELEMENTS' },
-  { key: 'text', label: 'TEXT' },
+  { key: 'product', label: 'PRODUCTOS' },
+  { key: 'fondos', label: 'FONDOS' },
+  { key: 'elements', label: 'ELEMENTOS' },
+  { key: 'text', label: 'TEXTO' },
 ]; 
