@@ -40,13 +40,16 @@ const EditPage: React.FC = () => {
 
   const handleAddElement = (element: { name: string; image: string }) => {
     const newId = Date.now();
+    // Centro puro del área de edición
+    const centerX = product.canvas.width / 2;
+    const centerY = product.canvas.height / 2;
     setCanvasItems(items => [
       ...items,
       {
         id: newId,
         src: element.image,
-        x: 0,
-        y: 0,
+        x: centerX,
+        y: centerY,
       },
     ]);
     setSelectedId(newId);
@@ -179,6 +182,9 @@ const EditPage: React.FC = () => {
   // Handler para agregar texto
   const handleAddText = (text: string, font: string, color: string) => {
     const newId = Date.now();
+    // Centro puro del área de edición
+    const centerX = product.canvas.width / 2;
+    const centerY = product.canvas.height / 2;
     setCanvasItems(items => [
       ...items,
       {
@@ -187,8 +193,8 @@ const EditPage: React.FC = () => {
         text,
         font,
         color,
-        x: product.canvas.width / 2,
-        y: product.canvas.height / 2,
+        x: centerX,
+        y: centerY,
       },
     ]);
     setSelectedId(newId);

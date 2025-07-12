@@ -239,8 +239,8 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
           setItemStates(states => ({
             ...states,
             [item.id]: {
-              x: ((img.left ?? 0) / scale) - ((img.width ?? DEFAULT_SIZE) / 2),
-              y: ((img.top ?? 0) / scale) - ((img.height ?? DEFAULT_SIZE) / 2),
+              x: ((img.left ?? 0) / scale),
+              y: ((img.top ?? 0) / scale),
               size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)) / scale,
               rotation: img.angle ?? 0,
               locked: itemStates[item.id]?.locked ?? false,
