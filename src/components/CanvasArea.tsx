@@ -210,8 +210,8 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
       } else {
         const img = await Image.fromURL((item as any).src);
         img.set({
-          left: ((itemStates[item.id]?.x ?? (item as any).x) + ((img.width ?? DEFAULT_SIZE) / 2)) * scale,
-          top: ((itemStates[item.id]?.y ?? (item as any).y) + ((img.height ?? DEFAULT_SIZE) / 2)) * scale,
+          left: (itemStates[item.id]?.x ?? (item as any).x) * scale,
+          top: (itemStates[item.id]?.y ?? (item as any).y) * scale,
           scaleX: ((itemStates[item.id]?.size ?? DEFAULT_SIZE) / (img.width ?? DEFAULT_SIZE)) * scale,
           scaleY: ((itemStates[item.id]?.size ?? DEFAULT_SIZE) / (img.height ?? DEFAULT_SIZE)) * scale,
           angle: itemStates[item.id]?.rotation ?? 0,

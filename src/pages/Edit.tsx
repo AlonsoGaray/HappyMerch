@@ -108,17 +108,25 @@ const EditPage: React.FC = () => {
     if (fabricCanvas) {
       const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
       if (obj) {
-        const centerX = (product.canvas.width * scale) / 2;
-        const centerY = (product.canvas.height * scale) / 2;
-        obj.set({ left: centerX, top: centerY, originX: 'center', originY: 'center' });
+        // Centro puro del área de edición (canvas)
+        const centerX = product.canvas.width / 2;
+        const centerY = product.canvas.height / 2;
+
+        // Actualizar el estado: x/y es el centro puro
         setItemStates(states => ({
           ...states,
           [id]: {
             ...states[id],
-            x: centerX / scale,
-            y: centerY / scale,
+            x: centerX,
+            y: centerY,
           },
         }));
+
+        // Actualizar el objeto de Fabric.js
+        obj.set({
+          left: centerX * scale,
+          top: centerY * scale,
+        });
         fabricCanvas.renderAll();
       }
     }
