@@ -13,11 +13,24 @@ import BgSelector from '../components/BgSelector';
 
 const DEFAULT_SIZE = 60;
 
+// Extiende CanvasItem para soportar textos
+type CanvasTextItem = {
+  id: number;
+  type: 'text';
+  text: string;
+  font: string;
+  color: string;
+  x: number;
+  y: number;
+};
+
+type CanvasAnyItem = CanvasItem | CanvasTextItem;
+
 const EditPage: React.FC = () => {
   const [productIdx, setProductIdx] = useState(0);
   const [activeTab, setActiveTab] = useState('product');
   const [selectedBgIdx, setSelectedBgIdx] = useState(-1);
-  const [canvasItems, setCanvasItems] = useState<CanvasItem[]>([]);
+  const [canvasItems, setCanvasItems] = useState<CanvasAnyItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [itemStates, setItemStates] = useState<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean } }>({});
   const fabricRef = useRef<Canvas | null>(null);
@@ -79,10 +92,14 @@ const EditPage: React.FC = () => {
       if (obj) {
         const centerX = (product.canvas.width * scale) / 2;
         const centerY = (product.canvas.height * scale) / 2;
-        obj.set({ left: centerX, top: centerY });
+        obj.set({ left: centerX, top: centerY, originX: 'center', originY: 'center' });
         setItemStates(states => ({
           ...states,
-          [id]: { ...states[id], x: (centerX / scale) - ((obj.width ?? DEFAULT_SIZE) / 2), y: (centerY / scale) - ((obj.height ?? DEFAULT_SIZE) / 2) },
+          [id]: {
+            ...states[id],
+            x: centerX / scale,
+            y: centerY / scale,
+          },
         }));
         fabricCanvas.renderAll();
       }
@@ -133,6 +150,46 @@ const EditPage: React.FC = () => {
   };
   const isLocked = (id: number) => !!itemStates[id]?.locked;
 
+  // Handler para agregar texto
+  const handleAddText = (text: string, font: string, color: string) => {
+    const newId = Date.now();
+    setCanvasItems(items => [
+      ...items,
+      {
+        id: newId,
+        type: 'text',
+        text,
+        font,
+        color,
+        x: product.canvas.width / 2,
+        y: product.canvas.height / 2,
+      },
+    ]);
+    setSelectedId(newId);
+  };
+
+  // Handler para actualizar fuente/color de un texto existente
+  const handleUpdateTextItem = (id: number, changes: Partial<{ font: string; color: string }>) => {
+    setCanvasItems(items => items.map(item => {
+      if (item.id === id && (item as any).type === 'text') {
+        return { ...item, ...changes };
+      }
+      return item;
+    }));
+    // Opcional: refrescar el canvas manualmente si no se actualiza solo
+    const fabricCanvas = fabricRef.current;
+    if (fabricCanvas) {
+      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
+      if (obj && changes.font) obj.set('fontFamily',
+        changes.font === 'font-sans' ? 'sans-serif' :
+        changes.font === 'font-serif' ? 'serif' :
+        changes.font === 'font-mono' ? 'monospace' :
+        changes.font === 'font-extrabold' ? 'inherit' : 'inherit');
+      if (obj && changes.color) obj.set('fill', changes.color);
+      fabricCanvas.renderAll();
+    }
+  };
+
   return (
     <>
       <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between">
@@ -149,6 +206,7 @@ const EditPage: React.FC = () => {
             scale={scale}
             setScale={setScale}
             selectedBg={selectedBgIdx >= 0 && selectedBgIdx < FONDOS.length ? FONDOS[selectedBgIdx] : null}
+            onUpdateItems={setCanvasItems}
           />
           <Sidebar
             selectedId={selectedId}
@@ -177,7 +235,11 @@ const EditPage: React.FC = () => {
           {activeTab === 'elements' && (
             <ElementSelector elements={ELEMENTS} onSelect={handleAddElement} />
           )}
-          {activeTab === 'text' && <TextTools />}
+          {activeTab === 'text' && <TextTools
+            onAddText={handleAddText}
+            selectedTextItem={canvasItems.find(i => i.id === selectedId && (i as any).type === 'text') as CanvasTextItem | undefined}
+            onUpdateTextItem={handleUpdateTextItem}
+          />}
         </div>
       </div>
     </>

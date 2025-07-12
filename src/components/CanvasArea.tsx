@@ -1,6 +1,18 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Canvas, Image } from 'fabric';
+import { Canvas, Image, IText } from 'fabric';
 import type { CanvasItem } from '../types';
+
+// Define también aquí el tipo CanvasTextItem y CanvasAnyItem
+export type CanvasTextItem = {
+  id: number;
+  type: 'text';
+  text: string;
+  font: string;
+  color: string;
+  x: number;
+  y: number;
+};
+export type CanvasAnyItem = CanvasItem | CanvasTextItem;
 
 type CanvasAreaProps = {
   product: {
@@ -10,7 +22,7 @@ type CanvasAreaProps = {
     imageWidth: number;
     imageHeight: number;
   };
-  items?: CanvasItem[];
+  items?: CanvasAnyItem[];
   selectedId?: number | null;
   setSelectedId?: (id: number | null) => void;
   fabricRef: React.MutableRefObject<Canvas | null>;
@@ -19,12 +31,13 @@ type CanvasAreaProps = {
   scale: number;
   setScale: React.Dispatch<React.SetStateAction<number>>;
   selectedBg?: { name: string; image: string } | null;
+  onUpdateItems?: (updatedItems: CanvasAnyItem[]) => void;
 };
 
 const DEFAULT_SIZE = 60;
 
 // CanvasArea component renders the product image, a canvas for editing, and a sidebar for layer controls.
-const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId, setSelectedId, fabricRef, itemStates, setItemStates, scale, setScale, selectedBg }) => {
+const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId, setSelectedId, fabricRef, itemStates, setItemStates, scale, setScale, selectedBg, onUpdateItems }) => {
   const isControlled = typeof selectedId !== 'undefined' && typeof setSelectedId === 'function';
   const [internalSelectedId, internalSetSelectedId] = useState<number | null>(null);
   const actualSelectedId = isControlled ? selectedId : internalSelectedId;
@@ -72,6 +85,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
       width: product.canvas.width * scale,
       height: product.canvas.height * scale,
       selection: true,
+      editable: true,
     });
     fabricRef.current = fabricCanvas;
     fabricCanvas.backgroundColor = 'rgba(0,0,0,0)';
@@ -129,47 +143,111 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
       });
     }
 
-    // Agregar los elementos normales
+    // Agregar los elementos normales y textos
     items.forEach(async item => {
-      const img = await Image.fromURL(item.src);
-      img.set({
-        left: ((itemStates[item.id]?.x ?? item.x) + ((img.width ?? DEFAULT_SIZE) / 2)) * scale,
-        top: ((itemStates[item.id]?.y ?? item.y) + ((img.height ?? DEFAULT_SIZE) / 2)) * scale,
-        scaleX: ((itemStates[item.id]?.size ?? DEFAULT_SIZE) / (img.width ?? DEFAULT_SIZE)) * scale,
-        scaleY: ((itemStates[item.id]?.size ?? DEFAULT_SIZE) / (img.height ?? DEFAULT_SIZE)) * scale,
-        angle: itemStates[item.id]?.rotation ?? 0,
-        selectable: !(itemStates[item.id]?.locked),
-        hasControls: !(itemStates[item.id]?.locked),
-        lockMovementX: !!itemStates[item.id]?.locked,
-        lockMovementY: !!itemStates[item.id]?.locked,
-        lockScalingX: !!itemStates[item.id]?.locked,
-        lockScalingY: !!itemStates[item.id]?.locked,
-        lockRotation: !!itemStates[item.id]?.locked,
-        hasBorders: true,
-        objectCaching: false,
-        originX: 'center',
-        originY: 'center',
-        cornerStyle: 'circle',
-        cornerColor: '#fff',
-        cornerStrokeColor: '#fff',
-      });
-      (img as any).id = item.id;
-      fabricCanvas.add(img);
-      if (actualSelectedId === item.id) {
-        fabricCanvas.setActiveObject(img);
+      if ((item as any).type === 'text') {
+        const textItem = item as any;
+        const txt = new IText(textItem.text, {
+          left: (itemStates[item.id]?.x ?? textItem.x) * scale,
+          top: (itemStates[item.id]?.y ?? textItem.y) * scale,
+          fontFamily: textItem.font === 'font-sans' ? 'sans-serif' : textItem.font === 'font-serif' ? 'serif' : textItem.font === 'font-mono' ? 'monospace' : 'inherit',
+          fill: textItem.color,
+          fontSize: (itemStates[item.id]?.size ?? DEFAULT_SIZE),
+          angle: itemStates[item.id]?.rotation ?? 0,
+          selectable: !(itemStates[item.id]?.locked),
+          hasControls: !(itemStates[item.id]?.locked),
+          lockMovementX: !!itemStates[item.id]?.locked,
+          lockMovementY: !!itemStates[item.id]?.locked,
+          lockScalingX: !!itemStates[item.id]?.locked,
+          lockScalingY: !!itemStates[item.id]?.locked,
+          lockRotation: !!itemStates[item.id]?.locked,
+          hasBorders: true,
+          objectCaching: false,
+          originX: 'center',
+          originY: 'center',
+          editable: true,
+        });
+        (txt as any).id = item.id;
+        fabricCanvas.add(txt);
+        if (actualSelectedId === item.id) {
+          fabricCanvas.setActiveObject(txt);
+        }
+        // Configurar eventos de edición
+        txt.on('mousedblclick', () => {
+          console.log('Doble clic detectado en texto');
+          (txt as any).enterEditing();
+          (txt as any).selectAll();
+        });
+        
+        // Actualizar estado cuando se modifica la posición/tamaño
+        txt.on('modified', () => {
+          setItemStates(states => ({
+            ...states,
+            [item.id]: {
+              x: ((txt.left ?? 0) / scale) - 0,
+              y: ((txt.top ?? 0) / scale) - 0,
+              size: txt.fontSize ?? DEFAULT_SIZE,
+              rotation: txt.angle ?? 0,
+              locked: itemStates[item.id]?.locked ?? false,
+            },
+          }));
+        });
+        
+        // Actualizar el texto cuando se termina de editar
+        (txt as any).on('editing:exited', () => {
+          // Actualizar el texto en el item original
+          const updatedItems = items.map(item => {
+            if (item.id === textItem.id) {
+              return { ...item, text: txt.text || '' };
+            }
+            return item;
+          });
+          // Actualizar los items en el componente padre
+          if (onUpdateItems) {
+            onUpdateItems(updatedItems);
+          }
+        });
+      } else {
+        const img = await Image.fromURL((item as any).src);
+        img.set({
+          left: ((itemStates[item.id]?.x ?? (item as any).x) + ((img.width ?? DEFAULT_SIZE) / 2)) * scale,
+          top: ((itemStates[item.id]?.y ?? (item as any).y) + ((img.height ?? DEFAULT_SIZE) / 2)) * scale,
+          scaleX: ((itemStates[item.id]?.size ?? DEFAULT_SIZE) / (img.width ?? DEFAULT_SIZE)) * scale,
+          scaleY: ((itemStates[item.id]?.size ?? DEFAULT_SIZE) / (img.height ?? DEFAULT_SIZE)) * scale,
+          angle: itemStates[item.id]?.rotation ?? 0,
+          selectable: !(itemStates[item.id]?.locked),
+          hasControls: !(itemStates[item.id]?.locked),
+          lockMovementX: !!itemStates[item.id]?.locked,
+          lockMovementY: !!itemStates[item.id]?.locked,
+          lockScalingX: !!itemStates[item.id]?.locked,
+          lockScalingY: !!itemStates[item.id]?.locked,
+          lockRotation: !!itemStates[item.id]?.locked,
+          hasBorders: true,
+          objectCaching: false,
+          originX: 'center',
+          originY: 'center',
+          cornerStyle: 'circle',
+          cornerColor: '#fff',
+          cornerStrokeColor: '#fff',
+        });
+        (img as any).id = item.id;
+        fabricCanvas.add(img);
+        if (actualSelectedId === item.id) {
+          fabricCanvas.setActiveObject(img);
+        }
+        img.on('modified', () => {
+          setItemStates(states => ({
+            ...states,
+            [item.id]: {
+              x: ((img.left ?? 0) / scale) - ((img.width ?? DEFAULT_SIZE) / 2),
+              y: ((img.top ?? 0) / scale) - ((img.height ?? DEFAULT_SIZE) / 2),
+              size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)) / scale,
+              rotation: img.angle ?? 0,
+              locked: itemStates[item.id]?.locked ?? false,
+            },
+          }));
+        });
       }
-      img.on('modified', () => {
-        setItemStates(states => ({
-          ...states,
-          [item.id]: {
-            x: ((img.left ?? 0) / scale) - ((img.width ?? DEFAULT_SIZE) / 2),
-            y: ((img.top ?? 0) / scale) - ((img.height ?? DEFAULT_SIZE) / 2),
-            size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)) / scale,
-            rotation: img.angle ?? 0,
-            locked: itemStates[item.id]?.locked ?? false,
-          },
-        }));
-      });
     });
     fabricCanvas.renderAll();
 
@@ -186,11 +264,24 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
     fabricCanvas.on('selection:created', handleSelection);
     fabricCanvas.on('selection:updated', handleSelection);
     fabricCanvas.on('selection:cleared', handleCleared);
+    
+    // Listener global para doble clic en texto
+    const handleDoubleClick = (e: any) => {
+      console.log('Doble clic global detectado:', e.target);
+      if (e.target && e.target.type === 'text') {
+        console.log('Activando edición de texto');
+        (e.target as any).enterEditing();
+        (e.target as any).selectAll();
+      }
+    };
+    fabricCanvas.on('mouse:dblclick', handleDoubleClick);
+    
     // Cleanup listeners on unmount
     return () => {
       fabricCanvas.off('selection:created', handleSelection);
       fabricCanvas.off('selection:updated', handleSelection);
       fabricCanvas.off('selection:cleared', handleCleared);
+      fabricCanvas.off('mouse:dblclick', handleDoubleClick);
     };
   }, [items, itemStates, scale, actualSelectedId, fabricRef, setItemStates, actualSetSelectedId, selectedBg]);
 

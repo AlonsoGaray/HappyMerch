@@ -1,9 +1,22 @@
 import { Eye, LockKeyhole, LockKeyholeOpen, SquareSplitHorizontal, StretchHorizontal, Trash } from 'lucide-react';
 import React from 'react';
 
+interface CanvasImageItem {
+  id: number;
+  src: string;
+}
+interface CanvasTextItem {
+  id: number;
+  type: 'text';
+  text: string;
+  font: string;
+  color: string;
+}
+type CanvasAnyItem = CanvasImageItem | CanvasTextItem;
+
 interface SidebarProps {
   selectedId: number | null;
-  canvasItems: Array<{ id: number; src: string }>;
+  canvasItems: CanvasAnyItem[];
   setSelectedId: (id: number | null) => void;
   onDeleteItem: (id: number) => void;
   onMoveItem: (id: number, direction: 'up' | 'down') => void;
@@ -65,7 +78,17 @@ const Sidebar: React.FC<SidebarProps> = ({
           onClick={() => setSelectedId(item.id)}
         >
           <StretchHorizontal size={17} color="white" fill='white' />
-          <img src={item.src} alt="icon" className="w-14 h-14 object-contain" />
+          {('src' in item) ? (
+            <img src={item.src} alt="icon" className="w-14 h-14 object-contain" />
+          ) : (
+            <span
+              className={`w-14 h-14 flex items-center justify-center text-2xl overflow-hidden ${(item as CanvasTextItem).font || ''}`}
+              style={{ color: (item as CanvasTextItem).color }}
+              title={(item as CanvasTextItem).text}
+            >
+              {(item as CanvasTextItem).text}
+            </span>
+          )}
           <div className='flex bg-gray-500 w-full h-6 rounded-b items-center justify-around px-0.5'>
             <button 
               onClick={(e) => { 
