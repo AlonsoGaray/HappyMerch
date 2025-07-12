@@ -71,16 +71,34 @@ const EditPage: React.FC = () => {
   };
 
   // Handlers para Sidebar
-  const handleRotate = (id: number, angle: number) => {
-    setItemStates(states => ({
-      ...states,
-      [id]: { ...states[id], rotation: angle },
-    }));
+  const handleRotate = (id: number, angleIncrement: number) => {
+    setItemStates(states => {
+      let newRotation: number;
+      if (angleIncrement === -999) {
+        // Caso especial para reset a 0°
+        newRotation = 0;
+      } else {
+        const currentRotation = states[id]?.rotation ?? 0;
+        newRotation = (currentRotation + angleIncrement) % 360;
+      }
+      return {
+        ...states,
+        [id]: { ...states[id], rotation: newRotation },
+      };
+    });
     const fabricCanvas = fabricRef.current;
     if (fabricCanvas) {
       const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
       if (obj) {
-        obj.set('angle', angle);
+        let newAngle: number;
+        if (angleIncrement === -999) {
+          // Caso especial para reset a 0°
+          newAngle = 0;
+        } else {
+          const currentAngle = obj.angle ?? 0;
+          newAngle = (currentAngle + angleIncrement) % 360;
+        }
+        obj.set('angle', newAngle);
         fabricCanvas.renderAll();
       }
     }

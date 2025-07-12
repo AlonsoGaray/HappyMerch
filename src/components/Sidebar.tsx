@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {/* Controles para el ítem seleccionado */}
     {selectedId && (
       <div className="flex flex-col gap-1 items-center mr-2">
-        <button className="text-xs bg-pink-500 text-white rounded px-2 py-1" onClick={() => onRotate(selectedId, 0)}>
+        <button className="text-xs bg-pink-500 text-white rounded px-2 py-1" onClick={() => onRotate(selectedId, -999)}>
           Reset 0°
         </button>
         <button className="text-xs bg-pink-500 text-white rounded px-2 py-1" onClick={() => onRotate(selectedId, 90)}>
