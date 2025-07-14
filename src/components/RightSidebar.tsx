@@ -1,4 +1,4 @@
-import { Eye, LockKeyhole, LockKeyholeOpen, SquareSplitHorizontal, StretchHorizontal, Trash } from 'lucide-react';
+import { Eye, EyeOff, LockKeyhole, LockKeyholeOpen, SquareSplitHorizontal, StretchHorizontal, Trash } from 'lucide-react';
 import React from 'react';
 
 interface CanvasImageItem {
@@ -25,6 +25,8 @@ interface RightSidebarProps {
   onCenter: (id: number) => void;
   onLockToggle: (id: number) => void;
   isLocked: (id: number) => boolean;
+  onToggleVisible: (id: number) => void;
+  isVisible: (id: number) => boolean;
 }
 
 const RightSidebar: React.FC<RightSidebarProps> = ({
@@ -38,6 +40,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   onCenter,
   onLockToggle,
   isLocked,
+  onToggleVisible,
+  isVisible,
 }) => (
   <div className="absolute right-10 top-1/2 -translate-y-1/2 flex gap-2 items-center bg-white/80 shadow-lg rounded-lg p-2 min-w-[56px] z-20">
     {/* Controles para el ítem seleccionado */}
@@ -91,7 +95,15 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             >
               <SquareSplitHorizontal size={17} color="white" />
             </button>
-            <Eye size={17} color="white" />
+            <button 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                onToggleVisible(item.id);
+              }}
+              title={isVisible(item.id) ? 'Ocultar' : 'Mostrar'}
+            >
+              {isVisible(item.id) ? <Eye size={17} color="white" /> : <EyeOff size={17} color="white" />}
+            </button>
             <button 
               onClick={(e) => { 
                 e.stopPropagation(); 

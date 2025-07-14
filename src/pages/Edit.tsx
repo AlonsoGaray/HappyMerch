@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import NavBar from '../components/NavBar';
 import { PRODUCTS, ELEMENTS, TABS, FONDOS } from '../constants';
 import ProductSelector from '../components/ProductSelector';
@@ -34,7 +34,7 @@ const EditPage: React.FC = () => {
   const [selectedBgIdx, setSelectedBgIdx] = useState(-1);
   const [canvasItems, setCanvasItems] = useState<CanvasAnyItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [itemStates, setItemStates] = useState<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean } }>({});
+  const [itemStates, setItemStates] = useState<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean } }>({});
   const fabricRef = useRef<Canvas | null>(null);
   const [scale, setScale] = useState(1);
   const [showDashedBorder, setShowDashedBorder] = useState(true);
@@ -225,6 +225,40 @@ const EditPage: React.FC = () => {
     }
   };
 
+  // Handler para alternar visibilidad
+  const handleToggleVisible = (id: number) => {
+    setItemStates(states => ({
+      ...states,
+      [id]: {
+        ...states[id],
+        visible: !states[id]?.visible,
+      },
+    }));
+  };
+  const isVisible = (id: number) => itemStates[id]?.visible !== false;
+
+  // Asegurarse de que cada item tenga un estado inicial, incluyendo visible
+  useEffect(() => {
+    setItemStates(prev => {
+      const updated = { ...prev };
+      let changed = false;
+      canvasItems.forEach(item => {
+        if (!updated[item.id]) {
+          updated[item.id] = {
+            x: (item as any).x,
+            y: (item as any).y,
+            size: DEFAULT_SIZE,
+            rotation: 0,
+            locked: false,
+            visible: true,
+          };
+          changed = true;
+        }
+      });
+      return changed ? updated : prev;
+    });
+  }, [canvasItems, setItemStates]);
+
   return (
     <>
       <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between">
@@ -248,6 +282,7 @@ const EditPage: React.FC = () => {
               selectedBg={selectedBgIdx >= 0 && selectedBgIdx < FONDOS.length ? FONDOS[selectedBgIdx] : null}
               onUpdateItems={setCanvasItems}
               showDashedBorder={showDashedBorder}
+              isVisible={isVisible}
             />
             <BottomBar 
               selectedId={selectedId}
@@ -266,6 +301,8 @@ const EditPage: React.FC = () => {
             onCenter={handleCenter}
             onLockToggle={handleLockToggle}
             isLocked={isLocked}
+            onToggleVisible={handleToggleVisible}
+            isVisible={isVisible}
           />
         </div>
         <div className="w-full bg-pink-500 pt-6 px-2 pb-2 flex flex-col items-center sticky bottom-0 z-10">

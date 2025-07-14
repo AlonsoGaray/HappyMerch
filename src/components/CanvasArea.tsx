@@ -26,19 +26,20 @@ type CanvasAreaProps = {
   selectedId?: number | null;
   setSelectedId?: (id: number | null) => void;
   fabricRef: React.MutableRefObject<Canvas | null>;
-  itemStates: { [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean } };
-  setItemStates: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean } }>>;
+  itemStates: { [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean } };
+  setItemStates: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean } }>>;
   scale: number;
   setScale: React.Dispatch<React.SetStateAction<number>>;
   selectedBg?: { name: string; image: string } | null;
   onUpdateItems?: (updatedItems: CanvasAnyItem[]) => void;
   showDashedBorder?: boolean;
+  isVisible: (id: number) => boolean;
 };
 
 const DEFAULT_SIZE = 60;
 
 // CanvasArea component renders the product image, a canvas for editing, and a sidebar for layer controls.
-const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId, setSelectedId, fabricRef, itemStates, setItemStates, scale, setScale, selectedBg, onUpdateItems, showDashedBorder }) => {
+const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId, setSelectedId, fabricRef, itemStates, setItemStates, scale, setScale, selectedBg, onUpdateItems, showDashedBorder, isVisible }) => {
   const isControlled = typeof selectedId !== 'undefined' && typeof setSelectedId === 'function';
   const [internalSelectedId, internalSetSelectedId] = useState<number | null>(null);
   const actualSelectedId = isControlled ? selectedId : internalSelectedId;
@@ -145,7 +146,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
     }
 
     // Agregar los elementos normales y textos
-    items.forEach(async item => {
+    items.filter(item => isVisible(item.id)).forEach(async item => {
       if ((item as any).type === 'text') {
         const textItem = item as any;
         const txt = new IText(textItem.text, {
@@ -190,6 +191,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
               size: txt.fontSize ?? DEFAULT_SIZE,
               rotation: txt.angle ?? 0,
               locked: itemStates[item.id]?.locked ?? false,
+              visible: itemStates[item.id]?.visible ?? true,
             },
           }));
         });
@@ -245,6 +247,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
               size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)) / scale,
               rotation: img.angle ?? 0,
               locked: itemStates[item.id]?.locked ?? false,
+              visible: itemStates[item.id]?.visible ?? true,
             },
           }));
         });
@@ -284,7 +287,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
       fabricCanvas.off('selection:cleared', handleCleared);
       fabricCanvas.off('mouse:dblclick', handleDoubleClick);
     };
-  }, [items, itemStates, scale, actualSelectedId, fabricRef, setItemStates, actualSetSelectedId, selectedBg]);
+  }, [items, itemStates, scale, actualSelectedId, fabricRef, setItemStates, actualSetSelectedId, selectedBg, isVisible]);
 
   // Ensure every item has an entry in itemStates so the action bar appears immediately
   useEffect(() => {
@@ -299,6 +302,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
             size: DEFAULT_SIZE,
             rotation: 0,
             locked: false,
+            visible: true,
           };
           changed = true;
         }
