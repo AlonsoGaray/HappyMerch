@@ -10,6 +10,7 @@ import type { CanvasItem } from '../types';
 import Sidebar from '../components/Sidebar';
 import { Canvas } from 'fabric';
 import BgSelector from '../components/BgSelector';
+import BottomBar from '../components/BottomBar';
 
 const DEFAULT_SIZE = 60;
 
@@ -227,19 +228,22 @@ const EditPage: React.FC = () => {
       <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between">
         <NavBar />
         <div className="relative flex w-full h-full justify-center">
-          <CanvasArea
-            product={product}
-            items={canvasItems}
-            selectedId={selectedId}
-            setSelectedId={setSelectedId}
-            fabricRef={fabricRef}
-            itemStates={itemStates}
-            setItemStates={setItemStates}
-            scale={scale}
-            setScale={setScale}
-            selectedBg={selectedBgIdx >= 0 && selectedBgIdx < FONDOS.length ? FONDOS[selectedBgIdx] : null}
-            onUpdateItems={setCanvasItems}
-          />
+          <div className='flex flex-col w-full h-full justify-center items-center gap-5'>
+            <CanvasArea
+              product={product}
+              items={canvasItems}
+              selectedId={selectedId}
+              setSelectedId={setSelectedId}
+              fabricRef={fabricRef}
+              itemStates={itemStates}
+              setItemStates={setItemStates}
+              scale={scale}
+              setScale={setScale}
+              selectedBg={selectedBgIdx >= 0 && selectedBgIdx < FONDOS.length ? FONDOS[selectedBgIdx] : null}
+              onUpdateItems={setCanvasItems}
+            />
+            <BottomBar />
+          </div>
           <Sidebar
             selectedId={selectedId}
             canvasItems={canvasItems}
