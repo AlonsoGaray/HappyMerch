@@ -12,9 +12,6 @@ const FONTS = [
   { label: 'Verdana', className: 'font-verdana' },
   { label: 'Courier', className: 'font-courier' },
   { label: 'Georgia', className: 'font-georgia' },
-  { label: 'Sans', className: 'font-sans' },
-  { label: 'Serif', className: 'font-serif' },
-  { label: 'Mono', className: 'font-mono' }
 ];
 
 const COLORS = [

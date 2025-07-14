@@ -151,10 +151,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
         const textItem = item as any;
         // Determinar el nombre real de la fuente
         let fontFamily = textItem.font;
-        if (fontFamily === 'font-sans') fontFamily = 'sans-serif';
-        else if (fontFamily === 'font-serif') fontFamily = 'serif';
-        else if (fontFamily === 'font-mono') fontFamily = 'monospace';
-        else if (fontFamily === 'font-pacifico') fontFamily = 'Pacifico';
+        if (fontFamily === 'font-pacifico') fontFamily = 'Pacifico';
         else if (fontFamily === 'font-anton') fontFamily = 'Anton';
         else if (fontFamily === 'font-lobster') fontFamily = 'Lobster';
         else if (fontFamily === 'font-oswald') fontFamily = 'Oswald';
