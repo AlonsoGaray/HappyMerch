@@ -16,7 +16,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
     <button 
       className='rounded-full bg-black p-2 disabled:bg-gray-500'
       disabled={!selectedId}
-      onClick={(e) => { 
+      onClick={() => { 
         if (selectedId !== null) onFlipX(selectedId);
       }}
       title="Flip horizontal"
