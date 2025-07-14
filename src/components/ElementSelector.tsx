@@ -11,7 +11,7 @@ type ElementSelectorProps = {
 };
 
 const ElementSelector: React.FC<ElementSelectorProps> = ({ elements, onSelect }) => (
-  <div className="flex gap-8">
+  <div className="flex gap-8 h-32 max-h-32 items-center">
     {elements.length === 0 && <span className="text-white/70">No elements</span>}
     {elements.map((el) => (
       <div key={el.image} className="flex flex-col items-center cursor-pointer" onClick={() => onSelect && onSelect(el)}>

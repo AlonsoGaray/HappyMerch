@@ -11,7 +11,7 @@ type ProductSelectorProps = {
 };
 
 const ProductSelector: React.FC<ProductSelectorProps> = ({ products, selectedIdx, onSelect }) => (
-  <div className="flex gap-8">
+  <div className="flex gap-8 h-32 max-h-32 items-center">
     {products.map((prod, idx) => (
       <button
         key={prod.image}

@@ -68,7 +68,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
     <div className="flex flex-col gap-1 items-center">
       {canvasItems.length === 0 && <span className="text-xs text-gray-400">Sin capas</span>}
       {canvasItems.map(item => (
-        <button
+        <div
           key={item.id}
           className={`w-24 h-27 flex flex-col items-center pt-0.5 justify-between rounded border ${selectedId === item.id ? 'border-pink-500 bg-pink-100' : 'border-gray-300 bg-gray-200'} transition`}
           onClick={() => setSelectedId(item.id)}
@@ -124,7 +124,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
               <Trash size={17} color="white" />
             </button>
           </div>
-        </button>
+        </div>
       )).reverse()}
     </div>
   </div>
