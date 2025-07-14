@@ -2,6 +2,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 
 @import "tailwindcss";
 
@@ -15,4 +18,10 @@
   --font-anton: Anton, sans-serif;
   --font-lobster: Lobster, sans-serif;
   --font-oswald: Oswald, sans-serif;
+  --font-shadow: Shadows Into Light, sans-serif;
+  --font-playfair: Playfair Display, sans-serif;
+  --font-montserrat: Montserrat, sans-serif;
+  --font-verdana: verdana-pro, sans-serif;
+  --font-courier: courier-new, sans-serif;
+  --font-georgia: georgia, sans-serif;
 }

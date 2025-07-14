@@ -158,6 +158,12 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
         else if (fontFamily === 'font-anton') fontFamily = 'Anton';
         else if (fontFamily === 'font-lobster') fontFamily = 'Lobster';
         else if (fontFamily === 'font-oswald') fontFamily = 'Oswald';
+        else if (fontFamily === 'font-shadow') fontFamily = 'Shadows Into Light';
+        else if (fontFamily === 'font-playfair') fontFamily = 'Playfair Display';
+        else if (fontFamily === 'font-montserrat') fontFamily = 'Montserrat';
+        else if (fontFamily === 'font-verdana') fontFamily = 'Verdana';
+        else if (fontFamily === 'font-courier') fontFamily = 'Courier';
+        else if (fontFamily === 'font-georgia') fontFamily = 'Georgia';
 
         const txt = new IText(textItem.text, {
           left: (itemStates[item.id]?.x ?? textItem.x) * scale,

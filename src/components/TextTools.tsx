@@ -3,12 +3,18 @@ import React, { useState } from 'react';
 
 const FONTS = [
   { label: 'Pacifico', className: 'font-pacifico' },
-  { label: 'Anton', className: 'font-anto' },
+  { label: 'Anton', className: 'font-anton' },
   { label: 'Lobster', className: 'font-lobster' },
   { label: 'Oswald', className: 'font-oswald' },
+  { label: 'Shadows Into Light', className: 'font-shadow' },
+  { label: 'Playfair Display', className: 'font-playfair' },
+  { label: 'Montserrat', className: 'font-montserrat' },
+  { label: 'Verdana', className: 'font-verdana' },
+  { label: 'Courier', className: 'font-courier' },
+  { label: 'Georgia', className: 'font-georgia' },
   { label: 'Sans', className: 'font-sans' },
   { label: 'Serif', className: 'font-serif' },
-  { label: 'Mono', className: 'font-mono' },
+  { label: 'Mono', className: 'font-mono' }
 ];
 
 const COLORS = [
