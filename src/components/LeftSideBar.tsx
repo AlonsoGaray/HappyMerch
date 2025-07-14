@@ -1,4 +1,4 @@
-import { Eye, LockKeyhole, LockKeyholeOpen, Redo, SquareSplitHorizontal, StretchHorizontal, Trash, Undo } from 'lucide-react';
+import { Redo, SquareSplitHorizontal, Undo } from 'lucide-react';
 import React from 'react';
 
 interface LeftSidebarProps {
