@@ -14,7 +14,7 @@ interface CanvasTextItem {
 }
 type CanvasAnyItem = CanvasImageItem | CanvasTextItem;
 
-interface SidebarProps {
+interface RightSidebarProps {
   selectedId: number | null;
   canvasItems: CanvasAnyItem[];
   setSelectedId: (id: number | null) => void;
@@ -23,12 +23,11 @@ interface SidebarProps {
   onRotate: (id: number, angle: number) => void;
   onFlipX: (id: number) => void;
   onCenter: (id: number) => void;
-  onResize: (id: number, factor: number) => void;
   onLockToggle: (id: number) => void;
   isLocked: (id: number) => boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({
+const RightSidebar: React.FC<RightSidebarProps> = ({
   selectedId,
   canvasItems,
   setSelectedId,
@@ -37,7 +36,6 @@ const Sidebar: React.FC<SidebarProps> = ({
   onRotate,
   onFlipX,
   onCenter,
-  onResize,
   onLockToggle,
   isLocked,
 }) => (
@@ -53,12 +51,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
         <button className="text-xs bg-pink-500 text-white rounded px-2 py-1 mt-1" onClick={() => onCenter(selectedId)}>
           Centrar
-        </button>
-        <button className="w-9 h-9 flex items-center justify-center bg-pink-500 text-white rounded-full text-xl mb-1 shadow" onClick={() => onResize(selectedId, 1.15)} title="Agrandar">
-          ➕
-        </button>
-        <button className="w-9 h-9 flex items-center justify-center bg-pink-500 text-white rounded-full text-xl mb-2 shadow" onClick={() => onResize(selectedId, 0.85)} title="Reducir">
-          ➖
         </button>
         <button className="w-9 h-9 flex items-center justify-center bg-gray-500 text-white rounded-full text-xl mb-1 shadow" onClick={() => onMoveItem(selectedId, 'up')} title="Subir capa">
           ⬆️
@@ -126,4 +118,4 @@ const Sidebar: React.FC<SidebarProps> = ({
   </div>
 );
 
-export default Sidebar; 
+export default RightSidebar; 

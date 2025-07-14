@@ -7,7 +7,7 @@ import TextTools from '../components/TextTools';
 import CanvasArea from '../components/CanvasArea';
 import Tabs from '../components/Tabs';
 import type { CanvasItem } from '../types';
-import Sidebar from '../components/Sidebar';
+import RightSidebar from '../components/RightSidebar';
 import { Canvas } from 'fabric';
 import BgSelector from '../components/BgSelector';
 import BottomBar from '../components/BottomBar';
@@ -36,6 +36,7 @@ const EditPage: React.FC = () => {
   const [itemStates, setItemStates] = useState<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean } }>({});
   const fabricRef = useRef<Canvas | null>(null);
   const [scale, setScale] = useState(1);
+  const [showDashedBorder, setShowDashedBorder] = useState(true);
 
   const product = PRODUCTS[productIdx];
 
@@ -241,10 +242,15 @@ const EditPage: React.FC = () => {
               setScale={setScale}
               selectedBg={selectedBgIdx >= 0 && selectedBgIdx < FONDOS.length ? FONDOS[selectedBgIdx] : null}
               onUpdateItems={setCanvasItems}
+              showDashedBorder={showDashedBorder}
             />
-            <BottomBar />
+            <BottomBar 
+              selectedId={selectedId}
+              onResize={handleResize}
+              onToggleDashedBorder={() => setShowDashedBorder(v => !v)}
+            />
           </div>
-          <Sidebar
+          <RightSidebar
             selectedId={selectedId}
             canvasItems={canvasItems}
             setSelectedId={setSelectedId}
@@ -253,7 +259,6 @@ const EditPage: React.FC = () => {
             onRotate={handleRotate}
             onFlipX={handleFlipX}
             onCenter={handleCenter}
-            onResize={handleResize}
             onLockToggle={handleLockToggle}
             isLocked={isLocked}
           />

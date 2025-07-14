@@ -32,12 +32,13 @@ type CanvasAreaProps = {
   setScale: React.Dispatch<React.SetStateAction<number>>;
   selectedBg?: { name: string; image: string } | null;
   onUpdateItems?: (updatedItems: CanvasAnyItem[]) => void;
+  showDashedBorder?: boolean;
 };
 
 const DEFAULT_SIZE = 60;
 
 // CanvasArea component renders the product image, a canvas for editing, and a sidebar for layer controls.
-const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId, setSelectedId, fabricRef, itemStates, setItemStates, scale, setScale, selectedBg, onUpdateItems }) => {
+const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId, setSelectedId, fabricRef, itemStates, setItemStates, scale, setScale, selectedBg, onUpdateItems, showDashedBorder }) => {
   const isControlled = typeof selectedId !== 'undefined' && typeof setSelectedId === 'function';
   const [internalSelectedId, internalSetSelectedId] = useState<number | null>(null);
   const actualSelectedId = isControlled ? selectedId : internalSelectedId;
@@ -334,15 +335,22 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
             height: product.canvas.height * scale,
             zIndex: 2,
             pointerEvents: 'none',
+            position: 'absolute',
           }}
         >
-          <div className="absolute left-0 top-0 w-full h-full border-2 border-dashed border-red-500 rounded z-10" />
+          {/* Borde siempre presente, solo cambia visibilidad */}
+          <div
+            className={`absolute left-0 top-0 w-full h-full border-2 border-dashed border-red-500 rounded z-10 ${showDashedBorder ? '' : 'invisible'}`}
+            key="border"
+            style={{ pointerEvents: 'none' }}
+          />
           <canvas
             ref={canvasElRef}
             width={product.canvas.width * scale}
             height={product.canvas.height * scale}
             className="absolute left-0 top-0"
             style={{ zIndex: 2, background: 'transparent', pointerEvents: 'auto', width: '100%', height: '100%' }}
+            key="canvas"
           />
         </div>
       </div>
