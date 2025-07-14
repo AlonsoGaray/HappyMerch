@@ -11,6 +11,7 @@ import RightSidebar from '../components/RightSidebar';
 import { Canvas } from 'fabric';
 import BgSelector from '../components/BgSelector';
 import BottomBar from '../components/BottomBar';
+import LeftSidebar from '../components/LeftSideBar';
 
 const DEFAULT_SIZE = 60;
 
@@ -229,6 +230,10 @@ const EditPage: React.FC = () => {
       <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between">
         <NavBar />
         <div className="relative flex w-full h-full justify-center">
+          <LeftSidebar 
+            selectedId={selectedId}
+            onFlipX={handleFlipX}
+          />
           <div className='flex flex-col w-full h-full justify-center items-center gap-5'>
             <CanvasArea
               product={product}
