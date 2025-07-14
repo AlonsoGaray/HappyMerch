@@ -1,6 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lobster&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
+
 @import "tailwindcss";
 
 .scroll {
   scrollbar-width: thin;
   scrollbar-color: #ff8fd8 #f542a7;
+}
+
+@theme{
+  --font-pacifico: Pacifico, sans-serif;
+  --font-anton: Anton, sans-serif;
+  --font-lobster: Lobster, sans-serif;
+  --font-oswald: Oswald, sans-serif;
 }

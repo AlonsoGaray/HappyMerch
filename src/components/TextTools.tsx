@@ -2,10 +2,12 @@ import { Plus } from 'lucide-react';
 import React, { useState } from 'react';
 
 const FONTS = [
+  { label: 'Pacifico', className: 'font-pacifico' },
+  { label: 'Anton', className: 'font-anto' },
+  { label: 'Lobster', className: 'font-lobster' },
+  { label: 'Oswald', className: 'font-oswald' },
   { label: 'Sans', className: 'font-sans' },
   { label: 'Serif', className: 'font-serif' },
-  { label: 'Mono', className: 'font-mono' },
-  { label: 'Mono', className: 'font-mono' },
   { label: 'Mono', className: 'font-mono' },
 ];
 

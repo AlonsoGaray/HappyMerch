@@ -149,10 +149,20 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
     items.filter(item => isVisible(item.id)).forEach(async item => {
       if ((item as any).type === 'text') {
         const textItem = item as any;
+        // Determinar el nombre real de la fuente
+        let fontFamily = textItem.font;
+        if (fontFamily === 'font-sans') fontFamily = 'sans-serif';
+        else if (fontFamily === 'font-serif') fontFamily = 'serif';
+        else if (fontFamily === 'font-mono') fontFamily = 'monospace';
+        else if (fontFamily === 'font-pacifico') fontFamily = 'Pacifico';
+        else if (fontFamily === 'font-anton') fontFamily = 'Anton';
+        else if (fontFamily === 'font-lobster') fontFamily = 'Lobster';
+        else if (fontFamily === 'font-oswald') fontFamily = 'Oswald';
+
         const txt = new IText(textItem.text, {
           left: (itemStates[item.id]?.x ?? textItem.x) * scale,
           top: (itemStates[item.id]?.y ?? textItem.y) * scale,
-          fontFamily: textItem.font === 'font-sans' ? 'sans-serif' : textItem.font === 'font-serif' ? 'serif' : textItem.font === 'font-mono' ? 'monospace' : 'inherit',
+          fontFamily: fontFamily,
           fill: textItem.color,
           fontSize: (itemStates[item.id]?.size ?? DEFAULT_SIZE),
           angle: itemStates[item.id]?.rotation ?? 0,
