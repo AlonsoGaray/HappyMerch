@@ -237,6 +237,11 @@ const EditPage: React.FC = () => {
   };
   const isVisible = (id: number) => itemStates[id]?.visible !== false;
 
+  // Handler para reordenar capas desde DnD
+  const handleReorderItems = (newOrder: CanvasAnyItem[]) => {
+    setCanvasItems(newOrder);
+  };
+
   // Asegurarse de que cada item tenga un estado inicial, incluyendo visible
   useEffect(() => {
     setItemStates(prev => {
@@ -303,6 +308,7 @@ const EditPage: React.FC = () => {
             isLocked={isLocked}
             onToggleVisible={handleToggleVisible}
             isVisible={isVisible}
+            onReorderItems={handleReorderItems}
           />
         </div>
         <div className="w-full bg-pink-500 pt-6 px-2 pb-2 flex flex-col items-center sticky bottom-0 z-10">
