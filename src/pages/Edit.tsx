@@ -265,73 +265,71 @@ const EditPage: React.FC = () => {
   }, [canvasItems, setItemStates]);
 
   return (
-    <>
-      <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between">
-        <NavBar />
-        <div className="relative flex w-full h-full justify-center">
-          <LeftSidebar 
+    <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between max-h-screen">
+      <NavBar />
+      <div className="relative flex w-full h-full justify-center">
+        <LeftSidebar 
+          selectedId={selectedId}
+          onFlipX={handleFlipX}
+        />
+        <div className='flex flex-col w-full h-full justify-center items-center gap-5'>
+          <CanvasArea
+            product={product}
+            items={canvasItems}
             selectedId={selectedId}
-            onFlipX={handleFlipX}
-          />
-          <div className='flex flex-col w-full h-full justify-center items-center gap-5'>
-            <CanvasArea
-              product={product}
-              items={canvasItems}
-              selectedId={selectedId}
-              setSelectedId={setSelectedId}
-              fabricRef={fabricRef}
-              itemStates={itemStates}
-              setItemStates={setItemStates}
-              scale={scale}
-              setScale={setScale}
-              selectedBg={selectedBgIdx >= 0 && selectedBgIdx < FONDOS.length ? FONDOS[selectedBgIdx] : null}
-              onUpdateItems={setCanvasItems}
-              showDashedBorder={showDashedBorder}
-              isVisible={isVisible}
-            />
-            <BottomBar 
-              selectedId={selectedId}
-              onResize={handleResize}
-              onToggleDashedBorder={() => setShowDashedBorder(v => !v)}
-            />
-          </div>
-          <RightSidebar
-            selectedId={selectedId}
-            canvasItems={canvasItems}
             setSelectedId={setSelectedId}
-            onDeleteItem={handleDeleteItem}
-            onMoveItem={handleMoveItem}
-            onRotate={handleRotate}
-            onFlipX={handleFlipX}
-            onCenter={handleCenter}
-            onLockToggle={handleLockToggle}
-            isLocked={isLocked}
-            onToggleVisible={handleToggleVisible}
+            fabricRef={fabricRef}
+            itemStates={itemStates}
+            setItemStates={setItemStates}
+            scale={scale}
+            setScale={setScale}
+            selectedBg={selectedBgIdx >= 0 && selectedBgIdx < FONDOS.length ? FONDOS[selectedBgIdx] : null}
+            onUpdateItems={setCanvasItems}
+            showDashedBorder={showDashedBorder}
             isVisible={isVisible}
-            onReorderItems={handleReorderItems}
+          />
+          <BottomBar 
+            selectedId={selectedId}
+            onResize={handleResize}
+            onToggleDashedBorder={() => setShowDashedBorder(v => !v)}
           />
         </div>
-        <div className="w-full bg-pink-500 pt-6 px-2 pb-2 flex flex-col items-center sticky bottom-0 z-10">
-          <div className="relative w-full flex justify-center">
-            <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
-          </div>
-          {activeTab === 'product' && (
-            <ProductSelector products={PRODUCTS} selectedIdx={productIdx} onSelect={setProductIdx} />
-          )}
-          {activeTab === 'fondos' && (
-            <BgSelector fondos={FONDOS} selectedIdx={selectedBgIdx} onSelect={setSelectedBgIdx} />
-          )}
-          {activeTab === 'elements' && (
-            <ElementSelector elements={ELEMENTS} onSelect={handleAddElement} />
-          )}
-          {activeTab === 'text' && <TextTools
-            onAddText={handleAddText}
-            selectedTextItem={canvasItems.find(i => i.id === selectedId && (i as any).type === 'text') as CanvasTextItem | undefined}
-            onUpdateTextItem={handleUpdateTextItem}
-          />}
-        </div>
+        <RightSidebar
+          selectedId={selectedId}
+          canvasItems={canvasItems}
+          setSelectedId={setSelectedId}
+          onDeleteItem={handleDeleteItem}
+          onMoveItem={handleMoveItem}
+          onRotate={handleRotate}
+          onFlipX={handleFlipX}
+          onCenter={handleCenter}
+          onLockToggle={handleLockToggle}
+          isLocked={isLocked}
+          onToggleVisible={handleToggleVisible}
+          isVisible={isVisible}
+          onReorderItems={handleReorderItems}
+        />
       </div>
-    </>
+      <div className="w-full bg-pink-500 pt-6 px-2 pb-2 flex flex-col items-center sticky bottom-0 z-10">
+        <div className="relative w-full flex justify-center">
+          <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
+        {activeTab === 'product' && (
+          <ProductSelector products={PRODUCTS} selectedIdx={productIdx} onSelect={setProductIdx} />
+        )}
+        {activeTab === 'fondos' && (
+          <BgSelector fondos={FONDOS} selectedIdx={selectedBgIdx} onSelect={setSelectedBgIdx} />
+        )}
+        {activeTab === 'elements' && (
+          <ElementSelector elements={ELEMENTS} onSelect={handleAddElement} />
+        )}
+        {activeTab === 'text' && <TextTools
+          onAddText={handleAddText}
+          selectedTextItem={canvasItems.find(i => i.id === selectedId && (i as any).type === 'text') as CanvasTextItem | undefined}
+          onUpdateTextItem={handleUpdateTextItem}
+        />}
+      </div>
+    </div>
   );
 };
 
