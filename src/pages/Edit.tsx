@@ -265,7 +265,7 @@ const EditPage: React.FC = () => {
   }, [canvasItems, setItemStates]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100 max-h-svh">
+    <div className="min-h-dvh flex flex-col bg-gray-100 max-h-dvh">
       <NavBar />
       <div className="flex-grow flex relative w-full justify-center items-center overflow-hidden">
         <LeftSidebar 
