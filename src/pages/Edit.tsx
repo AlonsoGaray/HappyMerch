@@ -265,7 +265,7 @@ const EditPage: React.FC = () => {
   }, [canvasItems, setItemStates]);
 
   return (
-    <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between max-h-screen">
+    <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between max-h-svh">
       <NavBar />
       <div className="relative flex w-full h-full justify-center">
         <LeftSidebar 
