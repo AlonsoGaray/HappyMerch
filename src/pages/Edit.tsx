@@ -265,14 +265,14 @@ const EditPage: React.FC = () => {
   }, [canvasItems, setItemStates]);
 
   return (
-    <div className="min-h-screen items-center bg-gray-100 flex flex-col justify-between max-h-svh">
+    <div className="min-h-screen flex flex-col bg-gray-100 max-h-svh">
       <NavBar />
-      <div className="relative flex w-full h-full justify-center">
+      <div className="flex-grow flex relative w-full justify-center items-center overflow-hidden">
         <LeftSidebar 
           selectedId={selectedId}
           onFlipX={handleFlipX}
         />
-        <div className='flex flex-col w-full h-full justify-center items-center gap-5'>
+        <div className='flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto'>
           <CanvasArea
             product={product}
             items={canvasItems}
