@@ -34,7 +34,8 @@ const EditPage: React.FC = () => {
   const [selectedBgIdx, setSelectedBgIdx] = useState(-1);
   const [canvasItems, setCanvasItems] = useState<CanvasAnyItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [itemStates, setItemStates] = useState<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean } }>({});
+  // Cambia la definición de itemStates para incluir scaleX y scaleY
+  const [itemStates, setItemStates] = useState<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number } }>({});
   const fabricRef = useRef<Canvas | null>(null);
   const [scale, setScale] = useState(1);
   const [showDashedBorder, setShowDashedBorder] = useState(true);
@@ -57,6 +58,20 @@ const EditPage: React.FC = () => {
       },
     ]);
     setSelectedId(newId);
+    // Inicializa el estado de escala para el nuevo elemento con tamaño pequeño
+    setItemStates(states => ({
+      ...states,
+      [newId]: {
+        x: centerX,
+        y: centerY,
+        size: DEFAULT_SIZE,
+        rotation: 0,
+        locked: false,
+        visible: true,
+        scaleX: 0.5,
+        scaleY: 0.5,
+      },
+    }));
   };
 
   const handleDeleteItem = (id: number) => {
@@ -284,8 +299,20 @@ const EditPage: React.FC = () => {
             rotation: 0,
             locked: false,
             visible: true,
+            scaleX: 1,
+            scaleY: 1,
           };
           changed = true;
+        } else {
+          // Asegura que scaleX y scaleY existan en todos los items
+          if (updated[item.id].scaleX === undefined) {
+            updated[item.id].scaleX = 1;
+            changed = true;
+          }
+          if (updated[item.id].scaleY === undefined) {
+            updated[item.id].scaleY = 1;
+            changed = true;
+          }
         }
       });
       return changed ? updated : prev;

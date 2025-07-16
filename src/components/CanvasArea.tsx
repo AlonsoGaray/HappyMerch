@@ -26,8 +26,8 @@ type CanvasAreaProps = {
   selectedId?: number | null;
   setSelectedId?: (id: number | null) => void;
   fabricRef: React.MutableRefObject<Canvas | null>;
-  itemStates: { [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean } };
-  setItemStates: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean } }>>;
+  itemStates: { [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number } };
+  setItemStates: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number } }>>;
   scale: number;
   setScale: React.Dispatch<React.SetStateAction<number>>;
   selectedBg?: { name: string; image: string } | null;
@@ -184,6 +184,9 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
           cornerStyle: 'circle',
           cornerColor: '#fff',
           cornerStrokeColor: '#fff',
+          // Nuevo: aplicar scaleX y scaleY si existen
+          scaleX: itemStates[item.id]?.scaleX ?? 1,
+          scaleY: itemStates[item.id]?.scaleY ?? 1,
         });
         (txt as any).id = item.id;
         fabricCanvas.add(txt);
@@ -199,10 +202,10 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
         
         // Actualizar estado cuando se modifica la posición/tamaño
         txt.on('modified', () => {
-          // El nuevo fontSize real es txt.fontSize * txt.scaleY
-          const newFontSize = (txt.fontSize ?? DEFAULT_SIZE) * (txt.scaleY ?? 1);
-          // Resetear el escalado a 1 y aplicar el nuevo fontSize para evitar acumulación de escalado
-          txt.set({ fontSize: newFontSize, scaleX: 1, scaleY: 1 });
+          // Guardar fontSize, scaleX y scaleY
+          const newFontSize = txt.fontSize ?? DEFAULT_SIZE;
+          const newScaleX = txt.scaleX ?? 1;
+          const newScaleY = txt.scaleY ?? 1;
           setItemStates(states => ({
             ...states,
             [item.id]: {
@@ -212,6 +215,8 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
               rotation: txt.angle ?? 0,
               locked: itemStates[item.id]?.locked ?? false,
               visible: itemStates[item.id]?.visible ?? true,
+              scaleX: newScaleX,
+              scaleY: newScaleY,
             },
           }));
           // También actualiza el tamaño en el objeto React (opcional, si lo usas)
@@ -259,6 +264,17 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
           cornerColor: '#fff',
           cornerStrokeColor: '#fff',
         });
+        // Ocultar controles laterales, dejar solo esquinas
+        img.setControlsVisibility({
+          mt: false, // middle top
+          mb: false, // middle bottom
+          ml: false, // middle left
+          mr: false, // middle right
+          tl: true,  // top left
+          tr: true,  // top right
+          bl: true,  // bottom left
+          br: true,  // bottom right
+        });
         (img as any).id = item.id;
         fabricCanvas.add(img);
         if (actualSelectedId === item.id) {
@@ -274,6 +290,8 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
               rotation: img.angle ?? 0,
               locked: itemStates[item.id]?.locked ?? false,
               visible: itemStates[item.id]?.visible ?? true,
+              scaleX: img.scaleX ?? 1,
+              scaleY: img.scaleY ?? 1,
             },
           }));
         });
@@ -329,8 +347,20 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
             rotation: 0,
             locked: false,
             visible: true,
+            scaleX: 1,
+            scaleY: 1,
           };
           changed = true;
+        } else {
+          // Asegura que scaleX y scaleY existan en todos los items
+          if (updated[item.id].scaleX === undefined) {
+            updated[item.id].scaleX = 1;
+            changed = true;
+          }
+          if (updated[item.id].scaleY === undefined) {
+            updated[item.id].scaleY = 1;
+            changed = true;
+          }
         }
       });
       return changed ? updated : prev;
