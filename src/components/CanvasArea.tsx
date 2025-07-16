@@ -181,6 +181,9 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
           originX: 'center',
           originY: 'center',
           editable: true,
+          cornerStyle: 'circle',
+          cornerColor: '#fff',
+          cornerStrokeColor: '#fff',
         });
         (txt as any).id = item.id;
         fabricCanvas.add(txt);
@@ -196,17 +199,27 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
         
         // Actualizar estado cuando se modifica la posición/tamaño
         txt.on('modified', () => {
+          // El nuevo fontSize real es txt.fontSize * txt.scaleY
+          const newFontSize = (txt.fontSize ?? DEFAULT_SIZE) * (txt.scaleY ?? 1);
+          // Resetear el escalado a 1 y aplicar el nuevo fontSize para evitar acumulación de escalado
+          txt.set({ fontSize: newFontSize, scaleX: 1, scaleY: 1 });
           setItemStates(states => ({
             ...states,
             [item.id]: {
-              x: ((txt.left ?? 0) / scale) - 0,
-              y: ((txt.top ?? 0) / scale) - 0,
-              size: txt.fontSize ?? DEFAULT_SIZE,
+              x: ((txt.left ?? 0) / scale),
+              y: ((txt.top ?? 0) / scale),
+              size: newFontSize,
               rotation: txt.angle ?? 0,
               locked: itemStates[item.id]?.locked ?? false,
               visible: itemStates[item.id]?.visible ?? true,
             },
           }));
+          // También actualiza el tamaño en el objeto React (opcional, si lo usas)
+          if (onUpdateItems) {
+            onUpdateItems(items.map(it =>
+              it.id === item.id ? { ...it, size: newFontSize } : it
+            ));
+          }
         });
         
         // Actualizar el texto cuando se termina de editar
