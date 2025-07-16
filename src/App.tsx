@@ -5,6 +5,7 @@ import { getCurrentUser, getUserRole } from './lib/auth';
 import type { UserRole } from './types';
 import EditPage from './pages/Edit';
 import AdminPage from './pages/Admin';
+import Welcome from './pages/Welcome';
 
 function PrivateRoute({ allowedRoles }: { allowedRoles: UserRole[] }) {
   const [role, setRole] = useState<UserRole | null>(null);
@@ -38,6 +39,9 @@ const App: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
+      <Route element={<PrivateRoute allowedRoles={['admin', 'editor']} />}>
+        <Route path="/welcome" element={<Welcome />} />
+      </Route>
       <Route element={<PrivateRoute allowedRoles={['editor', 'admin']} />}>
         <Route path="/edit" element={<EditPage />} />
       </Route>

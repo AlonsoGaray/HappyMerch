@@ -28,7 +28,7 @@ export default function Login() {
             navigate('/admin', { replace: true });
             return;
           } else if (role === 'editor') {
-            navigate('/edit', { replace: true });
+            navigate('/welcome', { replace: true });
             return;
           }
         }
