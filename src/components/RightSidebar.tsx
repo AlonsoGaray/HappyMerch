@@ -1,7 +1,7 @@
 import { Eye, EyeOff, LockKeyhole, LockKeyholeOpen, SquareSplitHorizontal, StretchHorizontal, Trash } from 'lucide-react';
 import React from 'react';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent, MeasuringStrategy } from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { CanvasItem } from '../types';
@@ -158,8 +158,8 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   return (
     <div className="absolute right-10 top-1/2 -translate-y-1/2 flex gap-2 items-center bg-white/80 shadow-lg rounded-lg p-2 min-w-[56px] z-20">
       {/* Lista de capas con drag and drop */}
-      <div className="flex flex-col gap-1 items-center w-full">
-        <DndContext measuring={{ droppable: { strategy: MeasuringStrategy.Always } }} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
+      <div className="flex flex-col gap-1 items-center w-full max-h-96 px-1 overflow-auto">
+        <DndContext measuring={{ droppable: { strategy: MeasuringStrategy.Always } }} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis, restrictToParentElement ]}>
           <SortableContext items={reversedItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
             {reversedItems.length === 0 && <span className="text-xs text-gray-400">Sin capas</span>}
             {reversedItems.map(item => (
