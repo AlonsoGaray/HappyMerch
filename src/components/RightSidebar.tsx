@@ -1,6 +1,6 @@
 import { Eye, EyeOff, LockKeyhole, LockKeyholeOpen, SquareSplitHorizontal, StretchHorizontal, Trash } from 'lucide-react';
 import React from 'react';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent, MeasuringStrategy } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -55,7 +55,7 @@ function SortableLayer({ item, selectedId, setSelectedId, onFlipX, onToggleVisib
     <div
       ref={setNodeRef}
       style={style}
-      className={`w-24 h-27 flex flex-col items-center pt-0.5 justify-between rounded border ${selectedId === item.id ? 'border-pink-500 bg-pink-100' : 'border-gray-300 bg-gray-200'} transition`}
+      className={`w-24 h-28 flex flex-col items-center pt-0.5 justify-between rounded border ${selectedId === item.id ? 'border-pink-500 bg-pink-100' : 'border-gray-300 bg-gray-200'} transition`}
       onClick={() => setSelectedId(item.id)}
     >
       <button {...attributes} {...listeners} data-dnd-kit-drag-handle><StretchHorizontal size={17} color="white" fill='white' /></button>
@@ -159,7 +159,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
     <div className="absolute right-10 top-1/2 -translate-y-1/2 flex gap-2 items-center bg-white/80 shadow-lg rounded-lg p-2 min-w-[56px] z-20">
       {/* Lista de capas con drag and drop */}
       <div className="flex flex-col gap-1 items-center w-full">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
+        <DndContext measuring={{ droppable: { strategy: MeasuringStrategy.Always } }} sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
           <SortableContext items={reversedItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
             {reversedItems.length === 0 && <span className="text-xs text-gray-400">Sin capas</span>}
             {reversedItems.map(item => (
