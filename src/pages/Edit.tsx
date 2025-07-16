@@ -38,6 +38,7 @@ const EditPage: React.FC = () => {
   const fabricRef = useRef<Canvas | null>(null);
   const [scale, setScale] = useState(1);
   const [showDashedBorder, setShowDashedBorder] = useState(true);
+  const [showLayers, setShowLayers] = useState(true);
 
   const product = PRODUCTS[productIdx];
 
@@ -349,21 +350,24 @@ const EditPage: React.FC = () => {
             selectedId={selectedId}
             onResize={handleResize}
             onToggleDashedBorder={() => setShowDashedBorder(v => !v)}
+            onToggleLayers={() => setShowLayers(v => !v)}
           />
         </div>
-        <RightSidebar
-          selectedId={selectedId}
-          canvasItems={canvasItems}
-          setSelectedId={setSelectedId}
-          onDeleteItem={handleDeleteItem}
-          onMoveItem={handleMoveItem}
-          onFlipX={handleFlipX}
-          onLockToggle={handleLockToggle}
-          isLocked={isLocked}
-          onToggleVisible={handleToggleVisible}
-          isVisible={isVisible}
-          onReorderItems={handleReorderItems}
-        />
+        {showLayers && (
+          <RightSidebar
+            selectedId={selectedId}
+            canvasItems={canvasItems}
+            setSelectedId={setSelectedId}
+            onDeleteItem={handleDeleteItem}
+            onMoveItem={handleMoveItem}
+            onFlipX={handleFlipX}
+            onLockToggle={handleLockToggle}
+            isLocked={isLocked}
+            onToggleVisible={handleToggleVisible}
+            isVisible={isVisible}
+            onReorderItems={handleReorderItems}
+          />
+        )}
       </div>
       <div className="w-full bg-pink-500 pt-6 px-2 pb-2 flex flex-col items-center sticky bottom-0 z-10">
         <div className="relative w-full flex justify-center">

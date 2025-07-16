@@ -3,17 +3,18 @@ import { Layers, SquareDashed, ZoomIn, ZoomOut } from 'lucide-react';
 interface BottomBarProps {
   selectedId: number | null;
   onResize: (id: number, factor: number) => void;
-  onToggleDashedBorder?: () => void;
+  onToggleDashedBorder: () => void;
+  onToggleLayers: () => void;
 }
   
 
-const BottomBar: React.FC<BottomBarProps> = ({ selectedId, onResize, onToggleDashedBorder }) => (
+const BottomBar: React.FC<BottomBarProps> = ({ selectedId, onResize, onToggleDashedBorder, onToggleLayers }) => (
   <div
     className="gap-16 flex justify-around z-50]"
   >
     <button 
       className='rounded-full bg-black p-2 disabled:bg-gray-500'
-      disabled={!selectedId}
+      onClick={onToggleLayers}
     >
       <Layers color='white'/>
     </button>
