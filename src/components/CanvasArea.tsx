@@ -55,6 +55,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
 
   /**
    * Calculate and update the scale factor based on the container size and product image size.
+   * Si el usuario hace zoom manual, no forzar el scale, solo actualizar containerDims.
    */
   const updateScale = useCallback(() => {
     if (!containerRef.current) return;
@@ -63,13 +64,17 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
     const maxH = parent.offsetHeight;
     const baseW = product.imageWidth;
     const baseH = product.imageHeight;
-    // Find the maximum scale that fits the container, but never greater than 1
+    // Solo actualizar containerDims, no tocar scale si fue modificado manualmente
     const scaleW = maxW / baseW;
     const scaleH = maxH / baseH;
-    const newScale = Math.min(scaleW, scaleH, 1);
-    setScale(newScale);
-    setContainerDims({ width: baseW * newScale, height: baseH * newScale });
-  }, [product, setScale]);
+    const maxAutoScale = Math.min(scaleW, scaleH, 1);
+    setContainerDims({ width: baseW * scale, height: baseH * scale });
+    // Si el scale es mayor al máximo permitido por el contenedor, reducirlo
+    if (scale > maxAutoScale) {
+      setScale(maxAutoScale);
+      setContainerDims({ width: baseW * maxAutoScale, height: baseH * maxAutoScale });
+    }
+  }, [product, setScale, scale]);
 
   // Update scale on mount and when window resizes
   useEffect(() => {
@@ -370,7 +375,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
   return (
       <div
         ref={containerRef}
-        className="relative flex max-w-md w-full h-[460px] max-h-[460px] bg-white"
+        className="relative flex max-w-md w-full h-[460px] max-h-[460px] bg-white overflow-hidden"
       >
         {/* Imagen centrada */}
         <img
@@ -390,12 +395,13 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
         <div
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           style={{
-            top: product.canvas.top * scale,
             width: product.canvas.width * scale,
             height: product.canvas.height * scale,
             zIndex: 2,
             pointerEvents: 'none',
             position: 'absolute',
+            // Offset horizontal y vertical para alinear el canvas editable con el producto
+            transform: `translate(-50%, -50%) translateX(${(((product.canvas as any).left ?? 0) + product.canvas.width / 2 - product.imageWidth / 2) * scale}px) translateY(${((product.canvas.top + product.canvas.height / 2) - (product.imageHeight / 2)) * scale}px)`
           }}
         >
           {/* Borde siempre presente, solo cambia visibilidad */}

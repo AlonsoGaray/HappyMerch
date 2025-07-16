@@ -5,10 +5,11 @@ interface BottomBarProps {
   onResize: (id: number, factor: number) => void;
   onToggleDashedBorder: () => void;
   onToggleLayers: () => void;
+  onZoom: (factor: number) => void; // Nueva prop para zoom global
 }
   
 
-const BottomBar: React.FC<BottomBarProps> = ({ selectedId, onResize, onToggleDashedBorder, onToggleLayers }) => (
+const BottomBar: React.FC<BottomBarProps> = ({ selectedId, onResize, onToggleDashedBorder, onToggleLayers, onZoom }) => (
   <div
     className="gap-16 flex justify-around z-50]"
   >
@@ -22,15 +23,15 @@ const BottomBar: React.FC<BottomBarProps> = ({ selectedId, onResize, onToggleDas
       <SquareDashed color='white'/>
     </button>
     <button
-      className='rounded-full bg-black p-2 disabled:bg-gray-500'
-      onClick={() => selectedId !== null && onResize(selectedId, 1.15)}
+      className='rounded-full bg-black p-2'
+      onClick={() => onZoom(1.15)}
       title="Agrandar"
     >
       <ZoomIn color='white'/>
     </button>
     <button
-      className='rounded-full bg-black p-2 disabled:bg-gray-500'
-      onClick={() => selectedId !== null && onResize(selectedId, 0.85)}
+      className='rounded-full bg-black p-2'
+      onClick={() => onZoom(0.85)}
       title="Reducir"
     >
       <ZoomOut color='white'/>
