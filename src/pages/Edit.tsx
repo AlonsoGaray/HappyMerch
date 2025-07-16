@@ -364,7 +364,6 @@ const EditPage: React.FC = () => {
           />
           <BottomBar 
             selectedId={selectedId}
-            onResize={handleResize}
             onToggleDashedBorder={() => setShowDashedBorder(v => !v)}
             onToggleLayers={() => setShowLayers(v => !v)}
             onZoom={handleZoom}

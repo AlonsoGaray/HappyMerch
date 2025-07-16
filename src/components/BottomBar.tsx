@@ -2,14 +2,13 @@ import { Layers, SquareDashed, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface BottomBarProps {
   selectedId: number | null;
-  onResize: (id: number, factor: number) => void;
   onToggleDashedBorder: () => void;
   onToggleLayers: () => void;
   onZoom: (factor: number) => void; // Nueva prop para zoom global
 }
   
 
-const BottomBar: React.FC<BottomBarProps> = ({ selectedId, onResize, onToggleDashedBorder, onToggleLayers, onZoom }) => (
+const BottomBar: React.FC<BottomBarProps> = ({ onToggleDashedBorder, onToggleLayers, onZoom }) => (
   <div
     className="gap-16 flex justify-around z-50]"
   >
