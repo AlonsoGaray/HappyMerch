@@ -326,6 +326,7 @@ const EditPage: React.FC = () => {
         <LeftSidebar 
           selectedId={selectedId}
           onRotate={handleRotate}
+          onResize={handleResize}
           onAlign={handleAlign}
         />
         <div className='flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto'>

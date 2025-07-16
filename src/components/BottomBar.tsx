@@ -23,7 +23,6 @@ const BottomBar: React.FC<BottomBarProps> = ({ selectedId, onResize, onToggleDas
     </button>
     <button
       className='rounded-full bg-black p-2 disabled:bg-gray-500'
-      disabled={!selectedId}
       onClick={() => selectedId !== null && onResize(selectedId, 1.15)}
       title="Agrandar"
     >
@@ -31,7 +30,6 @@ const BottomBar: React.FC<BottomBarProps> = ({ selectedId, onResize, onToggleDas
     </button>
     <button
       className='rounded-full bg-black p-2 disabled:bg-gray-500'
-      disabled={!selectedId}
       onClick={() => selectedId !== null && onResize(selectedId, 0.85)}
       title="Reducir"
     >

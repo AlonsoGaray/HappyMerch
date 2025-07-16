@@ -1,9 +1,10 @@
-import { Grid3x3, RefreshCcw, RotateCw, MoveUpLeft, MoveUpRight, MoveDownLeft, MoveDownRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Circle } from 'lucide-react';
+import { Grid3x3, RefreshCcw, RotateCw, MoveUpLeft, MoveUpRight, MoveDownLeft, MoveDownRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Circle, ZoomIn, ZoomOut } from 'lucide-react';
 import React, { useRef, useState, useEffect } from 'react';
 
 interface LeftSidebarProps {
   selectedId: number | null;
   onRotate: (id: number, angle: number) => void;
+  onResize: (id: number, factor: number) => void;
   onAlign?: (id: number, position: string) => void;
 }
 
@@ -28,6 +29,7 @@ const ALIGN_ICONS: Record<string, React.ReactNode> = {
 const LeftSidebar: React.FC<LeftSidebarProps> = ({
   selectedId,
   onRotate,
+  onResize,
   onAlign,
 }) => {
   const [showPopover, setShowPopover] = useState(false);
@@ -106,6 +108,22 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
         onClick={() => { if (selectedId !== null) onRotate(selectedId, 90); }}
       >
         <RotateCw color='white' />
+      </button>
+      <button
+        className='rounded-full bg-black p-2 disabled:bg-gray-500'
+        disabled={!selectedId}
+        onClick={() => selectedId !== null && onResize(selectedId, 1.15)}
+        title="Agrandar"
+      >
+        <ZoomIn color='white'/>
+      </button>
+      <button
+        className='rounded-full bg-black p-2 disabled:bg-gray-500'
+        disabled={!selectedId}
+        onClick={() => selectedId !== null && onResize(selectedId, 0.85)}
+        title="Reducir"
+      >
+        <ZoomOut color='white'/>
       </button>
     </div>
   );
