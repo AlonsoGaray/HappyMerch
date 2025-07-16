@@ -3,9 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 
 interface LeftSidebarProps {
   selectedId: number | null;
-  onCenter: (id: number) => void;
   onRotate: (id: number, angle: number) => void;
-  // Nuevo: función para alinear
   onAlign?: (id: number, position: string) => void;
 }
 
@@ -29,7 +27,6 @@ const ALIGN_ICONS: Record<string, React.ReactNode> = {
 
 const LeftSidebar: React.FC<LeftSidebarProps> = ({
   selectedId,
-  onCenter,
   onRotate,
   onAlign,
 }) => {
@@ -98,7 +95,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
       <button
         className='rounded-full bg-black p-2 disabled:bg-gray-500'
         disabled={selectedId === null}
-        onClick={() => { if (selectedId !== null) onCenter(selectedId); }}
+        onClick={() => { if (selectedId !== null) onRotate(selectedId, -999); }}
         title="Centrar"
       >
         <RefreshCcw color='white' />

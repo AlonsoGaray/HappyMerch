@@ -110,34 +110,6 @@ const EditPage: React.FC = () => {
       }
     }
   };
-  const handleCenter = (id: number) => {
-    const fabricCanvas = fabricRef.current;
-    if (fabricCanvas) {
-      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
-      if (obj) {
-        // Centro puro del área de edición (canvas)
-        const centerX = product.canvas.width / 2;
-        const centerY = product.canvas.height / 2;
-
-        // Actualizar el estado: x/y es el centro puro
-        setItemStates(states => ({
-          ...states,
-          [id]: {
-            ...states[id],
-            x: centerX,
-            y: centerY,
-          },
-        }));
-
-        // Actualizar el objeto de Fabric.js
-        obj.set({
-          left: centerX * scale,
-          top: centerY * scale,
-        });
-        fabricCanvas.renderAll();
-      }
-    }
-  };
   const handleFlipX = (id: number) => {
     const fabricCanvas = fabricRef.current;
     if (fabricCanvas) {
@@ -326,7 +298,6 @@ const EditPage: React.FC = () => {
       <div className="flex-grow flex relative w-full justify-center items-center overflow-hidden">
         <LeftSidebar 
           selectedId={selectedId}
-          onCenter={handleCenter}
           onRotate={handleRotate}
           onAlign={handleAlign}
         />
