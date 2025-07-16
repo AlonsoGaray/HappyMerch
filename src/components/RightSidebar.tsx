@@ -1,6 +1,6 @@
 import { Eye, EyeOff, LockKeyhole, LockKeyholeOpen, SquareSplitHorizontal, StretchHorizontal, Trash } from 'lucide-react';
 import React from 'react';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -23,9 +23,7 @@ interface RightSidebarProps {
   setSelectedId: (id: number | null) => void;
   onDeleteItem: (id: number) => void;
   onMoveItem: (id: number, direction: 'up' | 'down') => void;
-  onRotate: (id: number, angle: number) => void;
   onFlipX: (id: number) => void;
-  onCenter: (id: number) => void;
   onLockToggle: (id: number) => void;
   isLocked: (id: number) => boolean;
   onToggleVisible: (id: number) => void;
@@ -51,7 +49,6 @@ function SortableLayer({ item, selectedId, setSelectedId, onFlipX, onToggleVisib
     boxShadow: isDragging ? '0 2px 8px rgba(0,0,0,0.15)' : undefined,
     border: isOver && !isDragging ? '2px solid #ec4899' : undefined, // pink-500
     opacity: isDragging ? 0.9 : 1,
-    width: '100%',
   };
 
   return (
@@ -120,10 +117,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   canvasItems,
   setSelectedId,
   onDeleteItem,
-  onMoveItem,
-  onRotate,
   onFlipX,
-  onCenter,
   onLockToggle,
   isLocked,
   onToggleVisible,
@@ -136,44 +130,39 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
     })
   );
 
-  function handleDragEnd(event: any) {
+  function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    if (active.id !== over?.id) {
-      const oldIndex = canvasItems.findIndex(i => i.id === active.id);
-      const newIndex = canvasItems.findIndex(i => i.id === over.id);
-      const newOrder = arrayMove(canvasItems, oldIndex, newIndex);
-      onReorderItems(newOrder);
-    }
+  
+    if (!over || active.id === over.id) return;
+  
+    const oldIndex = canvasItems.findIndex(i => i.id === active.id);
+    const newIndex = canvasItems.findIndex(i => i.id === over.id);
+  
+    if (oldIndex === -1 || newIndex === -1) return;
+  
+    // OJO: debemos usar reversed canvasItems aquí también
+    const reversedItems = [...canvasItems].reverse();
+    const reversedOldIndex = reversedItems.findIndex(i => i.id === active.id);
+    const reversedNewIndex = reversedItems.findIndex(i => i.id === over.id);
+  
+    const newReversedOrder = arrayMove(reversedItems, reversedOldIndex, reversedNewIndex);
+  
+    const newCanvasItems = [...newReversedOrder].reverse(); // revertir para mantener el orden original
+  
+    onReorderItems(newCanvasItems);
   }
+  
+
+  const reversedItems = [...canvasItems].reverse(); 
 
   return (
     <div className="absolute right-10 top-1/2 -translate-y-1/2 flex gap-2 items-center bg-white/80 shadow-lg rounded-lg p-2 min-w-[56px] z-20">
-      {/* Controles para el ítem seleccionado */}
-      {selectedId && (
-        <div className="flex flex-col gap-1 items-center mr-2">
-          <button className="text-xs bg-pink-500 text-white rounded px-2 py-1" onClick={() => onRotate(selectedId, -999)}>
-            Reset 0°
-          </button>
-          <button className="text-xs bg-pink-500 text-white rounded px-2 py-1" onClick={() => onRotate(selectedId, 90)}>
-            Rotate 90°
-          </button>
-          <button className="text-xs bg-pink-500 text-white rounded px-2 py-1 mt-1" onClick={() => onCenter(selectedId)}>
-            Centrar
-          </button>
-          <button className="w-9 h-9 flex items-center justify-center bg-gray-500 text-white rounded-full text-xl mb-1 shadow" onClick={() => onMoveItem(selectedId, 'up')} title="Subir capa">
-            ⬆️
-          </button>
-          <button className="w-9 h-9 flex items-center justify-center bg-gray-500 text-white rounded-full text-xl mb-2 shadow" onClick={() => onMoveItem(selectedId, 'down')} title="Bajar capa">
-            ⬇️
-          </button>
-        </div>
-      )}
       {/* Lista de capas con drag and drop */}
       <div className="flex flex-col gap-1 items-center w-full">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
-          <SortableContext items={canvasItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
-            {canvasItems.length === 0 && <span className="text-xs text-gray-400">Sin capas</span>}
-            {canvasItems.map(item => (
+          <SortableContext items={reversedItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
+            {reversedItems.length === 0 && <span className="text-xs text-gray-400">Sin capas</span>}
+            {reversedItems.map(item => (
               <SortableLayer
                 key={item.id}
                 item={item}
@@ -186,7 +175,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 isLocked={isLocked}
                 onDeleteItem={onDeleteItem}
               />
-            )).reverse()}
+            ))}
           </SortableContext>
         </DndContext>
       </div>

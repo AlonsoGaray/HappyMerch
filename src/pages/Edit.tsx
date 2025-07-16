@@ -270,7 +270,8 @@ const EditPage: React.FC = () => {
       <div className="flex-grow flex relative w-full justify-center items-center overflow-hidden">
         <LeftSidebar 
           selectedId={selectedId}
-          onFlipX={handleFlipX}
+          onCenter={handleCenter}
+          onRotate={handleRotate}
         />
         <div className='flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto'>
           <CanvasArea
@@ -300,9 +301,7 @@ const EditPage: React.FC = () => {
           setSelectedId={setSelectedId}
           onDeleteItem={handleDeleteItem}
           onMoveItem={handleMoveItem}
-          onRotate={handleRotate}
           onFlipX={handleFlipX}
-          onCenter={handleCenter}
           onLockToggle={handleLockToggle}
           isLocked={isLocked}
           onToggleVisible={handleToggleVisible}
