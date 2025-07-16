@@ -242,6 +242,61 @@ const EditPage: React.FC = () => {
     setCanvasItems(newOrder);
   };
 
+  // Handler para alinear el elemento en el canvas según la posición 3x3
+  const handleAlign = (id: number, position: string) => {
+    const fabricCanvas = fabricRef.current;
+    if (!fabricCanvas) return;
+    const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
+    if (!obj) return;
+
+    // Dimensiones del canvas de edición
+    const canvasW = product.canvas.width;
+    const canvasH = product.canvas.height;
+    // Centro puro
+    const centerX = canvasW / 2;
+    const centerY = canvasH / 2;
+    // Bordes
+    const left = 0;
+    const top = 0;
+    const right = canvasW;
+    const bottom = canvasH;
+
+    // Tamaño del objeto (asumimos centrado)
+    const objW = (obj.width ?? 0) * (obj.scaleX ?? 1);
+    const objH = (obj.height ?? 0) * (obj.scaleY ?? 1);
+
+    // Calcula la nueva posición
+    let x = centerX;
+    let y = centerY;
+    if (position.includes('left')) x = left + objW / 2;
+    if (position.includes('right')) x = right - objW / 2;
+    if (position === 'left') x = left + objW / 2;
+    if (position === 'right') x = right - objW / 2;
+    if (position === 'top-left' || position === 'top' || position === 'top-right') y = top + objH / 2;
+    if (position === 'bottom-left' || position === 'bottom' || position === 'bottom-right') y = bottom - objH / 2;
+    if (position === 'top') x = centerX;
+    if (position === 'bottom') x = centerX;
+    if (position === 'left') y = centerY;
+    if (position === 'right') y = centerY;
+    if (position === 'center') { x = centerX; y = centerY; }
+
+    // Actualiza el estado
+    setItemStates(states => ({
+      ...states,
+      [id]: {
+        ...states[id],
+        x,
+        y,
+      },
+    }));
+    // Actualiza el objeto en Fabric.js
+    obj.set({
+      left: x * scale,
+      top: y * scale,
+    });
+    fabricCanvas.renderAll();
+  };
+
   // Asegurarse de que cada item tenga un estado inicial, incluyendo visible
   useEffect(() => {
     setItemStates(prev => {
@@ -272,6 +327,7 @@ const EditPage: React.FC = () => {
           selectedId={selectedId}
           onCenter={handleCenter}
           onRotate={handleRotate}
+          onAlign={handleAlign}
         />
         <div className='flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto'>
           <CanvasArea
