@@ -32,6 +32,22 @@ export const ELEMENTS: any[] = [
     name: 'Element 4',
     image: '/elements/HM - Elemento 4.svg',
   },
+  {
+    name: 'Element 5',
+    image: '/elements/HM - Elemento 1.svg',
+  },
+  {
+    name: 'Element 6',
+    image: '/elements/HM - Elemento 2.svg',
+  },
+  {
+    name: 'Element 7',
+    image: '/elements/HM - Elemento 3.svg',
+  },
+  {
+    name: 'Element 8',
+    image: '/elements/HM - Elemento 4.svg',
+  },
 ];
 
 export const FONDOS: any[] = [

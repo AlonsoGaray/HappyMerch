@@ -10,13 +10,13 @@ type Fondo = {
 };
 
 const BgSelector: React.FC<BgSelectorProps> = ({ fondos, selectedIdx, onSelect }) => (
-  <div className="flex gap-8 h-32 max-h-32 items-center">
+  <div className="flex gap-8 h-44 max-h-44 items-center w-full justify-center pl-14">
     {/* Opción "Sin fondo" */}
     <button
       className={`rounded-lg p-1 transition ${selectedIdx === -1 ? 'ring-4 ring-pink-300' : ''}`}
       onClick={() => onSelect(-1)}
     >
-      <div className="w-24 h-28 bg-white rounded-lg flex items-center justify-center">
+      <div className="w-28 h-28 bg-white rounded-lg flex items-center justify-center">
         <span className="text-gray-500 text-xs text-center">Sin fondo</span>
       </div>
     </button>
@@ -29,7 +29,7 @@ const BgSelector: React.FC<BgSelectorProps> = ({ fondos, selectedIdx, onSelect }
         <img
           src={bg.image}
           alt={bg.name}
-          className="w-24 h-28 object-contain bg-white rounded-lg"
+          className="w-28 h-28 object-contain bg-white rounded-lg"
           draggable={false}
         />
       </button>

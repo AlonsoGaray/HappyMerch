@@ -53,7 +53,7 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
   }, [selectedTextItem]);
 
   return (
-    <div className="flex gap-2 w-full max-w-lg items-center h-32 max-h-32">
+    <div className="flex gap-2 w-full max-w-lg self-center items-center h-44 max-h-44 justify-center">
       <div className='flex flex-col w-2/3 gap-2'>
         <div className="flex w-full gap-2 items-center">
           <input

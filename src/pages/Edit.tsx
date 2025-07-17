@@ -330,7 +330,7 @@ const EditPage: React.FC = () => {
   }, [canvasItems, setItemStates]);
 
   return (
-    <div className="min-h-dvh flex flex-col bg-gray-100 max-h-dvh">
+    <div className="min-h-dvh flex flex-col bg-gray-100 max-h-dvh items-center pb-5">
       <NavBar />
       <div className="flex-grow flex relative w-full justify-center items-center overflow-hidden">
         <LeftSidebar 
@@ -377,10 +377,12 @@ const EditPage: React.FC = () => {
           />
         )}
       </div>
-      <div className="w-full bg-pink-500 pt-6 px-2 pb-2 flex flex-col items-center sticky bottom-0 z-10">
-        <div className="relative w-full flex justify-center">
-          <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
+      <div className="relative w-full bg-pink-500 pt-2 px-4 pb-2 flex flex-col max-w-11/12 overflow-visible rounded-xl scroll">
+        <Tabs
+          tabs={TABS}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
         {activeTab === 'product' && (
           <ProductSelector products={PRODUCTS} selectedIdx={productIdx} onSelect={setProductIdx} />
         )}

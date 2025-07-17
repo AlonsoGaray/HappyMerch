@@ -11,7 +11,7 @@ type ProductSelectorProps = {
 };
 
 const ProductSelector: React.FC<ProductSelectorProps> = ({ products, selectedIdx, onSelect }) => (
-  <div className="flex gap-8 h-32 max-h-32 items-center">
+  <div className="flex gap-8 h-44 max-h-44 items-center w-full justify-center pl-14">
     {products.map((prod, idx) => (
       <button
         key={prod.image}
@@ -21,7 +21,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ products, selectedIdx
         <img
           src={prod.image}
           alt={prod.name}
-          className="w-24 h-28 object-contain bg-white rounded-lg"
+          className="w-28 h-28 object-contain bg-white rounded-lg"
           draggable={false}
         />
       </button>

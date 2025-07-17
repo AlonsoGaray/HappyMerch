@@ -7,7 +7,7 @@ type TabsProps = {
 };
 
 const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabChange }) => (
-  <div className="absolute -top-10 flex gap-2">
+  <div className="absolute -top-5 flex gap-2">
   {tabs.map(tab => (
     <button
       key={tab.key}
