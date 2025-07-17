@@ -13,6 +13,48 @@ export const PRODUCTS = [
     imageHeight: 400,
     canvas: { width: 190, height: 230, top: 80, left: 100 },
   },
+  {
+    name: 'Bolso',
+    image: '/products/bolso.png',
+    imageWidth: 400,
+    imageHeight: 400,
+    canvas: { width: 183, height: 190, top: 175, left: 110 },
+  },
+  {
+    name: 'Mochila',
+    image: '/products/mochila.png',
+    imageWidth: 400,
+    imageHeight: 400,
+    canvas: { width: 190, height: 230, top: 80, left: 100 },
+  },
+  {
+    name: 'Bolso',
+    image: '/products/bolso.png',
+    imageWidth: 400,
+    imageHeight: 400,
+    canvas: { width: 183, height: 190, top: 175, left: 110 },
+  },
+  {
+    name: 'Mochila',
+    image: '/products/mochila.png',
+    imageWidth: 400,
+    imageHeight: 400,
+    canvas: { width: 190, height: 230, top: 80, left: 100 },
+  },
+  {
+    name: 'Bolso',
+    image: '/products/bolso.png',
+    imageWidth: 400,
+    imageHeight: 400,
+    canvas: { width: 183, height: 190, top: 175, left: 110 },
+  },
+  {
+    name: 'Mochila',
+    image: '/products/mochila.png',
+    imageWidth: 400,
+    imageHeight: 400,
+    canvas: { width: 190, height: 230, top: 80, left: 100 },
+  },
 ];
 
 export const ELEMENTS: any[] = [

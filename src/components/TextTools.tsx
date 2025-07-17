@@ -53,7 +53,7 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
   }, [selectedTextItem]);
 
   return (
-    <div className="flex gap-2 w-full max-w-lg self-center items-center h-44 max-h-44 justify-center">
+    <div className="flex gap-2 w-full max-w-lg self-center items-center h-44 max-h-44 justify-center pt-5">
       <div className='flex flex-col w-2/3 gap-2'>
         <div className="flex w-full gap-2 items-center">
           <input
@@ -73,7 +73,7 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
             <Plus strokeWidth={3} color='oklch(65.6% 0.241 354.308)' size={28} />
           </button>
         </div>
-        <div className="scroll flex flex-wrap gap-2 mb-2 w-full justify-between max-h-20 overflow-y-scroll pr-1">
+        <div className="scroll flex flex-wrap gap-2 mb-2 w-full justify-between max-h-24 overflow-y-scroll pr-1">
           {FONTS.map(f => (
             <button
             key={f.className}
