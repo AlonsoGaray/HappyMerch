@@ -285,19 +285,12 @@ const EditPage: React.FC = () => {
     fabricCanvas.renderAll();
   };
 
-  // Lógica para limitar el zoom para que el canvas+producto no se salgan del div padre
+  // Lógica para permitir zoom infinito con pan
   const handleZoom = (factor: number) => {
-    // Suponemos que el contenedor tiene un tamaño fijo de 460x460 (como en CanvasArea)
-    const containerMaxW = 460;
-    const containerMaxH = 460;
-    const baseW = product.imageWidth;
-    const baseH = product.imageHeight;
     // El nuevo scale propuesto
     let newScale = scale * factor;
-    // Limitar el scale para que el producto+canvas no se salga del contenedor
-    const maxScale = Math.min(containerMaxW / baseW, containerMaxH / baseH, 2); // 2x como máximo
-    const minScale = Math.min(1, maxScale, 0.2); // No menos de 0.2x
-    if (newScale > maxScale) newScale = maxScale;
+    // Solo limitar el zoom mínimo para que no desaparezca completamente
+    const minScale = 0.1; // No menos de 0.1x
     if (newScale < minScale) newScale = minScale;
     setScale(newScale);
   };
@@ -356,7 +349,6 @@ const EditPage: React.FC = () => {
             itemStates={itemStates}
             setItemStates={setItemStates}
             scale={scale}
-            setScale={setScale}
             selectedBg={selectedBgIdx >= 0 && selectedBgIdx < FONDOS.length ? FONDOS[selectedBgIdx] : null}
             onUpdateItems={setCanvasItems}
             showDashedBorder={showDashedBorder}

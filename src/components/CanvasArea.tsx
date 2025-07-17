@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Canvas, Image, IText } from 'fabric';
+import React, { useEffect, useRef, useState } from 'react';
+import { Canvas, Image, IText, Point } from 'fabric';
 import type { CanvasItem } from '../types';
 
 // Define también aquí el tipo CanvasTextItem y CanvasAnyItem
@@ -18,7 +18,7 @@ type CanvasAreaProps = {
   product: {
     name: string;
     image: string;
-    canvas: { width: number; height: number; top: number };
+    canvas: { width: number; height: number; top: number; left: number };
     imageWidth: number;
     imageHeight: number;
   };
@@ -29,7 +29,6 @@ type CanvasAreaProps = {
   itemStates: { [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number } };
   setItemStates: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number } }>>;
   scale: number;
-  setScale: React.Dispatch<React.SetStateAction<number>>;
   selectedBg?: { name: string; image: string } | null;
   onUpdateItems?: (updatedItems: CanvasAnyItem[]) => void;
   showDashedBorder?: boolean;
@@ -39,60 +38,109 @@ type CanvasAreaProps = {
 const DEFAULT_SIZE = 60;
 
 // CanvasArea component renders the product image, a canvas for editing, and a sidebar for layer controls.
-const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId, setSelectedId, fabricRef, itemStates, setItemStates, scale, setScale, selectedBg, onUpdateItems, showDashedBorder, isVisible }) => {
+const CanvasArea: React.FC<CanvasAreaProps> = ({ 
+  product, 
+  items = [], 
+  selectedId, 
+  setSelectedId, 
+  fabricRef, 
+  itemStates, 
+  setItemStates, 
+  scale, 
+  selectedBg, 
+  onUpdateItems, 
+  showDashedBorder, 
+  isVisible 
+}) => {
   const isControlled = typeof selectedId !== 'undefined' && typeof setSelectedId === 'function';
   const [internalSelectedId, internalSetSelectedId] = useState<number | null>(null);
   const actualSelectedId = isControlled ? selectedId : internalSelectedId;
   const actualSetSelectedId = isControlled ? setSelectedId! : internalSetSelectedId;
+  
   // Canvas DOM element reference
   const canvasElRef = useRef<HTMLCanvasElement>(null);
   // Product image reference
   const imgRef = useRef<HTMLImageElement>(null);
   // Container div reference
   const containerRef = useRef<HTMLDivElement>(null);
-  // Container dimensions for scaling
-  const [containerDims, setContainerDims] = useState({ width: 0, height: 0 });
+  // Pan state for dragging the view
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  // Pan drag state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  /**
-   * Calculate and update the scale factor based on the container size and product image size.
-   * Si el usuario hace zoom manual, no forzar el scale, solo actualizar containerDims.
-   */
-  const updateScale = useCallback(() => {
-    if (!containerRef.current) return;
-    const parent = containerRef.current;
-    const maxW = parent.offsetWidth;
-    const maxH = parent.offsetHeight;
-    const baseW = product.imageWidth;
-    const baseH = product.imageHeight;
-    // Solo actualizar containerDims, no tocar scale si fue modificado manualmente
-    const scaleW = maxW / baseW;
-    const scaleH = maxH / baseH;
-    const maxAutoScale = Math.min(scaleW, scaleH, 1);
-    setContainerDims({ width: baseW * scale, height: baseH * scale });
-    // Si el scale es mayor al máximo permitido por el contenedor, reducirlo
-    if (scale > maxAutoScale) {
-      setScale(maxAutoScale);
-      setContainerDims({ width: baseW * maxAutoScale, height: baseH * maxAutoScale });
-    }
-  }, [product, setScale, scale]);
 
-  // Update scale on mount and when window resizes
+
+  // Reset pan when product changes
   useEffect(() => {
-    updateScale();
-    window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
-  }, [updateScale]);
+    setPan({ x: 0, y: 0 });
+  }, [product]);
+
+  // Pan handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Solo activar pan si no se está haciendo clic en el canvas o sus elementos
+    const target = e.target as HTMLElement;
+    const canvasContainer = target.closest('[data-canvas-container]');
+    if (!canvasContainer) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+      e.preventDefault();
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+      e.preventDefault();
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== 'CANVAS') {
+        setIsDragging(true);
+        setDragStart({ 
+          x: e.touches[0].clientX - pan.x, 
+          y: e.touches[0].clientY - pan.y 
+        });
+      }
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isDragging && e.touches.length === 1) {
+      e.preventDefault(); // Prevent scrolling
+      setPan({
+        x: e.touches[0].clientX - dragStart.x,
+        y: e.touches[0].clientY - dragStart.y,
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
 
   /**
-   * Initialize Fabric.js canvas when the component mounts or when canvas size/scale changes.
+   * Initialize Fabric.js canvas when the component mounts or when canvas size changes.
    */
   useEffect(() => {
     if (!canvasElRef.current) return;
     const fabricCanvas = new Canvas(canvasElRef.current, {
-      width: product.canvas.width * scale,
-      height: product.canvas.height * scale,
+      width: product.canvas.width,
+      height: product.canvas.height,
       selection: true,
       editable: true,
+      enableRetinaScaling: true,
+      imageSmoothingEnabled: true,
     });
     fabricRef.current = fabricCanvas;
     fabricCanvas.backgroundColor = 'rgba(0,0,0,0)';
@@ -100,7 +148,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
     return () => {
       fabricCanvas.dispose();
     };
-  }, [product.canvas.width, product.canvas.height, scale, fabricRef]);
+  }, [product.canvas.width, product.canvas.height, fabricRef]);
 
   /**
    * Sync items with Fabric.js canvas. Handles adding images, updating their properties, and selection events.
@@ -122,8 +170,8 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
     if (selectedBg) {
       Image.fromURL(selectedBg.image).then((bgImg) => {
         // Escalado exacto al canvas
-        const scaleX = (product.canvas.width * scale) / (bgImg.width ?? 1);
-        const scaleY = (product.canvas.height * scale) / (bgImg.height ?? 1);
+        const scaleX = product.canvas.width / (bgImg.width ?? 1);
+        const scaleY = product.canvas.height / (bgImg.height ?? 1);
         bgImg.set({
           left: 0,
           top: 0,
@@ -168,11 +216,11 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
         else if (fontFamily === 'font-georgia') fontFamily = 'Georgia';
 
         const txt = new IText(textItem.text, {
-          left: (itemStates[item.id]?.x ?? textItem.x) * scale,
-          top: (itemStates[item.id]?.y ?? textItem.y) * scale,
+          left: itemStates[item.id]?.x ?? textItem.x,
+          top: itemStates[item.id]?.y ?? textItem.y,
           fontFamily: fontFamily,
           fill: textItem.color,
-          fontSize: (itemStates[item.id]?.size ?? DEFAULT_SIZE),
+          fontSize: itemStates[item.id]?.size ?? DEFAULT_SIZE,
           angle: itemStates[item.id]?.rotation ?? 0,
           selectable: !(itemStates[item.id]?.locked),
           hasControls: !(itemStates[item.id]?.locked),
@@ -200,22 +248,19 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
         }
         // Configurar eventos de edición
         txt.on('mousedblclick', () => {
-          console.log('Doble clic detectado en texto');
           (txt as any).enterEditing();
           (txt as any).selectAll();
         });
-        
         // Actualizar estado cuando se modifica la posición/tamaño
         txt.on('modified', () => {
-          // Guardar fontSize, scaleX y scaleY
           const newFontSize = txt.fontSize ?? DEFAULT_SIZE;
           const newScaleX = txt.scaleX ?? 1;
           const newScaleY = txt.scaleY ?? 1;
           setItemStates(states => ({
             ...states,
             [item.id]: {
-              x: ((txt.left ?? 0) / scale),
-              y: ((txt.top ?? 0) / scale),
+              x: txt.left ?? 0,
+              y: txt.top ?? 0,
               size: newFontSize,
               rotation: txt.angle ?? 0,
               locked: itemStates[item.id]?.locked ?? false,
@@ -224,24 +269,19 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
               scaleY: newScaleY,
             },
           }));
-          // También actualiza el tamaño en el objeto React (opcional, si lo usas)
           if (onUpdateItems) {
             onUpdateItems(items.map(it =>
               it.id === item.id ? { ...it, size: newFontSize } : it
             ));
           }
         });
-        
-        // Actualizar el texto cuando se termina de editar
         (txt as any).on('editing:exited', () => {
-          // Actualizar el texto en el item original
           const updatedItems = items.map(item => {
             if (item.id === textItem.id) {
               return { ...item, text: txt.text || '' };
             }
             return item;
           });
-          // Actualizar los items en el componente padre
           if (onUpdateItems) {
             onUpdateItems(updatedItems);
           }
@@ -249,10 +289,10 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
       } else {
         const img = await Image.fromURL((item as any).src);
         img.set({
-          left: (itemStates[item.id]?.x ?? (item as any).x) * scale,
-          top: (itemStates[item.id]?.y ?? (item as any).y) * scale,
-          scaleX: ((itemStates[item.id]?.size ?? DEFAULT_SIZE) / (img.width ?? DEFAULT_SIZE)) * scale,
-          scaleY: ((itemStates[item.id]?.size ?? DEFAULT_SIZE) / (img.height ?? DEFAULT_SIZE)) * scale,
+          left: itemStates[item.id]?.x ?? (item as any).x,
+          top: itemStates[item.id]?.y ?? (item as any).y,
+          scaleX: ((itemStates[item.id]?.size ?? DEFAULT_SIZE) / (img.width ?? DEFAULT_SIZE)),
+          scaleY: ((itemStates[item.id]?.size ?? DEFAULT_SIZE) / (img.height ?? DEFAULT_SIZE)),
           angle: itemStates[item.id]?.rotation ?? 0,
           selectable: !(itemStates[item.id]?.locked),
           hasControls: !(itemStates[item.id]?.locked),
@@ -269,16 +309,15 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
           cornerColor: '#fff',
           cornerStrokeColor: '#fff',
         });
-        // Ocultar controles laterales, dejar solo esquinas
         img.setControlsVisibility({
-          mt: false, // middle top
-          mb: false, // middle bottom
-          ml: false, // middle left
-          mr: false, // middle right
-          tl: true,  // top left
-          tr: true,  // top right
-          bl: true,  // bottom left
-          br: true,  // bottom right
+          mt: false,
+          mb: false,
+          ml: false,
+          mr: false,
+          tl: true,
+          tr: true,
+          bl: true,
+          br: true,
         });
         (img as any).id = item.id;
         fabricCanvas.add(img);
@@ -289,9 +328,9 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
           setItemStates(states => ({
             ...states,
             [item.id]: {
-              x: ((img.left ?? 0) / scale),
-              y: ((img.top ?? 0) / scale),
-              size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)) / scale,
+              x: img.left ?? 0,
+              y: img.top ?? 0,
+              size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)),
               rotation: img.angle ?? 0,
               locked: itemStates[item.id]?.locked ?? false,
               visible: itemStates[item.id]?.visible ?? true,
@@ -302,6 +341,14 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
         });
       }
     });
+    // APLICAR ZOOM NATIVO DE FABRIC
+    fabricCanvas.setZoom(1); // Mantener zoom 1ya que el contenedor se escala
+    // Centrar el viewport después de hacer zoom
+    const center = {
+      x: (fabricCanvas.getWidth() / 2) - (fabricCanvas.getWidth() / 2),
+      y: (fabricCanvas.getHeight() / 2) - (fabricCanvas.getHeight() / 2),
+    };
+    fabricCanvas.absolutePan(new Point(-center.x, -center.y));
     fabricCanvas.renderAll();
 
     // Selection event listeners for updating selectedId
@@ -376,48 +423,74 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({ product, items = [], selectedId
       <div
         ref={containerRef}
         className="relative flex max-w-md w-full h-[460px] max-h-[460px] bg-white overflow-hidden"
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
       >
-        {/* Imagen centrada */}
-        <img
-          src={product.image}
-          alt={product.name}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 object-contain pointer-events-none select-none"
-          draggable={false}
-          style={{
-            width: containerDims.width,
-            height: containerDims.height,
-            display: 'block',
-            zIndex: 1,
-          }}
-          ref={imgRef}
-        />
-        {/* Canvas overlay centrado */}
+        {/* Contenedor que agrupa imagen y canvas y aplica la transformación */}
         <div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           style={{
-            width: product.canvas.width * scale,
-            height: product.canvas.height * scale,
-            zIndex: 2,
-            pointerEvents: 'none',
+            width: product.imageWidth,
+            height: product.imageHeight,
             position: 'absolute',
-            // Offset horizontal y vertical para alinear el canvas editable con el producto
-            transform: `translate(-50%, -50%) translateX(${(((product.canvas as any).left ?? 0) + product.canvas.width / 2 - product.imageWidth / 2) * scale}px) translateY(${((product.canvas.top + product.canvas.height / 2) - (product.imageHeight / 2)) * scale}px)`
+            left: '50%',
+            top: '50%',
+            transform: `translate(-50%, -50%) translateX(${pan.x}px) translateY(${pan.y}px) scale(${scale})`, // <--- volver a agregar scale aquí
+            transformOrigin: 'top left',
+            zIndex: 1,
+            pointerEvents: 'none',
           }}
         >
-          {/* Borde siempre presente, solo cambia visibilidad */}
+          {/* Imagen centrada, sin transform individual */}
+          <img
+            src={product.image}
+            alt={product.name}
+            className="absolute left-0 top-0 object-contain pointer-events-none select-none"
+            draggable={false}
+            style={{
+              width: product.imageWidth,
+              height: product.imageHeight,
+              display: 'block',
+              zIndex: 1,
+              position: 'absolute',
+              left: 0,
+              top: 0,
+            }}
+            ref={imgRef}
+          />
+          {/* Canvas overlay centrado, sin transform individual */}
           <div
-            className={`absolute left-0 top-0 w-full h-full border-2 border-dashed border-red-500 rounded z-10 ${showDashedBorder ? '' : 'invisible'}`}
-            key="border"
-            style={{ pointerEvents: 'none' }}
-          />
-          <canvas
-            ref={canvasElRef}
-            width={product.canvas.width * scale}
-            height={product.canvas.height * scale}
-            className="absolute left-0 top-0"
-            style={{ zIndex: 2, background: 'transparent', pointerEvents: 'auto', width: '100%', height: '100%' }}
-            key="canvas"
-          />
+            data-canvas-container
+            style={{
+              width: product.canvas.width,
+              height: product.canvas.height,
+              position: 'absolute',
+              left: product.canvas.left,
+              top: product.canvas.top,
+              zIndex: 2,
+              pointerEvents: 'auto',
+            }}
+          >
+            {/* Borde siempre presente, solo cambia visibilidad */}
+            <div
+              className={`absolute left-0 top-0 w-full h-full border-2 border-dashed border-red-500 rounded z-10 ${showDashedBorder ? '' : 'invisible'}`}
+              key="border"
+              style={{ pointerEvents: 'none' }}
+            />
+            <canvas
+              ref={canvasElRef}
+              width={product.canvas.width}
+              height={product.canvas.height}
+              className="absolute left-0 top-0"
+              style={{ zIndex: 2, background: 'transparent', pointerEvents: 'auto', width: '100%', height: '100%' }}
+              key="canvas"
+            />
+          </div>
         </div>
       </div>
   );
