@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
 import React, { useState } from 'react';
+import { useVerticalDragScroll, useSafeItemSelect } from '../utils/ScrollUtils';
 
 const FONTS = [
   { label: 'Pacifico', className: 'font-pacifico' },
@@ -52,6 +53,18 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
     }
   }, [selectedTextItem]);
 
+  // Scroll vertical y selección segura para fuentes
+  const dragScroll = useVerticalDragScroll();
+  const safeSelect = useSafeItemSelect({
+    onSelect: (idx) => {
+      setFont(FONTS[idx].className);
+      if (selectedTextItem && onUpdateTextItem) {
+        onUpdateTextItem(selectedTextItem.id, { font: FONTS[idx].className });
+      }
+    },
+    dragScroll,
+  });
+
   return (
     <div className="flex gap-2 w-full max-w-lg self-center items-center h-44 max-h-44 justify-center pt-5">
       <div className='flex flex-col w-2/3 gap-2'>
@@ -73,18 +86,26 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
             <Plus strokeWidth={3} color='oklch(65.6% 0.241 354.308)' size={28} />
           </button>
         </div>
-        <div className="scroll flex flex-wrap gap-2 mb-2 w-full justify-between max-h-24 overflow-y-scroll pr-1">
-          {FONTS.map(f => (
+        <div
+          className="scroll flex flex-wrap gap-2 mb-2 w-full justify-between max-h-24 overflow-y-scroll pr-1 cursor-grab active:cursor-grabbing select-none"
+          ref={dragScroll.scrollRef}
+          onMouseDown={dragScroll.onMouseDown}
+          onMouseMove={dragScroll.onMouseMove}
+          onMouseUp={dragScroll.onMouseUp}
+          onMouseLeave={dragScroll.onMouseLeave}
+          onTouchStart={dragScroll.onTouchStart}
+          onTouchMove={dragScroll.onTouchMove}
+          onTouchEnd={dragScroll.onTouchEnd}
+        >
+          {FONTS.map((f, idx) => (
             <button
-            key={f.className}
-            className={`px-3 py-1 w-[48%] rounded ${font === f.className ? 'bg-pink-200' : 'bg-pink-300'} ${f.className}`}
-              onClick={() => {
-                setFont(f.className);
-                if (selectedTextItem && onUpdateTextItem) {
-                  onUpdateTextItem(selectedTextItem.id, { font: f.className });
-                }
-              }}
-              >
+              key={f.className}
+              className={`px-3 py-1 w-[48%] rounded ${font === f.className ? 'bg-pink-200' : 'bg-pink-300'} ${f.className}`}
+              onMouseDown={e => safeSelect.handleMouseDown(e, idx)}
+              onMouseUp={e => safeSelect.handleMouseUp(e, idx)}
+              onTouchStart={e => safeSelect.handleTouchStart(e, idx)}
+              onTouchEnd={e => safeSelect.handleTouchEnd(e, idx)}
+            >
               {f.label}
             </button>
           ))}
