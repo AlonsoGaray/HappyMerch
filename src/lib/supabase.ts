@@ -187,3 +187,81 @@ export async function renameFileInBucket<T = any>(
   return updateData;
 }
 
+/**
+ * Uploads multiple files to a Supabase storage bucket in bulk, using original filenames,
+ * generates public URLs, and saves records in the specified table.
+ *
+ * @param bucketName - The name of the Supabase storage bucket
+ * @param files - Array of files to upload (File or Blob)
+ * @param tableName - The name of the table to insert the records into
+ * @param visible - Boolean value for the 'visible' field (applied to all files)
+ * @returns Array of inserted records from the table, or throws an error on failure
+ *
+ * The table must have at least the columns: 'name' (string), 'url' (string), and 'visible' (boolean).
+ * Each file will be uploaded with its original filename.
+ */
+export async function uploadFilesInBulk<T = any>({
+  bucketName,
+  files,
+  tableName,
+  visible
+}: {
+  bucketName: string;
+  files: (File | Blob)[];
+  tableName: string;
+  visible: boolean;
+}): Promise<T[]> {
+  const results: T[] = [];
+  const errors: string[] = [];
+
+  // Process files sequentially to avoid overwhelming the API
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const fileName = file instanceof File ? file.name : `file_${i}_${Date.now()}`;
+    
+    try {
+      // 1. Upload to bucket
+      const { data: _uploadData, error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(fileName, file, { upsert: true });
+      
+      if (uploadError) {
+        errors.push(`Error uploading ${fileName}: ${uploadError.message}`);
+        continue;
+      }
+
+      // 2. Get public URL
+      const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(fileName);
+      const url = publicUrlData?.publicUrl;
+      
+      if (!url) {
+        errors.push(`No se pudo obtener la URL pública para ${fileName}`);
+        continue;
+      }
+
+      // 3. Save in table
+      const { data: insertData, error: insertError } = await supabase
+        .from(tableName)
+        .insert([{ name: fileName, url, visible }])
+        .select()
+        .single();
+      
+      if (insertError) {
+        errors.push(`Error saving ${fileName} to database: ${insertError.message}`);
+        continue;
+      }
+
+      results.push(insertData);
+    } catch (error) {
+      errors.push(`Unexpected error processing ${fileName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  // If there were any errors, throw them as a combined error
+  if (errors.length > 0) {
+    throw new Error(`Bulk upload completed with errors:\n${errors.join('\n')}`);
+  }
+
+  return results;
+}
+

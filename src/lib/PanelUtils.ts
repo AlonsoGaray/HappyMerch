@@ -1,4 +1,4 @@
-import { uploadFileToBucket, updateTableRow, deleteTableRowAndFile, renameFileInBucket } from "@/lib/supabase"
+import { uploadFileToBucket, updateTableRow, deleteTableRowAndFile, renameFileInBucket, uploadFilesInBulk } from "@/lib/supabase"
 
 export function handleFileChangeGeneric(setNewItem: (cb: (prev: any) => any) => void) {
   return (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +49,40 @@ export async function handleAddItemWithUpload({
   } catch (err) {
     // Puedes agregar manejo de error aquí
     alert("Error al subir el archivo o guardar el registro")
+    console.error(err)
+  }
+}
+
+export async function handleBulkUpload({
+  bucketName,
+  tableName,
+  files,
+  setItems,
+  setShowModal,
+  visible = false,
+}: {
+  bucketName: string,
+  tableName: string,
+  files: File[],
+  setItems: (cb: (prev: any[]) => any[]) => void,
+  setShowModal: (open: boolean) => void,
+  visible?: boolean,
+}) {
+  if (files.length === 0) return
+  
+  try {
+    const records = await uploadFilesInBulk({
+      bucketName,
+      files,
+      tableName,
+      visible,
+    })
+    
+    setItems((prev) => [...prev, ...records])
+    setShowModal(false)
+  } catch (err) {
+    // Puedes agregar manejo de error aquí
+    alert("Error al subir los archivos o guardar los registros")
     console.error(err)
   }
 }
