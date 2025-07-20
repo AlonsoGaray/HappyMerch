@@ -29,7 +29,7 @@ type CanvasAreaProps = {
   itemStates: { [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number } };
   setItemStates: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number } }>>;
   scale: number;
-  selectedBg?: { name: string; image: string } | null;
+  selectedBg?: { name: string; url: string } | null;
   onUpdateItems?: (updatedItems: CanvasAnyItem[]) => void;
   showDashedBorder?: boolean;
   isVisible: (id: number) => boolean;
@@ -168,7 +168,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
 
     // Agregar fondo si hay uno seleccionado
     if (selectedBg) {
-      Image.fromURL(selectedBg.image).then((bgImg) => {
+      Image.fromURL(selectedBg.url).then((bgImg) => {
         // Escalado exacto al canvas
         const scaleX = product.canvas.width / (bgImg.width ?? 1);
         const scaleY = product.canvas.height / (bgImg.height ?? 1);

@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react"
 import type { ReactNode } from "react"
 import { getTableRows } from "@/lib/supabase"
 
-interface AdminData {
+interface GlobalData {
   products: any[]
   elements: any[]
   backgrounds: any[]
@@ -10,17 +10,17 @@ interface AdminData {
   error: string | null
 }
 
-interface AdminDataContextType {
-  data: AdminData
+interface GlobalDataContextType {
+  data: GlobalData
   refreshData: () => Promise<void>
   refreshTable: (tableName: string) => Promise<void>
   updateItem: (tableName: string, itemId: string, updates: { name?: string; visible?: boolean }) => void
 }
 
-const AdminDataContext = createContext<AdminDataContextType | undefined>(undefined)
+const GlobalDataContext = createContext<GlobalDataContextType | undefined>(undefined)
 
-export function AdminDataProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<AdminData>({
+export function GlobalDataProvider({ children }: { children: ReactNode }) {
+  const [data, setData] = useState<GlobalData>({
     products: [],
     elements: [],
     backgrounds: [],
@@ -46,7 +46,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
         error: null
       })
     } catch (error) {
-      console.error('Error loading admin data:', error)
+      console.error('Error loading global data:', error)
       setData(prev => ({
         ...prev,
         loading: false,
@@ -79,7 +79,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
                       tableName === 'element' ? 'elements' : 
                       tableName === 'background' ? 'backgrounds' : 'products'
       
-      const currentArray = prev[tableKey as keyof AdminData] as any[]
+      const currentArray = prev[tableKey as keyof GlobalData] as any[]
       if (!currentArray) return prev
       
       return {
@@ -96,16 +96,16 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AdminDataContext.Provider value={{ data, refreshData, refreshTable, updateItem }}>
+    <GlobalDataContext.Provider value={{ data, refreshData, refreshTable, updateItem }}>
       {children}
-    </AdminDataContext.Provider>
+    </GlobalDataContext.Provider>
   )
 }
 
-export function useAdminData() {
-  const context = useContext(AdminDataContext)
+export function useGlobalData() {
+  const context = useContext(GlobalDataContext)
   if (context === undefined) {
-    throw new Error('useAdminData must be used within an AdminDataProvider')
+    throw new Error('useGlobalData must be used within a GlobalDataProvider')
   }
   return context
 } 

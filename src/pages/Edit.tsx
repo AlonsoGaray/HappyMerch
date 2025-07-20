@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import NavBar from '../components/NavBar';
-import { PRODUCTS, ELEMENTS, TABS, FONDOS } from '../constants';
+import { PRODUCTS, TABS } from '../constants';
 import ProductSelector from '../components/ProductSelector';
 import ElementSelector from '../components/ElementSelector';
 import TextTools from '../components/TextTools';
@@ -12,6 +12,7 @@ import { Canvas } from 'fabric';
 import BgSelector from '../components/BgSelector';
 import BottomBar from '../components/BottomBar';
 import LeftSidebar from '../components/LeftSideBar';
+import { useGlobalData } from '../contexts/AdminDataContext';
 
 const DEFAULT_SIZE = 60;
 
@@ -29,6 +30,7 @@ type CanvasTextItem = {
 type CanvasAnyItem = CanvasItem | CanvasTextItem;
 
 const EditPage: React.FC = () => {
+  const { data } = useGlobalData();
   const [productIdx, setProductIdx] = useState(0);
   const [activeTab, setActiveTab] = useState('product');
   const [selectedBgIdx, setSelectedBgIdx] = useState(-1);
@@ -40,10 +42,10 @@ const EditPage: React.FC = () => {
   const [scale, setScale] = useState(1);
   const [showDashedBorder, setShowDashedBorder] = useState(true);
   const [showLayers, setShowLayers] = useState(true);
-
   const product = PRODUCTS[productIdx];
+  const visibleBackgrounds = data.backgrounds.filter((bg: any) => bg.visible);
 
-  const handleAddElement = (element: { name: string; image: string }) => {
+  const handleAddElement = (element: { id: string; name: string; url: string; visible: boolean }) => {
     const newId = Date.now();
     // Centro puro del área de edición
     const centerX = product.canvas.width / 2;
@@ -52,7 +54,7 @@ const EditPage: React.FC = () => {
       ...items,
       {
         id: newId,
-        src: element.image,
+        src: element.url,
         x: centerX,
         y: centerY,
       },
@@ -349,7 +351,7 @@ const EditPage: React.FC = () => {
             itemStates={itemStates}
             setItemStates={setItemStates}
             scale={scale}
-            selectedBg={selectedBgIdx >= 0 && selectedBgIdx < FONDOS.length ? FONDOS[selectedBgIdx] : null}
+            selectedBg={selectedBgIdx >= 0 && selectedBgIdx < visibleBackgrounds.length ? visibleBackgrounds[selectedBgIdx] : null}
             onUpdateItems={setCanvasItems}
             showDashedBorder={showDashedBorder}
             isVisible={isVisible}
@@ -387,10 +389,10 @@ const EditPage: React.FC = () => {
           <ProductSelector products={PRODUCTS} selectedIdx={productIdx} onSelect={setProductIdx} />
         )}
         {activeTab === 'fondos' && (
-          <BgSelector fondos={FONDOS} selectedIdx={selectedBgIdx} onSelect={setSelectedBgIdx} />
+          <BgSelector selectedIdx={selectedBgIdx} onSelect={setSelectedBgIdx} />
         )}
         {activeTab === 'elements' && (
-          <ElementSelector elements={ELEMENTS} onSelect={handleAddElement} />
+          <ElementSelector onSelect={handleAddElement} />
         )}
         {activeTab === 'text' && <TextTools
           onAddText={handleAddText}

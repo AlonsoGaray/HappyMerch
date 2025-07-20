@@ -35,7 +35,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ products, selectedIdx
     >
       {products.map((prod, idx) => (
         <div
-          key={prod.image}
+          key={prod.name}
           className={`flex flex-col items-center cursor-pointer ${selectedIdx === idx ? 'ring-4 ring-pink-300' : ''}`}
           onMouseDown={e => safeSelect.handleMouseDown(e, idx)}
           onMouseUp={e => safeSelect.handleMouseUp(e, idx)}

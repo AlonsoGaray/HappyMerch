@@ -26,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { GenericAdminPanel } from "@/components/admin/GenericAdminPanel"
-import { AdminDataProvider } from "@/contexts/AdminDataContext"
 import { Switch } from "@/components/ui/switch"
 
 const sidebarItems = [
@@ -52,8 +51,7 @@ export default function AdminPanel() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   return (
-    <AdminDataProvider>
-      <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
         {/* Sidebar */}
         <div
           className={`${sidebarCollapsed ? "w-16" : "w-64"} bg-white shadow-lg border-r flex-shrink-0 transition-all duration-300 ease-in-out`}
@@ -377,6 +375,5 @@ export default function AdminPanel() {
           </main>
         </div>
       </div>
-    </AdminDataProvider>
   )
 }

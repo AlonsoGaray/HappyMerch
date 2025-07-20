@@ -1,23 +1,45 @@
 import { useHorizontalDragScroll, useSafeItemSelect } from '../utils/ScrollUtils';
 import React from 'react';
+import { useGlobalData } from '../contexts/AdminDataContext';
 
-type Fondo = {
-    name: string;
-    image: string;
-  };
-  
-  type BgSelectorProps = {
-  fondos: Fondo[];
+type Background = {
+  id: string;
+  name: string;
+  url: string;
+  visible: boolean;
+};
+
+type BgSelectorProps = {
   selectedIdx: number;
   onSelect: (idx: number) => void;
 };
 
-const BgSelector: React.FC<BgSelectorProps> = ({ fondos, selectedIdx, onSelect }) => {
+const BgSelector: React.FC<BgSelectorProps> = ({ selectedIdx, onSelect }) => {
+  const { data } = useGlobalData();
   const dragScroll = useHorizontalDragScroll();
   const safeSelect = useSafeItemSelect({
     onSelect,
     dragScroll,
   });
+
+  // Filter only visible backgrounds
+  const visibleBackgrounds = data.backgrounds.filter((bg: Background) => bg.visible);
+
+  if (data.loading) {
+    return (
+      <div className="flex gap-8 h-44 max-h-44 items-center justify-center w-full">
+        <span className="text-white/70">Cargando fondos...</span>
+      </div>
+    );
+  }
+
+  if (data.error) {
+    return (
+      <div className="flex gap-8 h-44 max-h-44 items-center justify-center w-full">
+        <span className="text-red-400">Error: {data.error}</span>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -44,9 +66,10 @@ const BgSelector: React.FC<BgSelectorProps> = ({ fondos, selectedIdx, onSelect }
           <span className="text-gray-500 text-xs text-center">Sin fondo</span>
         </div>
       </button>
-      {fondos.map((bg, idx) => (
+      {visibleBackgrounds.length === 0 && <span className="text-white/70">No hay fondos disponibles</span>}
+      {visibleBackgrounds.map((bg: Background, idx) => (
         <button
-          key={bg.image}
+          key={bg.id}
           className={`rounded-lg p-1 transition ${selectedIdx === idx ? 'ring-4 ring-pink-300' : ''}`}
           onMouseDown={e => safeSelect.handleMouseDown(e, idx)}
           onMouseUp={e => safeSelect.handleMouseUp(e, idx)}
@@ -54,7 +77,7 @@ const BgSelector: React.FC<BgSelectorProps> = ({ fondos, selectedIdx, onSelect }
           onTouchEnd={e => safeSelect.handleTouchEnd(e, idx)}
         >
           <img
-            src={bg.image}
+            src={bg.url}
             alt={bg.name}
             className="w-28 h-28 object-contain bg-white rounded-lg"
             draggable={false}
@@ -64,5 +87,5 @@ const BgSelector: React.FC<BgSelectorProps> = ({ fondos, selectedIdx, onSelect }
     </div>
   );
 };
-  
-  export default BgSelector; 
+
+export default BgSelector; 

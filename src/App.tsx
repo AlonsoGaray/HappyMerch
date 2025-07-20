@@ -6,6 +6,7 @@ import type { UserRole } from './types';
 import EditPage from './pages/Edit';
 import AdminPage from './pages/Admin';
 import Welcome from './pages/Welcome';
+import { GlobalDataProvider } from './contexts/AdminDataContext';
 
 function PrivateRoute({ allowedRoles }: { allowedRoles: UserRole[] }) {
   const [role, setRole] = useState<UserRole | null>(null);
@@ -37,19 +38,21 @@ function PrivateRoute({ allowedRoles }: { allowedRoles: UserRole[] }) {
 
 const App: React.FC = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route element={<PrivateRoute allowedRoles={['admin', 'editor']} />}>
-        <Route path="/welcome" element={<Welcome />} />
-      </Route>
-      <Route element={<PrivateRoute allowedRoles={['editor', 'admin']} />}>
-        <Route path="/edit" element={<EditPage />} />
-      </Route>
-      <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-        <Route path="/admin" element={<AdminPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <GlobalDataProvider>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route element={<PrivateRoute allowedRoles={['admin', 'editor']} />}>
+          <Route path="/welcome" element={<Welcome />} />
+        </Route>
+        <Route element={<PrivateRoute allowedRoles={['editor', 'admin']} />}>
+          <Route path="/edit" element={<EditPage />} />
+        </Route>
+        <Route element={<PrivateRoute allowedRoles={['admin']} />}>
+          <Route path="/admin" element={<AdminPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </GlobalDataProvider>
   );
 };
 

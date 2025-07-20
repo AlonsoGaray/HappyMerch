@@ -7,7 +7,7 @@ import { SearchInput } from "@/components/ui/search-input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { handleAddItemWithUpload, handleVisibilityToggle, handleDeleteItem, handleNameChange, handleBulkUpload } from "@/lib/PanelUtils"
-import { useAdminData } from "@/contexts/AdminDataContext"
+import { useGlobalData } from "@/contexts/AdminDataContext"
 
 interface GenericAdminPanelProps {
   tableName: string
@@ -33,7 +33,7 @@ export function GenericAdminPanel({
   modalTitle,
   loadingText
 }: GenericAdminPanelProps) {
-  const { data, refreshTable, updateItem } = useAdminData()
+  const { data, refreshTable, updateItem } = useGlobalData()
   const [searchTerm, setSearchTerm] = useState("")
   const [showAddModal, setShowAddModal] = useState(false)
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
@@ -273,7 +273,7 @@ export function GenericAdminPanel({
         {filteredItems.map((item) => (
           <Card key={item.id}>
             <CardContent className="items-center flex flex-col">
-              <img src={item.url} alt={item.name} className="h-24 w-24 object-cover rounded mb-2" />
+              <img src={item.url} alt={item.name} className="h-28 w-2h-28 object-cover rounded mb-2" />
               {editingItemId === item.id ? (
                 <div className="flex items-center space-x-1 mb-2">
                   <Input
