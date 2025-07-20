@@ -58,3 +58,47 @@ export async function uploadFileToBucket({
   return insertData;
 }
 
+/**
+ * Retrieves all rows from a specified table in Supabase.
+ *
+ * @param tableName - The name of the table to query
+ * @returns An array of all rows from the table, or throws an error on failure
+ */
+export async function getTableRows<T = any>(tableName: string): Promise<T[]> {
+  const { data, error } = await supabase
+    .from(tableName)
+    .select('*');
+  
+  if (error) throw error;
+  
+  return data || [];
+}
+
+/**
+ * Updates the 'name' and/or 'visible' fields of a row in a specified table.
+ *
+ * @param tableName - The name of the table to update
+ * @param id - The ID of the row to update
+ * @param updates - Object containing the fields to update (name and/or visible)
+ * @returns The updated row, or throws an error on failure
+ */
+export async function updateTableRow<T = any>(
+  tableName: string,
+  id: number,
+  updates: {
+    name?: string;
+    visible?: boolean;
+  }
+): Promise<T> {
+  const { data, error } = await supabase
+    .from(tableName)
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  
+  return data;
+}
+

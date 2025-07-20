@@ -1,4 +1,4 @@
-import { uploadFileToBucket } from "@/lib/supabase"
+import { uploadFileToBucket, updateTableRow } from "@/lib/supabase"
 
 export function handleFileChangeGeneric(setNewItem: (cb: (prev: any) => any) => void) {
   return (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,5 +50,30 @@ export async function handleAddItemWithUpload({
     // Puedes agregar manejo de error aquí
     alert("Error al subir el archivo o guardar el registro")
     console.error(err)
+  }
+}
+
+
+export const handleVisibilityToggle = async <T extends { id: number; visible: boolean }>(
+  itemId: number,
+  tableName: string,
+  items: T[],
+  setItems: (cb: (prev: T[]) => T[]) => void
+) => {
+  try {
+    const item = items.find(item => item.id === itemId)
+    if (!item) return
+    
+    const newVisible = !item.visible
+    
+    // Update in database
+    await updateTableRow(tableName, itemId, { visible: newVisible })
+    
+    // Update local state
+    setItems(prev => prev.map(item => 
+      item.id === itemId ? { ...item, visible: newVisible } : item
+    ))
+  } catch (error) {
+    console.error(`Error updating ${tableName} visibility:`, error)
   }
 }
