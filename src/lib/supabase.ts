@@ -102,3 +102,88 @@ export async function updateTableRow<T = any>(
   return data;
 }
 
+/**
+ * Deletes a row from a table and the corresponding file from a storage bucket.
+ *
+ * @param tableName - The name of the table to delete the row from
+ * @param bucketName - The name of the storage bucket to delete the file from
+ * @param id - The ID of the row to delete
+ * @returns The deleted row data, or throws an error on failure
+ */
+export async function deleteTableRowAndFile<T = any>(
+  tableName: string,
+  bucketName: string,
+  id: string
+): Promise<T> {
+  // 1. First, get the row data to extract the file name
+  const { data: rowData, error: fetchError } = await supabase
+    .from(tableName)
+    .select('name')
+    .eq('id', id)
+    .single();
+  
+  if (fetchError) throw fetchError;
+  if (!rowData?.name) throw new Error('No se encontró el nombre del archivo en la fila');
+
+  // 2. Delete the file from storage bucket
+  const { error: storageError } = await supabase.storage
+    .from(bucketName)
+    .remove([rowData.name]);
+  
+  if (storageError) throw storageError;
+
+  // 3. Delete the row from the table
+  const { data: deletedRow, error: deleteError } = await supabase
+    .from(tableName)
+    .delete()
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (deleteError) throw deleteError;
+
+  return deletedRow;
+}
+
+/**
+ * Renames a file in a storage bucket and updates the corresponding database record.
+ *
+ * @param bucketName - The name of the storage bucket
+ * @param tableName - The name of the table containing the file record
+ * @param id - The ID of the row to update
+ * @param oldName - The current file name in the bucket
+ * @param newName - The new file name for the bucket
+ * @returns The updated row data, or throws an error on failure
+ */
+export async function renameFileInBucket<T = any>(
+  bucketName: string,
+  tableName: string,
+  id: string,
+  oldName: string,
+  newName: string
+): Promise<T> {
+  // 1. Move/rename the file directly in the bucket
+  const { data: _moveData, error: moveError } = await supabase.storage
+    .from(bucketName)
+    .move(oldName, newName);
+  
+  if (moveError) throw moveError;
+
+  // 2. Get the new public URL
+  const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(newName);
+  const newUrl = publicUrlData?.publicUrl;
+  if (!newUrl) throw new Error('No se pudo obtener la nueva URL pública del archivo');
+
+  // 3. Update the database record with new name and URL
+  const { data: updateData, error: updateError } = await supabase
+    .from(tableName)
+    .update({ name: newName, url: newUrl })
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (updateError) throw updateError;
+
+  return updateData;
+}
+

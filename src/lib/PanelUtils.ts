@@ -1,4 +1,4 @@
-import { uploadFileToBucket, updateTableRow } from "@/lib/supabase"
+import { uploadFileToBucket, updateTableRow, deleteTableRowAndFile, renameFileInBucket } from "@/lib/supabase"
 
 export function handleFileChangeGeneric(setNewItem: (cb: (prev: any) => any) => void) {
   return (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +53,6 @@ export async function handleAddItemWithUpload({
   }
 }
 
-
 export const handleVisibilityToggle = async <T extends { id: string; visible: boolean }>(
   itemId: string,
   tableName: string,
@@ -76,3 +75,66 @@ export const handleVisibilityToggle = async <T extends { id: string; visible: bo
     console.error(`Error updating ${tableName} visibility:`, error)
   }
 }
+
+export const handleNameChange = async <T extends { id: string; name: string }>(
+  itemId: string,
+  tableName: string,
+  bucketName: string,
+  items: T[],
+  setItems: (cb: (prev: T[]) => T[]) => void,
+  newName: string
+) => {
+  try {
+    const item = items.find(item => item.id === String(itemId))
+    if (!item) return
+    
+    if (!newName.trim()) {
+      console.error("El nombre no puede estar vacío")
+      return
+    }
+
+    const oldName = item.name
+    const trimmedNewName = newName.trim()
+    
+    // If the name hasn't changed, don't do anything
+    if (oldName === trimmedNewName) return
+    
+    // Update in database
+    await updateTableRow(tableName, itemId, { name: trimmedNewName })
+    
+    // Rename file in bucket
+    await renameFileInBucket(
+      bucketName,
+      tableName,
+      itemId,
+      oldName,
+      trimmedNewName
+    )
+    
+    // Update local state
+    setItems(prev => prev.map(item => 
+      item.id === String(itemId) ? { ...item, name: trimmedNewName } : item
+    ))
+  } catch (error) {
+    console.error(`Error updating ${tableName} name:`, error)
+  }
+}
+
+export const handleDeleteItem = async <T extends { id: string; name: string }>(
+  itemId: string,
+  tableName: string,
+  bucketName: string,
+  setItems: (cb: (prev: T[]) => T[]) => void
+) => {
+  try {
+    // Delete from database and storage
+    await deleteTableRowAndFile(tableName, bucketName, itemId)
+    
+    // Update local state
+    setItems(prev => prev.filter(item => item.id !== String(itemId)))
+  } catch (error) {
+    console.error(`Error deleting ${tableName} item:`, error)
+    alert("Error al eliminar el elemento")
+  }
+}
+
