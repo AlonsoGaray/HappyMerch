@@ -33,7 +33,7 @@ export function GenericAdminPanel({
   modalTitle,
   loadingText
 }: GenericAdminPanelProps) {
-  const { data, refreshTable } = useAdminData()
+  const { data, refreshTable, updateItem } = useAdminData()
   const [searchTerm, setSearchTerm] = useState("")
   const [showAddModal, setShowAddModal] = useState(false)
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
@@ -105,15 +105,20 @@ export function GenericAdminPanel({
           tableName,
           bucketName,
           items,
-          () => {}, // We'll refresh the table instead
+          (setItemsCallback) => {
+            // Update the local data without refreshing the entire table
+            setItemsCallback(items)
+            // Update the context directly
+            updateItem(tableName, editingItemId, { name: editingName.trim() })
+          },
           editingName
         )
-        await refreshTable(tableName)
         setEditingItemId(null)
         setEditingName("")
       } catch (error) {
         console.error("Error al cambiar el nombre:", error)
-        // You could add a toast notification here
+        // Refresh table only on error to ensure consistency
+        await refreshTable(tableName)
       }
     }
   }
@@ -151,9 +156,23 @@ export function GenericAdminPanel({
   }
 
   const handleVisibilityChange = async (itemId: string) => {
-    await handleVisibilityToggle(itemId, tableName, items, () => {})
-    // Refrescar solo la tabla específica después de cambiar visibilidad
-    await refreshTable(tableName)
+    try {
+      const item = items.find(item => item.id === itemId)
+      if (!item) return
+      
+      const newVisible = !item.visible
+      
+      await handleVisibilityToggle(itemId, tableName, items, (setItemsCallback) => {
+        // Update the local data without refreshing the entire table
+        setItemsCallback(items)
+        // Update the context directly
+        updateItem(tableName, itemId, { visible: newVisible })
+      })
+    } catch (error) {
+      console.error("Error al cambiar visibilidad:", error)
+      // Refresh table only on error to ensure consistency
+      await refreshTable(tableName)
+    }
   }
 
   const handleBulkUploadFiles = async () => {

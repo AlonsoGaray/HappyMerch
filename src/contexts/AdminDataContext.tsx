@@ -14,6 +14,7 @@ interface AdminDataContextType {
   data: AdminData
   refreshData: () => Promise<void>
   refreshTable: (tableName: string) => Promise<void>
+  updateItem: (tableName: string, itemId: string, updates: { name?: string; visible?: boolean }) => void
 }
 
 const AdminDataContext = createContext<AdminDataContextType | undefined>(undefined)
@@ -72,12 +73,30 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const updateItem = (tableName: string, itemId: string, updates: { name?: string; visible?: boolean }) => {
+    setData(prev => {
+      const tableKey = tableName === 'product' ? 'products' : 
+                      tableName === 'element' ? 'elements' : 
+                      tableName === 'background' ? 'backgrounds' : 'products'
+      
+      const currentArray = prev[tableKey as keyof AdminData] as any[]
+      if (!currentArray) return prev
+      
+      return {
+        ...prev,
+        [tableKey]: currentArray.map((item: any) => 
+          item.id === itemId ? { ...item, ...updates } : item
+        )
+      }
+    })
+  }
+
   useEffect(() => {
     loadAllData()
   }, [])
 
   return (
-    <AdminDataContext.Provider value={{ data, refreshData, refreshTable }}>
+    <AdminDataContext.Provider value={{ data, refreshData, refreshTable, updateItem }}>
       {children}
     </AdminDataContext.Provider>
   )
