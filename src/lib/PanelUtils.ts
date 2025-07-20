@@ -54,24 +54,23 @@ export async function handleAddItemWithUpload({
 }
 
 
-export const handleVisibilityToggle = async <T extends { id: number; visible: boolean }>(
-  itemId: number,
+export const handleVisibilityToggle = async <T extends { id: string; visible: boolean }>(
+  itemId: string,
   tableName: string,
   items: T[],
   setItems: (cb: (prev: T[]) => T[]) => void
 ) => {
   try {
-    const item = items.find(item => item.id === itemId)
+    const item = items.find(item => item.id === String(itemId))
     if (!item) return
     
     const newVisible = !item.visible
-    
     // Update in database
     await updateTableRow(tableName, itemId, { visible: newVisible })
     
     // Update local state
     setItems(prev => prev.map(item => 
-      item.id === itemId ? { ...item, visible: newVisible } : item
+      item.id === String(itemId) ? { ...item, visible: newVisible } : item
     ))
   } catch (error) {
     console.error(`Error updating ${tableName} visibility:`, error)
