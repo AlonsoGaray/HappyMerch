@@ -21,8 +21,8 @@ type CanvasAreaProps = {
   selectedId?: number | null;
   setSelectedId?: (id: number | null) => void;
   fabricRef: React.MutableRefObject<Canvas | null>;
-  itemStates: { [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number } };
-  setItemStates: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number } }>>;
+  itemStates: { [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } };
+  setItemStates: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } }>>;
   scale: number;
   selectedBg?: { name: string; url: string } | null;
   onUpdateItems?: (updatedItems: CanvasAnyItem[]) => void;
@@ -237,6 +237,8 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
           // Nuevo: aplicar scaleX y scaleY si existen
           scaleX: itemStates[item.id]?.scaleX ?? 1,
           scaleY: itemStates[item.id]?.scaleY ?? 1,
+          // Asegura que flipX se aplique
+          flipX: itemStates[item.id]?.flipX ?? false,
         });
         (txt as any).id = item.id;
         fabricCanvas.add(txt);
@@ -264,6 +266,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
               visible: itemStates[item.id]?.visible ?? true,
               scaleX: newScaleX,
               scaleY: newScaleY,
+              flipX: itemStates[item.id]?.flipX ?? false,
             },
           }));
           if (onUpdateItems) {
@@ -305,6 +308,8 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
           cornerStyle: 'circle',
           cornerColor: '#fff',
           cornerStrokeColor: '#fff',
+          // Asegura que flipX se aplique
+          flipX: itemStates[item.id]?.flipX ?? false,
         }), {crossOrigin: 'anonymous'};
         img.setControlsVisibility({
           mt: false,
@@ -333,6 +338,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
               visible: itemStates[item.id]?.visible ?? true,
               scaleX: img.scaleX ?? 1,
               scaleY: img.scaleY ?? 1,
+              flipX: img.flipX ?? false,
             },
           }));
         });
@@ -398,16 +404,21 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
             visible: true,
             scaleX: 1,
             scaleY: 1,
+            flipX: false,
           };
           changed = true;
         } else {
-          // Asegura que scaleX y scaleY existan en todos los items
+          // Asegura que scaleX, scaleY y flipX existan en todos los items
           if (updated[item.id].scaleX === undefined) {
             updated[item.id].scaleX = 1;
             changed = true;
           }
           if (updated[item.id].scaleY === undefined) {
             updated[item.id].scaleY = 1;
+            changed = true;
+          }
+          if (updated[item.id].flipX === undefined) {
+            updated[item.id].flipX = false;
             changed = true;
           }
         }

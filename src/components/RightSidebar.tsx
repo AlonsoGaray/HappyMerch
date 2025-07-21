@@ -22,7 +22,6 @@ interface RightSidebarProps {
   setSelectedId: (id: number | null) => void;
   onDeleteItem: (id: number) => void;
   onMoveItem: (id: number, direction: 'up' | 'down') => void;
-  onFlipX: (id: number) => void;
   onLockToggle: (id: number) => void;
   isLocked: (id: number) => boolean;
   onToggleVisible: (id: number) => void;
@@ -35,7 +34,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   canvasItems,
   setSelectedId,
   onDeleteItem,
-  onFlipX,
   onLockToggle,
   isLocked,
   onToggleVisible,
@@ -86,7 +84,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 item={item}
                 selectedId={selectedId}
                 setSelectedId={setSelectedId}
-                onFlipX={onFlipX}
                 onToggleVisible={onToggleVisible}
                 isVisible={isVisible}
                 onLockToggle={onLockToggle}

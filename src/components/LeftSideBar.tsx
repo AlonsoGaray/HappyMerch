@@ -1,4 +1,4 @@
-import { Grid3x3, RefreshCcw, RotateCw, MoveUpLeft, MoveUpRight, MoveDownLeft, MoveDownRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Circle, ZoomIn, ZoomOut } from 'lucide-react';
+import { Grid3x3, RefreshCcw, RotateCw, MoveUpLeft, MoveUpRight, MoveDownLeft, MoveDownRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Circle, ZoomIn, ZoomOut, SquareSplitHorizontal } from 'lucide-react';
 import React, { useRef, useState, useEffect } from 'react';
 
 interface LeftSidebarProps {
@@ -6,6 +6,7 @@ interface LeftSidebarProps {
   onRotate: (id: number, angle: number) => void;
   onResize: (id: number, factor: number) => void;
   onAlign?: (id: number, position: string) => void;
+  onFlipX: (id: number) => void;
 }
 
 const ALIGN_GRID = [
@@ -29,6 +30,7 @@ const ALIGN_ICONS: Record<string, React.ReactNode> = {
 const LeftSidebar: React.FC<LeftSidebarProps> = ({
   selectedId,
   onRotate,
+  onFlipX,
   onResize,
   onAlign,
 }) => {
@@ -94,6 +96,14 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
           </div>
         )}
       </div>
+      <button 
+        className='rounded-full bg-black p-2 disabled:bg-gray-500'
+        disabled={selectedId === null}
+        onClick={() => { if (selectedId !== null) onFlipX(selectedId); }}
+        title="Flip horizontal"
+      >
+        <SquareSplitHorizontal color="white" />
+      </button>
       <button
         className='rounded-full bg-black p-2 disabled:bg-gray-500'
         disabled={selectedId === null}

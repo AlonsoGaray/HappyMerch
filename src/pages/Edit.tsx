@@ -36,8 +36,8 @@ const EditPage: React.FC = () => {
   const [selectedBgIdx, setSelectedBgIdx] = useState(-1);
   const [canvasItems, setCanvasItems] = useState<CanvasAnyItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  // Cambia la definición de itemStates para incluir scaleX y scaleY
-  const [itemStates, setItemStates] = useState<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number } }>({});
+  // Cambia la definición de itemStates para incluir scaleX, scaleY y flipX
+  const [itemStates, setItemStates] = useState<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } }>({});
   const fabricRef = useRef<Canvas | null>(null);
   const [scale, setScale] = useState(1);
   const [showDashedBorder, setShowDashedBorder] = useState(true);
@@ -62,7 +62,7 @@ const EditPage: React.FC = () => {
       },
     ]);
     setSelectedId(newId);
-    // Inicializa el estado de escala para el nuevo elemento con tamaño pequeño
+    // Inicializa el estado de escala para el nuevo elemento con tamaño pequeño y flipX en false
     setItemStates(states => ({
       ...states,
       [newId]: {
@@ -74,6 +74,7 @@ const EditPage: React.FC = () => {
         visible: true,
         scaleX: 0.5,
         scaleY: 0.5,
+        flipX: false,
       },
     }));
   };
@@ -130,11 +131,21 @@ const EditPage: React.FC = () => {
     }
   };
   const handleFlipX = (id: number) => {
+    setItemStates(states => {
+      const prev = states[id]?.flipX ?? false;
+      return {
+        ...states,
+        [id]: {
+          ...states[id],
+          flipX: !prev,
+        },
+      };
+    });
     const fabricCanvas = fabricRef.current;
     if (fabricCanvas) {
       const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
       if (obj) {
-        obj.set('flipX', !obj.flipX);
+        obj.set('flipX', !(obj.flipX));
         fabricCanvas.renderAll();
       }
     }
@@ -332,7 +343,7 @@ const EditPage: React.FC = () => {
     setScale(newScale);
   };
 
-  // Asegurarse de que cada item tenga un estado inicial, incluyendo visible
+  // Asegurarse de que cada item tenga un estado inicial, incluyendo visible y flipX
   useEffect(() => {
     setItemStates(prev => {
       const updated = { ...prev };
@@ -348,10 +359,11 @@ const EditPage: React.FC = () => {
             visible: true,
             scaleX: 1,
             scaleY: 1,
+            flipX: false,
           };
           changed = true;
         } else {
-          // Asegura que scaleX y scaleY existan en todos los items
+          // Asegura que scaleX, scaleY y flipX existan en todos los items
           if (updated[item.id].scaleX === undefined) {
             updated[item.id].scaleX = 1;
             changed = true;
@@ -360,11 +372,26 @@ const EditPage: React.FC = () => {
             updated[item.id].scaleY = 1;
             changed = true;
           }
+          if (updated[item.id].flipX === undefined) {
+            updated[item.id].flipX = false;
+            changed = true;
+          }
         }
       });
       return changed ? updated : prev;
     });
   }, [canvasItems, setItemStates]);
+
+  // Sincroniza flipX de itemStates con Fabric.js al cambiar de selección
+  useEffect(() => {
+    if (selectedId !== null && fabricRef.current) {
+      const obj = fabricRef.current.getObjects().find(o => (o as any).id === selectedId);
+      if (obj && itemStates[selectedId] && obj.flipX !== itemStates[selectedId].flipX) {
+        obj.set('flipX', itemStates[selectedId].flipX);
+        fabricRef.current.renderAll();
+      }
+    }
+  }, [selectedId, itemStates, fabricRef]);
 
   return (
     <div className="min-h-dvh flex flex-col bg-gray-100 max-h-dvh items-center pb-5">
@@ -375,6 +402,7 @@ const EditPage: React.FC = () => {
           onRotate={handleRotate}
           onResize={handleResize}
           onAlign={handleAlign}
+          onFlipX={handleFlipX}
         />
         <div className='flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto'>
           <CanvasArea
@@ -405,7 +433,6 @@ const EditPage: React.FC = () => {
             setSelectedId={setSelectedId}
             onDeleteItem={handleDeleteItem}
             onMoveItem={handleMoveItem}
-            onFlipX={handleFlipX}
             onLockToggle={handleLockToggle}
             isLocked={isLocked}
             onToggleVisible={handleToggleVisible}

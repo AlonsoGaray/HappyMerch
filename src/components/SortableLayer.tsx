@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, EyeOff, LockKeyhole, LockKeyholeOpen, SquareSplitHorizontal, StretchHorizontal, Trash } from 'lucide-react';
+import { Eye, EyeOff, LockKeyhole, LockKeyholeOpen, StretchHorizontal, Trash } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { CanvasItem } from '../types';
@@ -19,7 +19,6 @@ interface SortableLayerProps {
   item: CanvasAnyItem;
   selectedId: number | null;
   setSelectedId: (id: number | null) => void;
-  onFlipX: (id: number) => void;
   onToggleVisible: (id: number) => void;
   isVisible: (id: number) => boolean;
   onLockToggle: (id: number) => void;
@@ -27,7 +26,7 @@ interface SortableLayerProps {
   onDeleteItem: (id: number) => void;
 }
 
-const SortableLayer: React.FC<SortableLayerProps> = ({ item, selectedId, setSelectedId, onFlipX, onToggleVisible, isVisible, onLockToggle, isLocked, onDeleteItem }) => {
+const SortableLayer: React.FC<SortableLayerProps> = ({ item, selectedId, setSelectedId, onToggleVisible, isVisible, onLockToggle, isLocked, onDeleteItem }) => {
   const {
     attributes,
     listeners,
@@ -67,15 +66,6 @@ const SortableLayer: React.FC<SortableLayerProps> = ({ item, selectedId, setSele
         </span>
       )}
       <div className='flex bg-gray-500 w-full h-6 rounded-b items-center justify-around px-0.5'>
-        <button 
-          onClick={(e) => { 
-            e.stopPropagation(); 
-            onFlipX(item.id);
-          }}
-          title="Flip horizontal"
-        >
-          <SquareSplitHorizontal size={17} color="white" />
-        </button>
         <button 
           onClick={(e) => { 
             e.stopPropagation(); 
