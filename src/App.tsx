@@ -7,6 +7,7 @@ import EditPage from './pages/Edit';
 import AdminPage from './pages/Admin';
 import Welcome from './pages/Welcome';
 import { GlobalDataProvider } from './contexts/AdminDataContext';
+import EntryGate from './pages/EntryGate';
 
 function PrivateRoute({ allowedRoles }: { allowedRoles: UserRole[] }) {
   const [role, setRole] = useState<UserRole | null>(null);
@@ -40,7 +41,8 @@ const App: React.FC = () => {
   return (
     <GlobalDataProvider>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<EntryGate />} />
+        <Route path="/login" element={<Login />} />
         <Route element={<PrivateRoute allowedRoles={['admin', 'editor']} />}>
           <Route path="/welcome" element={<Welcome />} />
         </Route>
