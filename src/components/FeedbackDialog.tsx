@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Input } from './ui/input';
 import StarRatings from 'react-star-ratings';
+import { useGlobalData } from '@/contexts/AdminDataContext';
 
 type FeedbackDialogProps = {
   isOpen: boolean;
@@ -16,6 +17,7 @@ type FeedbackDialogProps = {
 };
 
 const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ isOpen, onClose, onSubmit }) => {
+  const { data } = useGlobalData();
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
@@ -34,7 +36,7 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ isOpen, onClose, onSubm
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px] bg-gray-50">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-center text-pink-600">
+          <DialogTitle className="text-2xl font-bold text-center" style={{color:data.config?.main_color}}>
             ¡DÉJANOS TU OPINIÓN!
           </DialogTitle>
         </DialogHeader>
@@ -42,33 +44,36 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ isOpen, onClose, onSubm
           <p className="text-center text-gray-700">
             Nos encantó ser parte de esta experiencia, ¿nos cuentas qué te pareció?
           </p>
-          <Input
-            id="name"
-            placeholder="Nombre*"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="col-span-3"
-          />
-          <Input
-            id="surname"
-            placeholder="Apellido*"
-            value={surname}
-            onChange={(e) => setSurname(e.target.value)}
-            className="col-span-3"
-          />
+          <div className="flex gap-2">
+            <Input
+              id="name"
+              placeholder="Nombre*"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              style={{backgroundColor:data.config?.main_color}}
+            />
+            <Input
+              id="surname"
+              placeholder="Apellido*"
+              value={surname}
+              onChange={(e) => setSurname(e.target.value)}
+              style={{backgroundColor:data.config?.main_color}}
+            />
+          </div>
           <Input
             id="email"
             placeholder="Correo Electrónico*"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="col-span-3"
+            style={{backgroundColor:data.config?.main_color}}
           />
           <textarea
             id="comment"
             placeholder="Comentario*"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="col-span-3 h-32 border-input rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+            className="h-24 border-input rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+            style={{backgroundColor:data.config?.main_color}}
           />
           <div className='flex justify-center'>
             <StarRatings
