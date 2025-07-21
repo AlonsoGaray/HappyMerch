@@ -48,6 +48,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
   showDashedBorder, 
   isVisible 
 }) => {
+  if (!product) return <div>Cargando</div>
   const isControlled = typeof selectedId !== 'undefined' && typeof setSelectedId === 'function';
   const [internalSelectedId, internalSetSelectedId] = useState<number | null>(null);
   const actualSelectedId = isControlled ? selectedId : internalSelectedId;
