@@ -18,7 +18,7 @@ const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabChange }) => {
         key={tab.key}
         className={`relative px-5 min-h-9 flex items-center justify-center rounded-lg font-bold text-base
           ${activeTab === tab.key
-            && 'border-2 border-black'}
+            && 'outline-2 outline-black'}
         `}
         onClick={() => onTabChange(tab.key)}
         style={{
