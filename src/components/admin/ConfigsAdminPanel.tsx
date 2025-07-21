@@ -1,114 +1,88 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Switch } from "@/components/ui/switch"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { Button } from "../ui/button"
 import { Upload } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { uploadLogo, getAllLogos, updateBrandingConfig, getBrandingConfig } from "@/lib/supabase"
+import { uploadLogo, updateBrandingConfig } from "@/lib/supabase"
+import { useGlobalData } from "@/contexts/AdminDataContext"
 import { SketchPicker } from 'react-color'
 import type { ColorResult } from 'react-color'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "../ui/accordion"
 
 
 export function ConfigsAdminPanel() {
-  // Estado para los logos
-  const [logos, setLogos] = useState<{ name: string; url: string }[]>([])
-  const [selectedLogo, setSelectedLogo] = useState<string>("")
-  const [uploading, setUploading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [saving, setSaving] = useState(false)
-  const [saveMsg, setSaveMsg] = useState("")
-  
-  // Colores branding
-  const [mainColor, setMainColor] = useState("#2563eb")
-  const [inactiveBtnBg, setInactiveBtnBg] = useState("#e5e7eb")
-  const [inactiveBtnText, setInactiveBtnText] = useState("#6b7280")
-  const [activeBtnBg, setActiveBtnBg] = useState("#2563eb")
-  const [activeBtnText, setActiveBtnText] = useState("#fff")
-  const [colorChanged, setColorChanged] = useState(false)
-  const [savingColors, setSavingColors] = useState(false)
-  const [saveColorsMsg, setSaveColorsMsg] = useState("")
-  
-  // Cargar logos al montar
-  useEffect(() => {
-    async function fetchLogosAndConfig() {
-      try {
-        const all = await getAllLogos()
-        setLogos(all)
-        // Config branding
-        const config = await getBrandingConfig()
-        if (config) {
-          if (config.logo_url && all.some(l => l.url === config.logo_url)) {
-            setSelectedLogo(config.logo_url)
-          } else if (all.length > 0) {
-            setSelectedLogo(all[0].url)
-          }
-          if (config.main_color) setMainColor(config.main_color)
-          if (config.inactive_btn_bg_color) setInactiveBtnBg(config.inactive_btn_bg_color)
-          if (config.inactive_btn_text_color) setInactiveBtnText(config.inactive_btn_text_color)
-          if (config.active_btn_bg_color) setActiveBtnBg(config.active_btn_bg_color)
-          if (config.active_btn_text_color) setActiveBtnText(config.active_btn_text_color)
-        } else {
-          // fallback selección inicial: desde localStorage o el primero
-          const saved = localStorage.getItem("selectedLogo")
-          if (saved && all.some(l => l.url === saved)) {
-            setSelectedLogo(saved)
-          } else if (all.length > 0) {
-            setSelectedLogo(all[0].url)
-          }
-        }
-      } catch {}
-    }
-    fetchLogosAndConfig()
-  }, [])
+  const { data, refreshData } = useGlobalData();
+  const [selectedLogo, setSelectedLogo] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
+  // Colores branding (inicializar con config si existe)
+  const [mainColor, setMainColor] = useState<string>(data.config?.main_color || "#2563eb");
+  const [inactiveBtnBg, setInactiveBtnBg] = useState<string>(data.config?.inactive_btn_bg_color || "#e5e7eb");
+  const [inactiveBtnText, setInactiveBtnText] = useState<string>(data.config?.inactive_btn_text_color || "#6b7280");
+  const [activeBtnBg, setActiveBtnBg] = useState<string>(data.config?.active_btn_bg_color || "#2563eb");
+  const [activeBtnText, setActiveBtnText] = useState<string>(data.config?.active_btn_text_color || "#fff");
+  const [colorChanged, setColorChanged] = useState(false);
+  const [savingColors, setSavingColors] = useState(false);
+  const [saveColorsMsg, setSaveColorsMsg] = useState("");
 
-  // Guardar selección en localStorage
+  // Inicializar logo seleccionado con config o primer logo
   useEffect(() => {
-    if (selectedLogo) localStorage.setItem("selectedLogo", selectedLogo)
-  }, [selectedLogo])
+    if (data.config?.logo_url && data.logos.some(l => l.url === data.config.logo_url)) {
+      setSelectedLogo(data.config.logo_url);
+    } else if (data.logos.length > 0) {
+      setSelectedLogo(data.logos[0].url);
+    }
+    if (data.config?.main_color) setMainColor(data.config.main_color);
+    if (data.config?.inactive_btn_bg_color) setInactiveBtnBg(data.config.inactive_btn_bg_color);
+    if (data.config?.inactive_btn_text_color) setInactiveBtnText(data.config.inactive_btn_text_color);
+    if (data.config?.active_btn_bg_color) setActiveBtnBg(data.config.active_btn_bg_color);
+    if (data.config?.active_btn_text_color) setActiveBtnText(data.config.active_btn_text_color);
+  }, [data.config, data.logos]);
 
   // Subir logo
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
     try {
-      const url = await uploadLogo(file, file.name)
-      setLogos(prev => [...prev, { name: file.name, url }])
-      setSelectedLogo(url)
+      await uploadLogo(file, file.name);
+      await refreshData(); // refresca logos y config
     } catch (err) {
-      alert("Error subiendo el logo")
+      alert("Error subiendo el logo");
     } finally {
-      setUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ""
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  }
+  };
 
   // Guardar logo seleccionado en la tabla config
   const handleSaveLogo = async () => {
-    setSaving(true)
-    setSaveMsg("")
+    setSaving(true);
+    setSaveMsg("");
     try {
-      await updateBrandingConfig({ logo_url: selectedLogo })
-      setSaveMsg("¡Logo guardado correctamente!")
+      await updateBrandingConfig({ logo_url: selectedLogo });
+      await refreshData();
+      setSaveMsg("¡Logo guardado correctamente!");
     } catch (err) {
-      setSaveMsg("Error al guardar el logo")
+      setSaveMsg("Error al guardar el logo");
     } finally {
-      setSaving(false)
-      setTimeout(() => setSaveMsg(""), 2000)
+      setSaving(false);
+      setTimeout(() => setSaveMsg(""), 2000);
     }
-  }
+  };
 
   // Marcar como cambiado al modificar cualquier color
   const handleColorChange = (setter: (v: string) => void) => (c: ColorResult) => {
-    setter(c.hex)
-    setColorChanged(true)
-  }
+    setter(c.hex);
+    setColorChanged(true);
+  };
 
   // Guardar todos los colores juntos
   const handleSaveColors = async () => {
-    setSavingColors(true)
-    setSaveColorsMsg("")
+    setSavingColors(true);
+    setSaveColorsMsg("");
     try {
       await updateBrandingConfig({
         main_color: mainColor,
@@ -116,24 +90,24 @@ export function ConfigsAdminPanel() {
         inactive_btn_text_color: inactiveBtnText,
         active_btn_bg_color: activeBtnBg,
         active_btn_text_color: activeBtnText,
-      })
-      setSaveColorsMsg("¡Colores guardados!")
-      setColorChanged(false)
+      });
+      await refreshData();
+      setSaveColorsMsg("¡Colores guardados!");
+      setColorChanged(false);
     } catch {
-      setSaveColorsMsg("Error al guardar")
+      setSaveColorsMsg("Error al guardar");
     } finally {
-      setSavingColors(false)
-      setTimeout(() => setSaveColorsMsg(""), 2000)
+      setSavingColors(false);
+      setTimeout(() => setSaveColorsMsg(""), 2000);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
       <Tabs defaultValue="branding" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="branding">Marca</TabsTrigger>
           <TabsTrigger value="colors">Colores</TabsTrigger>
-          <TabsTrigger value="layout">Layout</TabsTrigger>
         </TabsList>
 
         <TabsContent value="branding" className="space-y-6">
@@ -168,7 +142,7 @@ export function ConfigsAdminPanel() {
               <div className="mt-6">
                 <div className="mb-2 font-semibold">Logos disponibles:</div>
                 <div className="flex gap-4 flex-wrap">
-                  {logos.map(logo => (
+                  {data.logos.map(logo => (
                     <button
                       key={logo.url}
                       className={`border rounded-lg p-1 transition ${selectedLogo === logo.url ? 'ring-4 ring-pink-300' : ''}`}
@@ -178,7 +152,7 @@ export function ConfigsAdminPanel() {
                       <img src={logo.url} alt={logo.name} className="h-16 w-16 object-contain" />
                     </button>
                   ))}
-                  {logos.length === 0 && <span className="text-gray-400">No hay logos subidos</span>}
+                  {data.logos.length === 0 && <span className="text-gray-400">No hay logos subidos</span>}
                 </div>
               </div>
               {/* Botón para guardar logo seleccionado en la tabla config */}
@@ -315,33 +289,6 @@ export function ConfigsAdminPanel() {
                   {savingColors ? "Guardando..." : "Guardar configuración"}
                 </Button>
                 {saveColorsMsg && <span className="text-sm text-gray-600">{saveColorsMsg}</span>}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="layout" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuración de Layout</CardTitle>
-              <CardDescription>Ajusta la disposición y comportamiento de tu tienda</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Mostrar Barra de Navegación</p>
-                    <p className="text-sm text-gray-500">Mostrar u ocultar la barra de navegación principal</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Modo Oscuro</p>
-                    <p className="text-sm text-gray-500">Habilitar el modo oscuro para los usuarios</p>
-                  </div>
-                  <Switch />
-                </div>
               </div>
             </CardContent>
           </Card>

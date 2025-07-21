@@ -1,12 +1,13 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import type { ReactNode } from "react"
-import { getTableRows, getBrandingConfig } from "@/lib/supabase"
+import { getTableRows, getBrandingConfig, getAllLogos } from "@/lib/supabase"
 
 interface GlobalData {
   products: any[]
   elements: any[]
   backgrounds: any[]
   config: any | null
+  logos: { name: string; url: string }[]
   loading: boolean
   error: string | null
 }
@@ -26,6 +27,7 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
     elements: [],
     backgrounds: [],
     config: null,
+    logos: [],
     loading: true,
     error: null
   })
@@ -34,11 +36,12 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
     try {
       setData(prev => ({ ...prev, loading: true, error: null }))
       
-      const [products, elements, backgrounds, config] = await Promise.all([
+      const [products, elements, backgrounds, config, logos] = await Promise.all([
         getTableRows('product'),
         getTableRows('element'),
         getTableRows('background'),
-        getBrandingConfig()
+        getBrandingConfig(),
+        getAllLogos()
       ])
 
       setData({
@@ -46,6 +49,7 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
         elements,
         backgrounds,
         config,
+        logos,
         loading: false,
         error: null
       })
