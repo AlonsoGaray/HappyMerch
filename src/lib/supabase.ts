@@ -398,3 +398,15 @@ export async function saveDesignWithFeedback(
   return insertData;
 }
 
+/**
+ * Obtiene todas las filas de la tabla 'client_product'.
+ * @returns Un array de objetos de la tabla client_product
+ */
+export async function getAllClientProducts(): Promise<any[]> {
+  const { data, error } = await supabase
+    .from('client_product')
+    .select('*');
+  if (error) throw error;
+  return data || [];
+}
+

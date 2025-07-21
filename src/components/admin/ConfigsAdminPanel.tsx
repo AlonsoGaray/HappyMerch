@@ -191,96 +191,104 @@ export function ConfigsAdminPanel() {
                     />
                   </AccordionContent>
                 </AccordionItem>
-                {/* Inactive Button Background */}
-                <AccordionItem value="inactive-btn-bg">
+                {/* Pestañas de edición (Accordion padre) */}
+                <AccordionItem value="tab-editing">
                   <AccordionTrigger>
-                    <div className="flex items-center gap-3">
-                      <span>Inactive Button Background</span>
-                      <span className="w-6 h-6 rounded border ml-2" style={{ background: inactiveBtnBg }} />
-                    </div>
+                    <span>Pestañas de edición</span>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <SketchPicker
-                      color={inactiveBtnBg}
-                      onChange={handleColorChange(setInactiveBtnBg)}
-                      presetColors={[]}
-                    />
-                  </AccordionContent>
-                </AccordionItem>
-                {/* Inactive Button Text */}
-                <AccordionItem value="inactive-btn-text">
-                  <AccordionTrigger>
-                    <div className="flex items-center gap-3">
-                      <span>Inactive Button Text</span>
-                      <span className="w-6 h-6 rounded border ml-2" style={{ background: inactiveBtnText }} />
+                    {/* Inactive Button Background */}
+                    <AccordionItem value="inactive-btn-bg">
+                      <AccordionTrigger>
+                        <div className="flex items-center gap-3">
+                          <span>Background boton inactivo tab</span>
+                          <span className="w-6 h-6 rounded border ml-2" style={{ background: inactiveBtnBg }} />
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <SketchPicker
+                          color={inactiveBtnBg}
+                          onChange={handleColorChange(setInactiveBtnBg)}
+                          presetColors={[]}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                    {/* Inactive Button Text */}
+                    <AccordionItem value="inactive-btn-text">
+                      <AccordionTrigger>
+                        <div className="flex items-center gap-3">
+                          <span>Texto boton inactivo tab</span>
+                          <span className="w-6 h-6 rounded border ml-2" style={{ background: inactiveBtnText }} />
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <SketchPicker
+                          color={inactiveBtnText}
+                          onChange={handleColorChange(setInactiveBtnText)}
+                          presetColors={[]}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                    <div className="mt-4">
+                      <button
+                        className="px-5 min-h-9 rounded-lg font-bold text-base"
+                        style={{
+                          background: inactiveBtnBg,
+                          color: inactiveBtnText,
+                        }}
+                        disabled
+                      >
+                        Ejemplo inactivo
+                      </button>
                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <SketchPicker
-                      color={inactiveBtnText}
-                      onChange={handleColorChange(setInactiveBtnText)}
-                      presetColors={[]}
-                    />
-                  </AccordionContent>
-                </AccordionItem>
-                <div className="mt-4">
-                  <button
-                    className="px-5 min-h-9 rounded-lg font-bold text-base"
-                    style={{
-                      background: inactiveBtnBg,
-                      color: inactiveBtnText,
-                    }}
-                    disabled
-                  >
-                    Ejemplo inactivo
-                  </button>
-                </div>
-                {/* Active Button Background */}
-                <AccordionItem value="active-btn-bg">
-                  <AccordionTrigger>
-                    <div className="flex items-center gap-3">
-                      <span>Active Button Background</span>
-                      <span className="w-6 h-6 rounded border ml-2" style={{ background: activeBtnBg }} />
+                    {/* Active Button Background */}
+                    <AccordionItem value="active-btn-bg">
+                      <AccordionTrigger>
+                        <div className="flex items-center gap-3">
+                          <span>Background boton activo tab</span>
+                          <span className="w-6 h-6 rounded border ml-2" style={{ background: activeBtnBg }} />
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <SketchPicker
+                          color={activeBtnBg}
+                          onChange={handleColorChange(setActiveBtnBg)}
+                          presetColors={[]}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                    {/* Active Button Text */}
+                    <AccordionItem value="active-btn-text">
+                      <AccordionTrigger>
+                        <div className="flex items-center gap-3">
+                          <span>Texto boton inactivo tab</span>
+                          <span className="w-6 h-6 rounded border ml-2" style={{ background: activeBtnText }} />
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <SketchPicker
+                          color={activeBtnText}
+                          onChange={handleColorChange(setActiveBtnText)}
+                          presetColors={[]}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                    <div className="mt-4">
+                      <button
+                        className="px-5 min-h-9 rounded-lg font-bold text-base border-2 border-black"
+                        style={{
+                          background: activeBtnBg,
+                          color: activeBtnText,
+                        }}
+                        disabled
+                      >
+                        Ejemplo activo
+                      </button>
                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <SketchPicker
-                      color={activeBtnBg}
-                      onChange={handleColorChange(setActiveBtnBg)}
-                      presetColors={[]}
-                    />
                   </AccordionContent>
                 </AccordionItem>
-                {/* Active Button Text */}
-                <AccordionItem value="active-btn-text">
-                  <AccordionTrigger>
-                    <div className="flex items-center gap-3">
-                      <span>Active Button Text</span>
-                      <span className="w-6 h-6 rounded border ml-2" style={{ background: activeBtnText }} />
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <SketchPicker
-                      color={activeBtnText}
-                      onChange={handleColorChange(setActiveBtnText)}
-                      presetColors={[]}
-                    />
-                  </AccordionContent>
-                </AccordionItem>
-                <div className="mt-4">
-                  <button
-                    className="px-5 min-h-9 rounded-lg font-bold text-base border-2 border-black"
-                    style={{
-                      background: activeBtnBg,
-                      color: activeBtnText,
-                    }}
-                    disabled
-                  >
-                    Ejemplo activo
-                  </button>
-                </div>
               </Accordion>
-              <div className="flex items-center gap-3 mt-8">
+              <div className="flex items-center gap-3 mt-8 justify-end">
                 <Button
                   onClick={handleSaveColors}
                   disabled={!colorChanged || savingColors}

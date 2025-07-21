@@ -1,12 +1,10 @@
 import { useState } from "react"
 import {
-  LayoutDashboard,
   Package,
   Palette,
   Settings,
   Users,
   BarChart3,
-  Eye,
   Bell,
   User,
   LogOut,
@@ -25,26 +23,36 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { GenericAdminPanel } from "@/components/admin/GenericAdminPanel"
 import { ConfigsAdminPanel } from "@/components/admin/ConfigsAdminPanel"
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table"
+import { useEffect } from "react"
+import { getAllClientProducts } from "@/lib/supabase"
 
 const sidebarItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "productos", label: "Productos", icon: Package },
   { id: "elementos", label: "Elementos", icon: Palette },
   { id: "fondos", label: "Fondos", icon: BarChart3 },
   { id: "personalizacion", label: "Personalización", icon: Settings },
   { id: "usuarios", label: "Usuarios", icon: Users },
-]
-
-const stats = [
-  { title: "Total Productos", value: "156", change: "+12%", icon: Package },
-  { title: "Productos Activos", value: "89", change: "+5%", icon: Eye },
-  { title: "Ventas del Mes", value: "$12,450", change: "+18%", icon: BarChart3 },
-  { title: "Usuarios Registrados", value: "2,341", change: "+7%", icon: Users },
+  { id: "diseños_clientes", label: "Diseños de Clientes", icon: Palette }, // Nuevo ítem
 ]
 
 export default function AdminPanel() {
   const [activeSection, setActiveSection] = useState("dashboard")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [clientProducts, setClientProducts] = useState<any[]>([])
+  const [loadingClientProducts, setLoadingClientProducts] = useState(false)
+  const [errorClientProducts, setErrorClientProducts] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (activeSection === "diseños_clientes") {
+      setLoadingClientProducts(true)
+      setErrorClientProducts(null)
+      getAllClientProducts()
+        .then(setClientProducts)
+        .catch(e => setErrorClientProducts(e.message || "Error al cargar los productos"))
+        .finally(() => setLoadingClientProducts(false))
+    }
+  }, [activeSection])
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -90,9 +98,7 @@ export default function AdminPanel() {
           <header className="bg-white shadow-sm border-b h-16 flex items-center justify-between px-6">
             <div className="flex items-center">
               <h2 className="text-lg font-semibold text-gray-800 capitalize">
-                {activeSection === "dashboard"
-                  ? "Dashboard"
-                  : activeSection === "productos"
+                {activeSection === "productos"
                     ? "Gestión de Productos"
                     : activeSection === "elementos"
                       ? "Gestión de Elementos"
@@ -100,7 +106,9 @@ export default function AdminPanel() {
                         ? "Gestión de Fondos"
                         : activeSection === "personalizacion"
                           ? "Personalización de Marca"
-                          : activeSection}
+                          : activeSection === "diseños_clientes"
+                            ? "Diseños de Clientes"
+                            : activeSection}
               </h2>
             </div>
 
@@ -133,60 +141,6 @@ export default function AdminPanel() {
 
           {/* Content */}
           <main className="flex-1 overflow-y-auto p-6">
-            {activeSection === "dashboard" && (
-              <div className="space-y-6">
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {stats.map((stat, index) => {
-                    const Icon = stat.icon
-                    return (
-                      <Card key={index}>
-                        <CardContent className="p-6">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                              <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                              <p className="text-sm text-green-600">{stat.change}</p>
-                            </div>
-                            <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <Icon className="h-6 w-6 text-blue-600" />
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )
-                  })}
-                </div>
-
-                {/* Recent Activity */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Actividad Reciente</CardTitle>
-                    <CardDescription>Últimas acciones realizadas en el sistema</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-4">
-                        <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                        <p className="text-sm">Producto "Tote Bag Premium" actualizado</p>
-                        <span className="text-xs text-gray-500 ml-auto">Hace 2 horas</span>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                        <p className="text-sm">Nuevo usuario registrado</p>
-                        <span className="text-xs text-gray-500 ml-auto">Hace 4 horas</span>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="h-2 w-2 bg-yellow-500 rounded-full"></div>
-                        <p className="text-sm">Configuración de colores modificada</p>
-                        <span className="text-xs text-gray-500 ml-auto">Hace 1 día</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
             {activeSection === "productos" && (
               <GenericAdminPanel
                 tableName="product"
@@ -236,6 +190,59 @@ export default function AdminPanel() {
                   </CardContent>
                 </Card>
               </div>
+            )}
+
+            {activeSection === "diseños_clientes" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Diseños de Clientes</CardTitle>
+                  <CardDescription>Lista de todos los productos y diseños enviados por clientes</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {loadingClientProducts ? (
+                    <div className="text-gray-500">Cargando...</div>
+                  ) : errorClientProducts ? (
+                    <div className="text-red-500">{errorClientProducts}</div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nombre</TableHead>
+                          <TableHead>Apellido</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Comentario</TableHead>
+                          <TableHead>Rating</TableHead>
+                          <TableHead>Diseño</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {clientProducts.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center">No hay diseños enviados aún.</TableCell>
+                          </TableRow>
+                        ) : (
+                          clientProducts.map((prod, idx) => (
+                            <TableRow key={prod.id || idx}>
+                              <TableCell>{prod.name}</TableCell>
+                              <TableCell>{prod.last_name}</TableCell>
+                              <TableCell>{prod.email}</TableCell>
+                              <TableCell>{prod.comment}</TableCell>
+                              <TableCell>{prod.rating}</TableCell>
+                              <TableCell>
+                                {prod.design ? (
+                                  <img src={prod.design} alt="Diseño" className="w-20 h-20 object-contain border rounded" />
+                                ) : (
+                                  <span className="text-gray-400">Sin imagen</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
             )}
           </main>
         </div>
