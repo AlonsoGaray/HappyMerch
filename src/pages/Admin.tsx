@@ -35,8 +35,6 @@ const sidebarItems = [
   { id: "fondos", label: "Fondos", icon: BarChart3 },
   { id: "personalizacion", label: "Personalización", icon: Settings },
   { id: "usuarios", label: "Usuarios", icon: Users },
-  { id: "analytics", label: "Analytics", icon: BarChart3 },
-  { id: "configuracion", label: "Configuración", icon: Settings },
 ]
 
 const stats = [
@@ -340,34 +338,6 @@ export default function AdminPanel() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-500">Funcionalidad de gestión de usuarios en desarrollo...</p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {activeSection === "analytics" && (
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Analytics</CardTitle>
-                    <CardDescription>Métricas y estadísticas de tu tienda</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-500">Panel de analytics en desarrollo...</p>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {activeSection === "configuracion" && (
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Configuración General</CardTitle>
-                    <CardDescription>Ajustes generales del sistema</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-500">Configuraciones generales en desarrollo...</p>
                   </CardContent>
                 </Card>
               </div>

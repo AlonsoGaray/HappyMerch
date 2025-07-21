@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import NavBar from '../components/NavBar';
-import { PRODUCTS, TABS } from '../constants';
-import ProductSelector from '../components/ProductSelector';
+import { TABS } from '../constants';
+import ProductSelector, { type Product } from '../components/ProductSelector';
 import ElementSelector from '../components/ElementSelector';
 import TextTools from '../components/TextTools';
 import CanvasArea from '../components/CanvasArea';
@@ -16,7 +16,6 @@ import { useGlobalData } from '../contexts/AdminDataContext';
 
 const DEFAULT_SIZE = 60;
 
-// Extiende CanvasItem para soportar textos
 type CanvasTextItem = {
   id: number;
   type: 'text';
@@ -42,14 +41,16 @@ const EditPage: React.FC = () => {
   const [scale, setScale] = useState(1);
   const [showDashedBorder, setShowDashedBorder] = useState(true);
   const [showLayers, setShowLayers] = useState(true);
-  const product = PRODUCTS[productIdx];
+  // Adapt to new product structure from data.products
+  const visibleProducts: Product[] = data.products.filter((p: Product) => p.visible);
+  const product = visibleProducts[productIdx] || visibleProducts[0];
   const visibleBackgrounds = data.backgrounds.filter((bg: any) => bg.visible);
 
   const handleAddElement = (element: { id: string; name: string; url: string; visible: boolean }) => {
     const newId = Date.now();
     // Centro puro del área de edición
-    const centerX = product.canvas.width / 2;
-    const centerY = product.canvas.height / 2;
+    const centerX = product.width / 2;
+    const centerY = product.height / 2;
     setCanvasItems(items => [
       ...items,
       {
@@ -176,8 +177,8 @@ const EditPage: React.FC = () => {
   const handleAddText = (text: string, font: string, color: string) => {
     const newId = Date.now();
     // Centro puro del área de edición
-    const centerX = product.canvas.width / 2;
-    const centerY = product.canvas.height / 2;
+    const centerX = product.width / 2;
+    const centerY = product.height / 2;
     setCanvasItems(items => [
       ...items,
       {
@@ -240,8 +241,8 @@ const EditPage: React.FC = () => {
     if (!obj) return;
 
     // Dimensiones del canvas de edición
-    const canvasW = product.canvas.width;
-    const canvasH = product.canvas.height;
+    const canvasW = product.width;
+    const canvasH = product.height;
     // Centro puro
     const centerX = canvasW / 2;
     const centerY = canvasH / 2;
@@ -386,7 +387,7 @@ const EditPage: React.FC = () => {
           onTabChange={setActiveTab}
         />
         {activeTab === 'product' && (
-          <ProductSelector products={PRODUCTS} selectedIdx={productIdx} onSelect={setProductIdx} />
+          <ProductSelector selectedIdx={productIdx} onSelect={setProductIdx} />
         )}
         {activeTab === 'fondos' && (
           <BgSelector selectedIdx={selectedBgIdx} onSelect={setSelectedBgIdx} />

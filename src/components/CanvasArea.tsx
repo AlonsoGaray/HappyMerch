@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Canvas, Image, IText, Point } from 'fabric';
 import type { CanvasItem } from '../types';
+import type { Product } from './ProductSelector';
 
 // Define también aquí el tipo CanvasTextItem y CanvasAnyItem
 export type CanvasTextItem = {
@@ -15,13 +16,7 @@ export type CanvasTextItem = {
 export type CanvasAnyItem = CanvasItem | CanvasTextItem;
 
 type CanvasAreaProps = {
-  product: {
-    name: string;
-    image: string;
-    canvas: { width: number; height: number; top: number; left: number };
-    imageWidth: number;
-    imageHeight: number;
-  };
+  product: Product;
   items?: CanvasAnyItem[];
   selectedId?: number | null;
   setSelectedId?: (id: number | null) => void;
@@ -34,6 +29,7 @@ type CanvasAreaProps = {
   showDashedBorder?: boolean;
   isVisible: (id: number) => boolean;
 };
+
 
 const DEFAULT_SIZE = 60;
 
@@ -133,10 +129,10 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
    * Initialize Fabric.js canvas when the component mounts or when canvas size changes.
    */
   useEffect(() => {
-    if (!canvasElRef.current) return;
+    if (!canvasElRef.current || !product) return; // <-- agrega !product aquí
     const fabricCanvas = new Canvas(canvasElRef.current, {
-      width: product.canvas.width,
-      height: product.canvas.height,
+      width: product.width,
+      height: product.height,
       selection: true,
       editable: true,
       enableRetinaScaling: true,
@@ -148,7 +144,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
     return () => {
       fabricCanvas.dispose();
     };
-  }, [product.canvas.width, product.canvas.height, fabricRef]);
+  }, [product, fabricRef]);
 
   /**
    * Sync items with Fabric.js canvas. Handles adding images, updating their properties, and selection events.
@@ -170,8 +166,8 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
     if (selectedBg) {
       Image.fromURL(selectedBg.url).then((bgImg) => {
         // Escalado exacto al canvas
-        const scaleX = product.canvas.width / (bgImg.width ?? 1);
-        const scaleY = product.canvas.height / (bgImg.height ?? 1);
+        const scaleX = product.width / (bgImg.width ?? 1);
+        const scaleY = product.height / (bgImg.height ?? 1);
         bgImg.set({
           left: 0,
           top: 0,
@@ -435,8 +431,8 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
         {/* Contenedor que agrupa imagen y canvas y aplica la transformación */}
         <div
           style={{
-            width: product.imageWidth,
-            height: product.imageHeight,
+            width: 400,
+            height: 400,
             position: 'absolute',
             left: '50%',
             top: '50%',
@@ -448,13 +444,13 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
         >
           {/* Imagen centrada, sin transform individual */}
           <img
-            src={product.image}
+            src={product.url}
             alt={product.name}
             className="absolute left-0 top-0 object-contain pointer-events-none select-none"
             draggable={false}
             style={{
-              width: product.imageWidth,
-              height: product.imageHeight,
+              width: 400,
+              height: 400,
               display: 'block',
               zIndex: 1,
               position: 'absolute',
@@ -467,11 +463,11 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
           <div
             data-canvas-container
             style={{
-              width: product.canvas.width,
-              height: product.canvas.height,
+              width: product.width,
+              height: product.height,
               position: 'absolute',
-              left: product.canvas.left,
-              top: product.canvas.top,
+              left: product.left,
+              top: product.top,
               zIndex: 2,
               pointerEvents: 'auto',
             }}
@@ -484,8 +480,8 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
             />
             <canvas
               ref={canvasElRef}
-              width={product.canvas.width}
-              height={product.canvas.height}
+              width={product.width}
+              height={product.height}
               className="absolute left-0 top-0"
               style={{ zIndex: 2, background: 'transparent', pointerEvents: 'auto', width: '100%', height: '100%' }}
               key="canvas"
