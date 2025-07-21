@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react';
 import React, { useState } from 'react';
 import { useVerticalDragScroll, useSafeItemSelect } from '../utils/ScrollUtils';
+import { SketchPicker } from 'react-color';
 
 const FONTS = [
   { label: 'Pacifico', className: 'font-pacifico' },
@@ -37,6 +38,7 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
   const [text, setText] = useState('');
   const [font, setFont] = useState(FONTS[0].className);
   const [color, setColor] = useState(COLORS[0]);
+  const [showPalette, setShowPalette] = useState(false);
 
   const handleAdd = () => {
     if (text.trim() && onAddText) {
@@ -66,7 +68,7 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
   });
 
   return (
-    <div className="flex gap-2 w-full max-w-lg self-center items-center h-44 max-h-44 justify-center pt-5">
+    <div className="flex gap-5 w-full max-w-lg self-center items-center h-44 max-h-44 justify-center pt-5">
       <div className='flex flex-col w-2/3 gap-2'>
         <div className="flex w-full gap-2 items-center">
           <input
@@ -111,11 +113,11 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
           ))}
         </div>
       </div>
-      <div className="flex flex-wrap gap-2 w-1/3 justify-center">
+      <div className="flex flex-wrap gap-2 w-1/3 justify-center relative">
         {COLORS.map(c => (
           <button
             key={c}
-            className={`w-7 h-7 rounded-full`}
+            className={`w-7 h-7 rounded-full border-2 ${color === c ? 'border-pink-500' : 'border-transparent'}`}
             style={{ background: c }}
             onClick={() => {
               setColor(c);
@@ -125,6 +127,27 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
             }}
           />
         ))}
+        <button
+          className="mt-2 px-2 py-1 bg-pink-200 rounded text-sm text-pink-900 border border-pink-300 w-full"
+          onClick={() => setShowPalette(v => !v)}
+        >
+          {showPalette ? 'Cerrar paleta' : 'Abrir paleta'}
+        </button>
+        {showPalette && (
+          <div className="absolute z-50 bottom-10 left-28 -translate-x-1/2 shadow-lg border border-gray-200 bg-white rounded">
+            <SketchPicker
+              color={color}
+              onChange={col => {
+                setColor(col.hex);
+                if (selectedTextItem && onUpdateTextItem) {
+                  onUpdateTextItem(selectedTextItem.id, { color: col.hex });
+                }
+              }}
+              presetColors={COLORS}
+              disableAlpha
+            />
+          </div>
+        )}
       </div>
     </div>
   );
