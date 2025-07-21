@@ -16,11 +16,10 @@ export type Product = {
 };
 
 type ProductSelectorProps = {
-  selectedIdx: number;
   onSelect: (idx: number) => void;
 };
 
-const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIdx, onSelect }) => {
+const ProductSelector: React.FC<ProductSelectorProps> = ({ onSelect }) => {
   const { data } = useGlobalData();
   const dragScroll = useHorizontalDragScroll();
   const safeSelect = useSafeItemSelect({
@@ -47,7 +46,7 @@ const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedIdx, onSelect
       {visibleProducts.map((prod, idx) => (
         <div
           key={prod.name}
-          className={`flex flex-col items-center cursor-pointer ${selectedIdx === idx ? 'ring-4 ring-pink-300' : ''}`}
+          className={`flex flex-col items-center cursor-pointer`}
           onMouseDown={e => safeSelect.handleMouseDown(e, idx)}
           onMouseUp={e => safeSelect.handleMouseUp(e, idx)}
           onTouchStart={e => safeSelect.handleTouchStart(e, idx)}

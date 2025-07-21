@@ -7,7 +7,6 @@ import {
   Users,
   BarChart3,
   Eye,
-  Upload,
   Bell,
   User,
   LogOut,
@@ -16,7 +15,6 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { GenericAdminPanel } from "@/components/admin/GenericAdminPanel"
-import { Switch } from "@/components/ui/switch"
+import { ConfigsAdminPanel } from "@/components/admin/ConfigsAdminPanel"
 
 const sidebarItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -223,110 +221,7 @@ export default function AdminPanel() {
             )}
 
             {activeSection === "personalizacion" && (
-              <div className="space-y-6">
-                <Tabs defaultValue="branding" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="branding">Marca</TabsTrigger>
-                    <TabsTrigger value="colors">Colores</TabsTrigger>
-                    <TabsTrigger value="layout">Layout</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="branding" className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Logotipo de la Marca</CardTitle>
-                        <CardDescription>Sube y gestiona el logotipo principal de tu tienda</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-6">
-                        <div className="flex items-center space-x-6">
-                          <div className="flex-shrink-0">
-                            <img
-                              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDH9qs8Kuu1e5Ewf9MD1OdTMFeMsbUF54n6-Z272xTVgVNfkivgr46_kyKGcKjmJYF_XUtTDXPMCciT84uAJUbtXXWGgRtmwW12YC7eLS9pBIYJo-evK8hPs7Dq81xCwKHB0DjF32YIUaeuQ_k1M8iXTHsb5k9-HVDG0EpL"
-                              alt="Logotipo de la Marca"
-                              className="h-24 w-24 rounded-lg object-cover"
-                            />
-                          </div>
-                          <div>
-                            <Button>
-                              <Upload className="mr-2 h-4 w-4" />
-                              Cambiar Logotipo
-                            </Button>
-                            <p className="text-sm text-gray-500 mt-2">
-                              Formatos soportados: PNG, JPG, SVG. Tamaño máximo: 2MB
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  <TabsContent value="colors" className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Paleta de Colores</CardTitle>
-                        <CardDescription>Personaliza los colores principales de tu tienda</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Color Primario
-                            </label>
-                            <div className="flex items-center space-x-2">
-                              <div className="w-8 h-8 bg-blue-600 rounded border"></div>
-                              <input
-                                type="color"
-                                defaultValue="#2563eb"
-                                className="w-12 h-8 border rounded cursor-pointer"
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Color Secundario
-                            </label>
-                            <div className="flex items-center space-x-2">
-                              <div className="w-8 h-8 bg-gray-600 rounded border"></div>
-                              <input
-                                type="color"
-                                defaultValue="#4b5563"
-                                className="w-12 h-8 border rounded cursor-pointer"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-
-                  <TabsContent value="layout" className="space-y-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Configuración de Layout</CardTitle>
-                        <CardDescription>Ajusta la disposición y comportamiento de tu tienda</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium">Mostrar Barra de Navegación</p>
-                              <p className="text-sm text-gray-500">Mostrar u ocultar la barra de navegación principal</p>
-                            </div>
-                            <Switch defaultChecked />
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium">Modo Oscuro</p>
-                              <p className="text-sm text-gray-500">Habilitar el modo oscuro para los usuarios</p>
-                            </div>
-                            <Switch />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
-              </div>
+              <ConfigsAdminPanel />
             )}
 
             {activeSection === "usuarios" && (

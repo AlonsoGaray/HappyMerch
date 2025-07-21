@@ -10,11 +10,10 @@ type Background = {
 };
 
 type BgSelectorProps = {
-  selectedIdx: number;
   onSelect: (idx: number) => void;
 };
 
-const BgSelector: React.FC<BgSelectorProps> = ({ selectedIdx, onSelect }) => {
+const BgSelector: React.FC<BgSelectorProps> = ({ onSelect }) => {
   const { data } = useGlobalData();
   const dragScroll = useHorizontalDragScroll();
   const safeSelect = useSafeItemSelect({
@@ -44,7 +43,7 @@ const BgSelector: React.FC<BgSelectorProps> = ({ selectedIdx, onSelect }) => {
   return (
     <div
       ref={dragScroll.scrollRef}
-      className="flex gap-8 h-44 max-h-44 items-center w-full justify-center pl-14 overflow-x-auto cursor-grab active:cursor-grabbing select-none"
+      className="flex gap-8 h-44 max-h-44 items-center w-full justify-start overflow-x-auto cursor-grab active:cursor-grabbing select-none"
       style={{ WebkitOverflowScrolling: 'touch' }}
       onMouseDown={dragScroll.onMouseDown}
       onMouseMove={dragScroll.onMouseMove}
@@ -56,7 +55,7 @@ const BgSelector: React.FC<BgSelectorProps> = ({ selectedIdx, onSelect }) => {
     >
       {/* Opción "Sin fondo" */}
       <button
-        className={`rounded-lg p-1 transition ${selectedIdx === -1 ? 'ring-4 ring-pink-300' : ''}`}
+        className={`rounded-lg p-1 transition`}
         onMouseDown={e => safeSelect.handleMouseDown(e, -1)}
         onMouseUp={e => safeSelect.handleMouseUp(e, -1)}
         onTouchStart={e => safeSelect.handleTouchStart(e, -1)}
@@ -70,7 +69,7 @@ const BgSelector: React.FC<BgSelectorProps> = ({ selectedIdx, onSelect }) => {
       {visibleBackgrounds.map((bg: Background, idx) => (
         <button
           key={bg.id}
-          className={`rounded-lg p-1 transition ${selectedIdx === idx ? 'ring-4 ring-pink-300' : ''}`}
+          className={`rounded-lg p-1 transition`}
           onMouseDown={e => safeSelect.handleMouseDown(e, idx)}
           onMouseUp={e => safeSelect.handleMouseUp(e, idx)}
           onTouchStart={e => safeSelect.handleTouchStart(e, idx)}

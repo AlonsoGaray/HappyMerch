@@ -265,3 +265,85 @@ export async function uploadFilesInBulk<T = any>({
   return results;
 }
 
+/**
+ * Sube un archivo al bucket 'logos' y retorna la URL pública.
+ * @param file - El archivo a subir (File o Blob)
+ * @param fileName - El nombre con el que se guardará el archivo en el bucket
+ * @returns La URL pública del archivo subido
+ */
+export async function uploadLogo(file: File | Blob, fileName: string): Promise<string> {
+  const bucketName = 'logos';
+  // Subir archivo
+  const { error: uploadError } = await supabase.storage
+    .from(bucketName)
+    .upload(fileName, file, { upsert: true });
+  if (uploadError) throw uploadError;
+
+  // Obtener URL pública
+  const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(fileName);
+  const url = publicUrlData?.publicUrl;
+  if (!url) throw new Error('No se pudo obtener la URL pública del logo');
+  return url;
+}
+
+/**
+ * Obtiene todos los archivos del bucket 'logos' con sus URLs públicas.
+ * @returns Un array de objetos con nombre y url pública de cada archivo
+ */
+export async function getAllLogos(): Promise<{ name: string; url: string }[]> {
+  const bucketName = 'logos';
+  // Listar archivos en el bucket
+  const { data: listData, error: listError } = await supabase.storage.from(bucketName).list();
+  if (listError) throw listError;
+  if (!listData) return [];
+
+  // Mapear a nombre y url pública
+  return listData.map((item) => {
+    const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(item.name);
+    return {
+      name: item.name,
+      url: publicUrlData?.publicUrl || ''
+    };
+  });
+}
+
+/**
+ * Actualiza la configuración de branding en la tabla 'config'.
+ * Solo actualiza los campos recibidos (parcial).
+ * @param updates - Objeto con los campos a actualizar
+ * @returns La fila actualizada
+ */
+export async function updateBrandingConfig(updates: Partial<{
+  logo_url: string;
+  main_color: string;
+  inactive_btn_bg_color: string;
+  inactive_btn_text_color: string;
+  active_btn_bg_color: string;
+  active_btn_text_color: string;
+}>): Promise<any> {
+  const CONFIG_ID = '5e46ee3c-1885-4257-b486-ff225603d3f2';
+  const { data, error } = await supabase
+    .from('config')
+    .update(updates)
+    .eq('id', CONFIG_ID)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Obtiene la configuración de branding de la tabla 'config'.
+ * @returns La fila de configuración (o null si no existe)
+ */
+export async function getBrandingConfig(): Promise<any | null> {
+  const CONFIG_ID = '5e46ee3c-1885-4257-b486-ff225603d3f2';
+  const { data, error } = await supabase
+    .from('config')
+    .select('*')
+    .eq('id', CONFIG_ID)
+    .single();
+  if (error) throw error;
+  return data;
+}
+

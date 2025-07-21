@@ -380,17 +380,17 @@ const EditPage: React.FC = () => {
           />
         )}
       </div>
-      <div className="relative w-full bg-pink-500 pt-2 px-4 pb-2 flex flex-col max-w-11/12 overflow-visible rounded-xl scroll">
+      <div className={`relative w-full pt-2 px-4 pb-2 flex flex-col max-w-11/12 overflow-visible rounded-xl scroll`} style={{ backgroundColor: data.config?.main_color }}>
         <Tabs
           tabs={TABS}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
         {activeTab === 'product' && (
-          <ProductSelector selectedIdx={productIdx} onSelect={setProductIdx} />
+          <ProductSelector onSelect={setProductIdx} />
         )}
         {activeTab === 'fondos' && (
-          <BgSelector selectedIdx={selectedBgIdx} onSelect={setSelectedBgIdx} />
+          <BgSelector onSelect={setSelectedBgIdx} />
         )}
         {activeTab === 'elements' && (
           <ElementSelector onSelect={handleAddElement} />
