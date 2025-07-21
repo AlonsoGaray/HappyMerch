@@ -449,7 +449,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
             left: '50%',
             top: '50%',
             transform: `translate(-50%, -50%) translateX(${pan.x}px) translateY(${pan.y}px) scale(${scale})`, // <--- volver a agregar scale aquí
-            transformOrigin: 'top left',
+            transformOrigin: 'center center', // Cambiado de 'top left' a 'center center'
             zIndex: 1,
             pointerEvents: 'none',
           }}
