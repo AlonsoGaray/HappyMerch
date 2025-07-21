@@ -165,7 +165,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
 
     // Agregar fondo si hay uno seleccionado
     if (selectedBg) {
-      Image.fromURL(selectedBg.url).then((bgImg) => {
+      Image.fromURL(selectedBg.url, {crossOrigin: 'anonymous'}).then((bgImg) => {
         // Escalado exacto al canvas
         const scaleX = product.width / (bgImg.width ?? 1);
         const scaleY = product.height / (bgImg.height ?? 1);
@@ -185,7 +185,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
           objectCaching: false,
           originX: 'left',
           originY: 'top',
-        });
+        }), {crossOrigin: 'anonymous'};
         (bgImg as any).id = 'background';
         fabricCanvas.add(bgImg);
         // Alternativa para enviar al fondo sin error de linter
@@ -284,7 +284,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
           }
         });
       } else {
-        const img = await Image.fromURL((item as any).src);
+        const img = await Image.fromURL((item as any).src, {crossOrigin: 'anonymous'});
         img.set({
           left: itemStates[item.id]?.x ?? (item as any).x,
           top: itemStates[item.id]?.y ?? (item as any).y,
@@ -305,7 +305,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
           cornerStyle: 'circle',
           cornerColor: '#fff',
           cornerStrokeColor: '#fff',
-        });
+        }), {crossOrigin: 'anonymous'};
         img.setControlsVisibility({
           mt: false,
           mb: false,

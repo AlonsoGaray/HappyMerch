@@ -17,7 +17,7 @@ const ElementSelector: React.FC<ElementSelectorProps> = ({ onSelect }) => {
   const { data } = useGlobalData();
   const dragScroll = useHorizontalDragScroll();
   const safeSelect = useSafeItemSelect({
-    onSelect: (idx) => onSelect && onSelect(data.elements[idx]),
+    onSelect: (idx) => onSelect && onSelect(visibleElements[idx]),
     dragScroll,
   });
 

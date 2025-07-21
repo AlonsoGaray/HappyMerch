@@ -347,3 +347,54 @@ export async function getBrandingConfig(): Promise<any | null> {
   return data;
 }
 
+/**
+ * Guarda un diseño en el bucket 'client-products' y registra el feedback del cliente.
+ * @param designBlob - El blob del diseño en formato PNG
+ * @param feedback - Datos del feedback del cliente
+ * @returns Los datos guardados en la tabla client_product
+ */
+export async function saveDesignWithFeedback(
+  designBlob: Blob,
+  feedback: {
+    name: string;
+    email: string;
+    comment: string;
+    rating: number;
+  }
+): Promise<any> {
+  // Upload to Supabase
+  const fileName = `design-${Date.now()}.png`;
+  const { data: uploadData, error: uploadError } = await supabase.storage
+    .from('client-products')
+    .upload(fileName, designBlob);
+
+  if (uploadError) throw uploadError;
+  if (!uploadData) throw new Error('No data returned from upload');
+
+  // Get public URL
+  const { data: urlData } = supabase.storage
+    .from('client-products')
+    .getPublicUrl(uploadData.path);
+
+  // Save to database
+  const { name, email, comment, rating } = feedback;
+  const [firstName, ...lastNameParts] = name.split(' ');
+  const lastName = lastNameParts.join(' ');
+
+  const { data: insertData, error: insertError } = await supabase
+    .from('client_product')
+    .insert({
+      name: firstName,
+      last_name: lastName,
+      email,
+      comment,
+      rating,
+      design: urlData.publicUrl,
+    })
+    .select()
+    .single();
+
+  if (insertError) throw insertError;
+  return insertData;
+}
+

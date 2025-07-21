@@ -13,7 +13,7 @@ const Welcome = () => {
     >
       <div className="flex flex-col gap-7 items-center">
         <span className="text-white text-4xl font-bold">PERSONALIZA EN VIVO, <br/> CREA SIN LÍMITES</span>
-        <img className="max-w-64" src={data.config.logo_url} alt="logo" />
+        <img className="max-w-64" src={data.config?.logo_url} alt="logo" />
         <span className="text-xl text-gray-200">Diseña tu merch a tu estilo, en tiempo real. <br/> Elige, edita y hazlo único en solo unos pasos</span>
       </div>
       <img className="max-w-2xl" src="/Welcome.png" alt="Products" />

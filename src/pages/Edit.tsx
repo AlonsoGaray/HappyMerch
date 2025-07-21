@@ -13,6 +13,7 @@ import BgSelector from '../components/BgSelector';
 import BottomBar from '../components/BottomBar';
 import LeftSidebar from '../components/LeftSideBar';
 import { useGlobalData } from '../contexts/AdminDataContext';
+import { saveDesignWithFeedback } from '../lib/supabase';
 
 const DEFAULT_SIZE = 60;
 
@@ -288,6 +289,39 @@ const EditPage: React.FC = () => {
     fabricCanvas.renderAll();
   };
 
+  const handleSave = async (feedbackData: {
+    name: string;
+    email: string;
+    comment: string;
+    rating: number;
+  }) => {
+    if (!fabricRef.current) return;
+
+    try {
+      const canvas = fabricRef.current;
+      const dataUrl = canvas.toDataURL();
+
+      // Convert data URL to blob
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+
+      await saveDesignWithFeedback(blob, feedbackData);
+      alert('¡Gracias por tu opinión! Tu diseño ha sido guardado.');
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      // Dump all image URLs currently in the canvas
+      const fabricCanvas = fabricRef.current;
+      if (fabricCanvas) {
+        fabricCanvas.getObjects().forEach(obj => {
+          if (obj.type === 'image' && 'getSrc' in obj) {
+            console.log('Imagen en canvas:', (obj as any).getSrc());
+          }
+        });
+      }
+      alert('Hubo un error al guardar tu diseño. Por favor, intenta de nuevo.');
+    }
+  };
+
   // Lógica para permitir zoom infinito con pan
   const handleZoom = (factor: number) => {
     // El nuevo scale propuesto
@@ -334,7 +368,7 @@ const EditPage: React.FC = () => {
 
   return (
     <div className="min-h-dvh flex flex-col bg-gray-100 max-h-dvh items-center pb-5">
-      <NavBar />
+      <NavBar onSave={handleSave} />
       <div className="flex-grow flex relative w-full justify-center items-center overflow-hidden">
         <LeftSidebar 
           selectedId={selectedId}
