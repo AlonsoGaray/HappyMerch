@@ -1,13 +1,26 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
+import { Card, CardContent } from "../ui/card"
 import { Button } from "../ui/button"
 import { Upload } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { uploadLogo, updateBrandingConfig } from "@/lib/supabase"
+import { uploadLogo, updateBrandingConfig, updateTableRow } from "@/lib/supabase"
 import { useGlobalData } from "@/contexts/AdminDataContext"
 import { SketchPicker } from 'react-color'
 import type { ColorResult } from 'react-color'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "../ui/accordion"
+
+const FONT_OPTIONS = [
+  { value: "font-pacifico", label: "Pacifico" },
+  { value: "font-anton", label: "Anton" },
+  { value: "font-lobster", label: "Lobster" },
+  { value: "font-oswald", label: "Oswald" },
+  { value: "font-shadow", label: "Shadows Into Light" },
+  { value: "font-playfair", label: "Playfair Display" },
+  { value: "font-montserrat", label: "Montserrat" },
+  { value: "font-verdana", label: "Verdana" },
+  { value: "font-courier", label: "Courier" },
+  { value: "font-georgia", label: "Georgia" },
+];
 
 
 export function ConfigsAdminPanel() {
@@ -17,7 +30,6 @@ export function ConfigsAdminPanel() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
-  // Colores branding (inicializar con config si existe)
   const [mainColor, setMainColor] = useState<string>(data.config?.main_color || "#2563eb");
   const [inactiveBtnBg, setInactiveBtnBg] = useState<string>(data.config?.inactive_btn_bg_color || "#e5e7eb");
   const [inactiveBtnText, setInactiveBtnText] = useState<string>(data.config?.inactive_btn_text_color || "#6b7280");
@@ -26,8 +38,20 @@ export function ConfigsAdminPanel() {
   const [colorChanged, setColorChanged] = useState(false);
   const [savingColors, setSavingColors] = useState(false);
   const [saveColorsMsg, setSaveColorsMsg] = useState("");
+  const [fontSelections, setFontSelections] = useState<{
+    welcome_title_font: string;
+    welcome_subtitle_font: string;
+    welcome_button_font: string;
+    tab_button_font: string;
+    nav_button_font: string;
+  }>({
+    welcome_title_font: '',
+    welcome_subtitle_font: '',
+    welcome_button_font: '',
+    tab_button_font: '',
+    nav_button_font: '',
+  });
 
-  // Inicializar logo seleccionado con config o primer logo
   useEffect(() => {
     if (data.config?.logo_url && data.logos.some(l => l.url === data.config.logo_url)) {
       setSelectedLogo(data.config.logo_url);
@@ -57,7 +81,6 @@ export function ConfigsAdminPanel() {
     }
   };
 
-  // Guardar logo seleccionado en la tabla config
   const handleSaveLogo = async () => {
     setSaving(true);
     setSaveMsg("");
@@ -73,13 +96,11 @@ export function ConfigsAdminPanel() {
     }
   };
 
-  // Marcar como cambiado al modificar cualquier color
   const handleColorChange = (setter: (v: string) => void) => (c: ColorResult) => {
     setter(c.hex);
     setColorChanged(true);
   };
 
-  // Guardar todos los colores juntos
   const handleSaveColors = async () => {
     setSavingColors(true);
     setSaveColorsMsg("");
@@ -102,19 +123,21 @@ export function ConfigsAdminPanel() {
     }
   };
 
+  const handleFontChange = (fontType: keyof typeof fontSelections, value: string) => {
+    setFontSelections((prev) => ({ ...prev, [fontType]: value }));
+  };
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="branding" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="branding">Marca</TabsTrigger>
           <TabsTrigger value="colors">Colores</TabsTrigger>
+          <TabsTrigger value="texts">Texto</TabsTrigger>
         </TabsList>
 
         <TabsContent value="branding" className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Logotipo de la Marca</CardTitle>
-            </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center space-x-6">
                 <div className="flex-shrink-0">
@@ -297,6 +320,55 @@ export function ConfigsAdminPanel() {
                   {savingColors ? "Guardando..." : "Guardar configuración"}
                 </Button>
                 {saveColorsMsg && <span className="text-sm text-gray-600">{saveColorsMsg}</span>}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="texts">
+          <Card>
+            <CardContent>
+              <div className="flex flex-col gap-3">
+                {/* Font Selection Inputs */}
+                {['welcome_title_font', 'welcome_subtitle_font', 'welcome_button_font', 'tab_button_font', 'nav_button_font'].map((fontType) => (
+                  <div key={fontType} className="flex items-center gap-3">
+                    <label htmlFor={fontType} className="font-semibold">{fontType.replace(/_/g, ' ')}</label>
+                    <select
+                      id={fontType}
+                      className="border rounded p-2"
+                      value={fontSelections[fontType as keyof typeof fontSelections]}
+                      onChange={(e) => handleFontChange(fontType as keyof typeof fontSelections, e.target.value)}
+                    >
+                      {FONT_OPTIONS.map((font) => (
+                        <option key={font.value} value={font.value}>{font.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+                {/* Save Button */}
+                <div className="flex items-center gap-3 mt-4">
+                  <Button
+                    onClick={async () => {
+                      try {
+                        const updates = {
+                          welcome_title_font: fontSelections.welcome_title_font,
+                          welcome_subtitle_font: fontSelections.welcome_subtitle_font,
+                          welcome_button_font: fontSelections.welcome_button_font,
+                          tab_button_font: fontSelections.tab_button_font,
+                          nav_button_font: fontSelections.nav_button_font,
+                        };
+                        await updateTableRow('config', '5e46ee3c-1885-4257-b486-ff225603d3f2', updates);
+                        setSaveMsg('Configuración de fuentes guardada correctamente');
+                      } catch (error) {
+                        setSaveMsg('Error al guardar la configuración de fuentes');
+                      }
+                    }}
+                    className="bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    Guardar configuración de fuentes
+                  </Button>
+                  {saveMsg && <span className="text-sm text-gray-600">{saveMsg}</span>}
+                </div>
               </div>
             </CardContent>
           </Card>

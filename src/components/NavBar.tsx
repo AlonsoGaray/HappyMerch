@@ -40,15 +40,15 @@ const NavBar = ({ onSave }: NavBarProps) => {
           <img className="h-fit max-h-10" src={data.config?.logo_url} alt="logo marca" />
         </div>
         <div className="flex items-center space-x-4">
-          <button className="bg-gray-100 rounded-md px-4 py-2 text-base hover:bg-gray-200 transition">Nuevo</button>
+          <button className={`bg-gray-100 rounded-md px-4 py-2 text-base hover:bg-gray-200 transition ${data.config?.nav_button_font}`}>Nuevo</button>
           <button
             onClick={handleSave}
-            className="bg-gray-100 rounded-md px-4 py-2 text-base hover:bg-gray-200 transition"
+            className={`bg-gray-100 rounded-md px-4 py-2 text-base hover:bg-gray-200 transition ${data.config?.nav_button_font}`}
           >
             Guardar
           </button>
           <button
-            className="bg-red-600 rounded-md px-4 py-2 text-base hover:bg-red-700 transition"
+            className={`bg-red-600 rounded-md px-4 py-2 text-base hover:bg-red-700 transition ${data.config?.nav_button_font}`}
             onClick={async () => {
               await signOut();
               navigate('/');

@@ -85,10 +85,7 @@ export async function getTableRows<T = any>(tableName: string): Promise<T[]> {
 export async function updateTableRow<T = any>(
   tableName: string,
   id: string,
-  updates: {
-    name?: string;
-    visible?: boolean;
-  }
+  updates: Partial<T>
 ): Promise<T> {
   const { data, error } = await supabase
     .from(tableName)

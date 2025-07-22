@@ -16,7 +16,7 @@ const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabChange }) => {
     {tabs.map(tab => (
       <button
         key={tab.key}
-        className={`relative px-5 min-h-9 flex items-center justify-center rounded-lg font-bold text-base
+        className={`relative px-5 min-h-9 flex items-center justify-center rounded-lg font-bold text-base ${data.config?.tab_button_font}
           ${activeTab === tab.key
             && 'outline-2 outline-black'}
         `}
