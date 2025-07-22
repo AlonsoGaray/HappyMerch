@@ -26,6 +26,8 @@ import { ConfigsAdminPanel } from "@/components/admin/ConfigsAdminPanel"
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table"
 import { useEffect } from "react"
 import { getAllClientProducts } from "@/lib/supabase"
+import { signOut } from "@/lib/auth"
+import { useNavigate } from "react-router-dom"
 
 const sidebarItems = [
   { id: "diseños_clientes", label: "Diseños de Clientes", icon: Palette },
@@ -37,6 +39,7 @@ const sidebarItems = [
 ]
 
 export default function AdminPanel() {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("diseños_clientes")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [clientProducts, setClientProducts] = useState<any[]>([])
@@ -113,29 +116,21 @@ export default function AdminPanel() {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm">
-                <Bell className="h-4 w-4" />
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                    <User className="h-4 w-4" />
-                    <span className="hidden md:block">Admin</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Configuración
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Cerrar Sesión
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <button
+                className={`bg-blue-400 rounded-md px-4 py-2 text-base hover:bg-blue-700 transition cursor-pointer`}
+                onClick={() => window.open('/edit', '_blank')}
+              >
+                Preview Edit
+              </button>
+              <button
+                className={`bg-red-600 rounded-md px-4 py-2 text-base hover:bg-red-700 transition cursor-pointer`}
+                onClick={async () => {
+                  await signOut();
+                  navigate('/');
+                }}
+              >
+                Cerrar sesión
+              </button>
             </div>
           </header>
 
