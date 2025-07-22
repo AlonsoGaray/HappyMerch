@@ -28,7 +28,8 @@ export default function Login() {
             navigate('/admin', { replace: true });
             return;
           } else if (role === 'editor') {
-            navigate('/welcome', { replace: true });
+            sessionStorage.removeItem('videoShown');
+            window.location.replace('/');
             return;
           }
         }
@@ -51,7 +52,8 @@ export default function Login() {
           navigate('/admin', { replace: true });
           return;
         } else if (role === 'editor') {
-          navigate('/edit', { replace: true });
+          sessionStorage.removeItem('videoShown');
+          window.location.replace('/');
           return;
         }
       }
