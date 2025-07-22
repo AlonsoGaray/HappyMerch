@@ -5,22 +5,11 @@ import {
   Settings,
   Users,
   BarChart3,
-  Bell,
-  User,
-  LogOut,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { GenericAdminPanel } from "@/components/admin/GenericAdminPanel"
 import { ConfigsAdminPanel } from "@/components/admin/ConfigsAdminPanel"
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table"

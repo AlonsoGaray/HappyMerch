@@ -369,7 +369,7 @@ export function ConfigsAdminPanel() {
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
-              <div className="flex items-center gap-3 mt-8 justify-end">
+              <div className="flex items-center gap-3 mt-8 justify-start">
                 <Button
                   onClick={handleSaveColors}
                   disabled={!colorChanged || savingColors}
