@@ -330,6 +330,16 @@ export async function updateBrandingConfig(updates: Partial<{
 }
 
 /**
+ * Deletes a logo from the 'logos' bucket.
+ * @param fileName - The name of the logo file to delete.
+ */
+export async function deleteLogo(fileName: string): Promise<void> {
+  const bucketName = 'logos';
+  const { error } = await supabase.storage.from(bucketName).remove([fileName]);
+  if (error) throw error;
+}
+
+/**
  * Obtiene la configuración de branding de la tabla 'config'.
  * @returns La fila de configuración (o null si no existe)
  */

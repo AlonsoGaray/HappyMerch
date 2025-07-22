@@ -1,9 +1,14 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "../ui/card"
 import { Button } from "../ui/button"
-import { Upload } from "lucide-react"
+import { Upload, Trash2 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { uploadLogo, updateBrandingConfig, updateTableRow } from "@/lib/supabase"
+import {
+  uploadLogo,
+  updateBrandingConfig,
+  updateTableRow,
+  deleteLogo,
+} from "@/lib/supabase";
 import { useGlobalData } from "@/contexts/AdminDataContext"
 import { SketchPicker } from 'react-color'
 import type { ColorResult } from 'react-color'
@@ -51,9 +56,12 @@ export function ConfigsAdminPanel() {
     tab_button_font: '',
     nav_button_font: '',
   });
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    if (data.config?.logo_url && data.logos.some(l => l.url === data.config.logo_url)) {
+    if (data.config?.logo_url === '') {
+      setSelectedLogo('');
+    } else if (data.config?.logo_url && data.logos.some(l => l.url === data.config.logo_url)) {
       setSelectedLogo(data.config.logo_url);
     } else if (data.logos.length > 0) {
       setSelectedLogo(data.logos[0].url);
@@ -93,6 +101,33 @@ export function ConfigsAdminPanel() {
     } finally {
       setSaving(false);
       setTimeout(() => setSaveMsg(""), 2000);
+    }
+  };
+
+  const handleDeleteLogo = async () => {
+    if (!selectedLogo) return;
+
+    const logoToDelete = data.logos.find((logo) => logo.url === selectedLogo);
+    if (!logoToDelete) return;
+
+    if (
+      !confirm(
+        `¿Estás seguro de que quieres eliminar el logo "${logoToDelete.name}"?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await deleteLogo(logoToDelete.name);
+
+      if (data.config.logo_url === selectedLogo) {
+        await updateBrandingConfig({ logo_url: "" });
+      }
+      await refreshData();
+      setSelectedLogo("");
+    } catch (err) {
+      alert("Error al eliminar el logo");
     }
   };
 
@@ -140,41 +175,64 @@ export function ConfigsAdminPanel() {
           <Card>
             <CardContent className="space-y-6">
               <div className="flex items-center space-x-6">
-                <div className="flex-shrink-0">
-                  <img
-                    src={selectedLogo}
-                    alt="Logotipo de la Marca"
-                    className="h-24 w-24 rounded-lg object-contain border"
-                  />
-                </div>
-                <div>
-                  <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                    <Upload className="mr-2 h-4 w-4" />
-                    {uploading ? "Subiendo..." : "Subir nuevo logotipo"}
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleUpload}
-                  />
-                </div>
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="border rounded p-2"
+                />
+                <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  {uploading ? "Subiendo..." : "Subir nuevo logotipo"}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteLogo}
+                  disabled={!selectedLogo || selectedLogo === ""}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleUpload}
+                />
               </div>
               {/* Lista de logos */}
               <div className="mt-6">
                 <div className="mb-2 font-semibold">Logos disponibles:</div>
                 <div className="flex gap-4 flex-wrap">
-                  {data.logos.map(logo => (
+                  <div className="text-center">
                     <button
-                      key={logo.url}
-                      className={`border rounded-lg p-1 transition ${selectedLogo === logo.url ? 'ring-4 ring-pink-300' : ''}`}
-                      onClick={() => setSelectedLogo(logo.url)}
-                      title={logo.name}
+                      className={`border rounded-lg p-1 transition ${selectedLogo === '' ? 'ring-4 ring-pink-300' : ''}`}
+                      onClick={() => setSelectedLogo('')}
+                      title="No usar logotipo"
                     >
-                      <img src={logo.url} alt={logo.name} className="h-16 w-16 object-contain" />
+                      <span className="h-16 w-16 flex items-center justify-center">Vacío</span>
                     </button>
-                  ))}
+                    <div className="mt-1">Vacío</div>
+                  </div>
+
+                  {data.logos
+                    .filter(logo => logo.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                    .map(logo => {
+                      const formattedName = logo.name.replace(/_/g, ' ').replace(/\.[^/.]+$/, '');
+                      return (
+                        <div key={logo.url} className="text-center">
+                          <button
+                            className={`border rounded-lg p-1 transition ${selectedLogo === logo.url ? 'ring-4 ring-pink-300' : ''}`}
+                            onClick={() => setSelectedLogo(logo.url)}
+                            title={formattedName}
+                          >
+                            <img src={logo.url} alt={formattedName} className="h-16 w-16 object-contain" />
+                          </button>
+                          <div className="mt-1">{formattedName}</div>
+                        </div>
+                      );
+                    })}
                   {data.logos.length === 0 && <span className="text-gray-400">No hay logos subidos</span>}
                 </div>
               </div>
@@ -184,7 +242,7 @@ export function ConfigsAdminPanel() {
                   variant="outline"
                   className="border-blue-600 text-blue-600 hover:bg-blue-50"
                   onClick={handleSaveLogo}
-                  disabled={!selectedLogo || saving}
+                  disabled={saving}
                 >
                   {saving ? "Guardando..." : "Guardar como logo principal"}
                 </Button>
