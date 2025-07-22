@@ -2,6 +2,8 @@ import { Plus } from 'lucide-react';
 import React, { useState } from 'react';
 import { useVerticalDragScroll, useSafeItemSelect } from '../utils/ScrollUtils';
 import { SketchPicker } from 'react-color';
+import { Scrollbar } from 'react-scrollbars-custom';
+import { useGlobalData } from '@/contexts/AdminDataContext';
 
 const FONTS = [
   { label: 'Pacifico', className: 'font-pacifico' },
@@ -35,6 +37,7 @@ interface TextToolsProps {
 }
 
 const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUpdateTextItem }) => {
+  const { data } = useGlobalData()
   const [text, setText] = useState('');
   const [font, setFont] = useState(FONTS[0].className);
   const [color, setColor] = useState(COLORS[0]);
@@ -81,28 +84,28 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
             name='texto'
             />
           <button
-            className="flex bg-pink-300 text-white rounded h-8 w-8 items-center justify-center px-0.5"
+            className="flex text-white rounded h-8 w-8 items-center justify-center px-0.5"
+            style={{backgroundColor: data.config?.main_color, mixBlendMode: 'screen' }}
             onClick={handleAdd}
             title="Agregar texto"
           >
-            <Plus strokeWidth={3} color='oklch(65.6% 0.241 354.308)' size={28} />
+            <Plus strokeWidth={3} color='white' size={28} />
           </button>
         </div>
-        <div
-          className="scroll flex flex-wrap gap-2 mb-2 w-full justify-between max-h-24 overflow-y-scroll pr-1 cursor-grab active:cursor-grabbing select-none"
-          ref={dragScroll.scrollRef}
-          onMouseDown={dragScroll.onMouseDown}
-          onMouseMove={dragScroll.onMouseMove}
-          onMouseUp={dragScroll.onMouseUp}
-          onMouseLeave={dragScroll.onMouseLeave}
-          onTouchStart={dragScroll.onTouchStart}
-          onTouchMove={dragScroll.onTouchMove}
-          onTouchEnd={dragScroll.onTouchEnd}
+        {/* Reemplazo del div scroll por Scrollbar */}
+        <Scrollbar 
+          className=''
+          style={{ width: "100%", height: 96 }}
+          contentProps={{ style: { display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: 5 } }}
+          trackYProps={{ style: { mixBlendMode: 'screen', backgroundColor: data.config?.main_color, height: '100%', top: 0 } }}
+          thumbYProps={{ style: { background: '#fff'} }}
+          ref={dragScroll.scrollRef as any}
         >
           {FONTS.map((f, idx) => (
             <button
               key={f.className}
-              className={`px-3 py-1 w-[48%] rounded ${font === f.className ? 'bg-pink-200' : 'bg-pink-300'} ${f.className}`}
+              className={`px-3 py-1 w-[49%] rounded ${f.className}`}
+              style={font === f.className ? {backgroundColor: 'white'} : {backgroundColor: data.config?.main_color, mixBlendMode: 'screen', color: 'white'}}
               onMouseDown={e => safeSelect.handleMouseDown(e, idx)}
               onMouseUp={e => safeSelect.handleMouseUp(e, idx)}
               onTouchStart={e => safeSelect.handleTouchStart(e, idx)}
@@ -111,7 +114,30 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
               {f.label}
             </button>
           ))}
-        </div>
+        </Scrollbar>
+          {/* <div
+            className="flex flex-wrap gap-2 mb-2 w-full justify-between cursor-grab active:cursor-grabbing select-none"
+            onMouseDown={dragScroll.onMouseDown}
+            onMouseMove={dragScroll.onMouseMove}
+            onMouseUp={dragScroll.onMouseUp}
+            onMouseLeave={dragScroll.onMouseLeave}
+            onTouchStart={dragScroll.onTouchStart}
+            onTouchMove={dragScroll.onTouchMove}
+            onTouchEnd={dragScroll.onTouchEnd}
+          >
+            {FONTS.map((f, idx) => (
+              <button
+                key={f.className}
+                className={`px-3 py-1 w-[48%] rounded ${font === f.className ? 'bg-pink-200' : 'bg-pink-300'} ${f.className}`}
+                onMouseDown={e => safeSelect.handleMouseDown(e, idx)}
+                onMouseUp={e => safeSelect.handleMouseUp(e, idx)}
+                onTouchStart={e => safeSelect.handleTouchStart(e, idx)}
+                onTouchEnd={e => safeSelect.handleTouchEnd(e, idx)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div> */}
       </div>
       <div className="flex flex-wrap gap-2 w-1/3 justify-center relative">
         {COLORS.map(c => (
@@ -128,7 +154,8 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
           />
         ))}
         <button
-          className="mt-2 px-2 py-1 bg-pink-200 rounded text-sm text-pink-900 border border-pink-300 w-full"
+          className="mt-2 px-2 py-1 rounded text-sm w-full text-white"
+            style={{backgroundColor: data.config?.main_color, mixBlendMode: 'screen' }}
           onClick={() => setShowPalette(v => !v)}
         >
           {showPalette ? 'Cerrar paleta' : 'Abrir paleta'}
