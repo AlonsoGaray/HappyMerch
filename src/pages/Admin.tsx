@@ -28,16 +28,16 @@ import { useEffect } from "react"
 import { getAllClientProducts } from "@/lib/supabase"
 
 const sidebarItems = [
+  { id: "diseños_clientes", label: "Diseños de Clientes", icon: Palette },
   { id: "productos", label: "Productos", icon: Package },
   { id: "elementos", label: "Elementos", icon: Palette },
   { id: "fondos", label: "Fondos", icon: BarChart3 },
   { id: "personalizacion", label: "Personalización", icon: Settings },
   { id: "usuarios", label: "Usuarios", icon: Users },
-  { id: "diseños_clientes", label: "Diseños de Clientes", icon: Palette }, // Nuevo ítem
 ]
 
 export default function AdminPanel() {
-  const [activeSection, setActiveSection] = useState("dashboard")
+  const [activeSection, setActiveSection] = useState("diseños_clientes")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [clientProducts, setClientProducts] = useState<any[]>([])
   const [loadingClientProducts, setLoadingClientProducts] = useState(false)
@@ -98,16 +98,16 @@ export default function AdminPanel() {
           <header className="bg-white shadow-sm border-b h-16 flex items-center justify-between px-6">
             <div className="flex items-center">
               <h2 className="text-lg font-semibold text-gray-800 capitalize">
-                {activeSection === "productos"
-                    ? "Gestión de Productos"
+                {activeSection === "diseños_clientes"
+                    ? "Gestión de Clientes"
                     : activeSection === "elementos"
                       ? "Gestión de Elementos"
                       : activeSection === "fondos"
                         ? "Gestión de Fondos"
                         : activeSection === "personalizacion"
                           ? "Personalización de Marca"
-                          : activeSection === "diseños_clientes"
-                            ? "Diseños de Clientes"
+                          : activeSection === "productos"
+                            ? "Diseños de Productos"
                             : activeSection}
               </h2>
             </div>
