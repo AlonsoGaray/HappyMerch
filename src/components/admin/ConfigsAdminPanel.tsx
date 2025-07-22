@@ -330,14 +330,20 @@ export function ConfigsAdminPanel() {
             <CardContent>
               <div className="flex flex-col gap-3">
                 {/* Font Selection Inputs */}
-                {['welcome_title_font', 'welcome_subtitle_font', 'welcome_button_font', 'tab_button_font', 'nav_button_font'].map((fontType) => (
-                  <div key={fontType} className="flex items-center gap-3">
-                    <label htmlFor={fontType} className="font-semibold">{fontType.replace(/_/g, ' ')}</label>
+                {[
+                  { id: 'welcome_title_font', label: 'Título de bienvenida' },
+                  { id: 'welcome_subtitle_font', label: 'Subtítulo de bienvenida' },
+                  { id: 'welcome_button_font', label: 'Botón de bienvenida' },
+                  { id: 'tab_button_font', label: 'Botones de pestaña' },
+                  { id: 'nav_button_font', label: 'Botones de navegación' }
+                ].map(({ id, label }) => (
+                  <div key={id} className="flex items-center gap-3">
+                    <label htmlFor={id} className="font-semibold">{label}</label>
                     <select
-                      id={fontType}
+                      id={id}
                       className="border rounded p-2"
-                      value={fontSelections[fontType as keyof typeof fontSelections]}
-                      onChange={(e) => handleFontChange(fontType as keyof typeof fontSelections, e.target.value)}
+                      value={fontSelections[id as keyof typeof fontSelections]}
+                      onChange={(e) => handleFontChange(id as keyof typeof fontSelections, e.target.value)}
                     >
                       {FONT_OPTIONS.map((font) => (
                         <option key={font.value} value={font.value}>{font.label}</option>
@@ -358,14 +364,14 @@ export function ConfigsAdminPanel() {
                           nav_button_font: fontSelections.nav_button_font,
                         };
                         await updateTableRow('config', '5e46ee3c-1885-4257-b486-ff225603d3f2', updates);
-                        setSaveMsg('Configuración de fuentes guardada correctamente');
+                        setSaveMsg('Configuración guardada correctamente');
                       } catch (error) {
-                        setSaveMsg('Error al guardar la configuración de fuentes');
+                        setSaveMsg('Error al guardar la configuración');
                       }
                     }}
                     className="bg-blue-600 text-white hover:bg-blue-700"
                   >
-                    Guardar configuración de fuentes
+                    Guardar configuración
                   </Button>
                   {saveMsg && <span className="text-sm text-gray-600">{saveMsg}</span>}
                 </div>

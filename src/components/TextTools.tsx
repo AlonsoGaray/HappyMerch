@@ -70,6 +70,41 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
     dragScroll,
   });
 
+  // Add custom drag-and-scroll functionality with null checks
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!dragScroll.scrollRef.current) return;
+    const startY = e.clientY;
+    const startScrollTop = dragScroll.scrollRef.current.scrollTop;
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!dragScroll.scrollRef.current) return;
+      const deltaY = moveEvent.clientY - startY;
+      dragScroll.scrollRef.current.scrollTop = startScrollTop - deltaY;
+    };
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!dragScroll.scrollRef.current) return;
+    const startY = e.touches[0].clientY;
+    const startScrollTop = dragScroll.scrollRef.current.scrollTop;
+    const onTouchMove = (moveEvent: TouchEvent) => {
+      if (!dragScroll.scrollRef.current) return;
+      const deltaY = moveEvent.touches[0].clientY - startY;
+      dragScroll.scrollRef.current.scrollTop = startScrollTop - deltaY;
+    };
+    const onTouchEnd = () => {
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+    };
+    document.addEventListener('touchmove', onTouchMove);
+    document.addEventListener('touchend', onTouchEnd);
+  };
+
   return (
     <div className="flex gap-5 w-full max-w-lg self-center items-center h-44 max-h-44 justify-center pt-5">
       <div className='flex flex-col w-2/3 gap-2'>
@@ -100,6 +135,13 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
           trackYProps={{ style: { mixBlendMode: 'screen', backgroundColor: data.config?.main_color, height: '100%', top: 0 } }}
           thumbYProps={{ style: { background: '#fff'} }}
           ref={dragScroll.scrollRef as any}
+          onMouseDown={handleMouseDown}
+          onMouseMove={dragScroll.onMouseMove}
+          onMouseUp={dragScroll.onMouseUp}
+          onMouseLeave={dragScroll.onMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={dragScroll.onTouchMove}
+          onTouchEnd={dragScroll.onTouchEnd}
         >
           {FONTS.map((f, idx) => (
             <button
@@ -115,29 +157,6 @@ const TextTools: React.FC<TextToolsProps> = ({ onAddText, selectedTextItem, onUp
             </button>
           ))}
         </Scrollbar>
-          {/* <div
-            className="flex flex-wrap gap-2 mb-2 w-full justify-between cursor-grab active:cursor-grabbing select-none"
-            onMouseDown={dragScroll.onMouseDown}
-            onMouseMove={dragScroll.onMouseMove}
-            onMouseUp={dragScroll.onMouseUp}
-            onMouseLeave={dragScroll.onMouseLeave}
-            onTouchStart={dragScroll.onTouchStart}
-            onTouchMove={dragScroll.onTouchMove}
-            onTouchEnd={dragScroll.onTouchEnd}
-          >
-            {FONTS.map((f, idx) => (
-              <button
-                key={f.className}
-                className={`px-3 py-1 w-[48%] rounded ${font === f.className ? 'bg-pink-200' : 'bg-pink-300'} ${f.className}`}
-                onMouseDown={e => safeSelect.handleMouseDown(e, idx)}
-                onMouseUp={e => safeSelect.handleMouseUp(e, idx)}
-                onTouchStart={e => safeSelect.handleTouchStart(e, idx)}
-                onTouchEnd={e => safeSelect.handleTouchEnd(e, idx)}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div> */}
       </div>
       <div className="flex flex-wrap gap-2 w-1/3 justify-center relative">
         {COLORS.map(c => (
