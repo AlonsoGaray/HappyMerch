@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import NavBar from "../components/NavBar";
 import { TABS } from "../lib/constants";
 import ProductSelector, { type Product } from "../components/ProductSelector";
@@ -17,6 +17,7 @@ import LeftSidebar from "../components/LeftSideBar";
 import { useGlobalData } from "../contexts/AdminDataContext";
 import { saveDesignWithFeedback } from "../lib/supabase";
 import FeedbackDialog from "../components/FeedbackDialog";
+import Done from "../components/Done";
 
 const DEFAULT_SIZE = 60;
 
@@ -85,7 +86,7 @@ const EditPage: React.FC = () => {
   const [scale, setScale] = useState(1);
   const [showDashedBorder, setShowDashedBorder] = useState(true);
   const [showLayers, setShowLayers] = useState(true);
-  const [mode, setMode] = useState<'edit' | 'confirm'>("edit");
+  const [mode, setMode] = useState<'edit' | 'confirm' | 'done'>("edit");
   const [isFeedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [showBubble, setShowBubble] = useState(false); // Por defecto oculto
   // Adapt to new product structure from data.products
@@ -279,9 +280,8 @@ const EditPage: React.FC = () => {
       const response = await fetch(dataUrl);
       const blob = await response.blob();
       await saveDesignWithFeedback(blob, feedbackData);
-      alert("¡Gracias por tu opinión! Tu diseño ha sido guardado.");
       setFeedbackDialogOpen(false);
-      setMode("edit");
+      setMode("done"); // Go to done mode after feedback
     } catch (error: any) {
       console.error("Error al guardar:", error);
       if (
@@ -381,11 +381,8 @@ const EditPage: React.FC = () => {
     }
   }, [selectedId, itemStates, fabricRef]);
 
-  const memoizedCanvasItems = useMemo(() => canvasItems, [canvasItems]);
-  const memoizedProduct = useMemo(() => product, [product]);
-
   return (
-    <div className="min-h-dvh flex flex-col bg-gray-100 max-h-dvh items-center pb-5">
+    <div className="min-h-dvh flex flex-col bg-gray-100 max-h-dvh items-center">
       {mode === "edit" && (
         <div className="w-full absolute top-14 z-30">
           <StepBar step={canvasItems.length === 0 && selectedBgIdx === -1 ? 1 : 2} />
@@ -396,9 +393,19 @@ const EditPage: React.FC = () => {
           <StepBar step={3} />
         </div>
       )}
+      {mode === "done" && (
+        <Done
+          product={product}
+          items={canvasItems}
+          selectedBg={selectedBgIdx >= 0 && selectedBgIdx < visibleBackgrounds.length ? visibleBackgrounds[selectedBgIdx] : null}
+          mainColor={data.config?.main_color}
+          titleFont={data.config?.welcome_title_font}
+          subtitleFont={data.config?.welcome_subtitle_font}
+        />
+      )}
       {mode === "edit" ? (
         <NavBar onSave={handleNavBarSave} />
-      ) : (
+      ) : mode === "confirm" ? (
         <div className="flex flex-col w-full p-14">
           <div className="flex gap-6">
             <img className="h-fit max-h-12" src="/Logo.svg" alt="logo" />
@@ -407,7 +414,7 @@ const EditPage: React.FC = () => {
             )}
           </div>
         </div>
-      )}
+      ) : null}
       <div className="flex-grow flex relative w-full justify-center items-center overflow-hidden">
         {mode === "edit" && (
           <LeftSidebar
@@ -418,35 +425,33 @@ const EditPage: React.FC = () => {
             onFlipX={handleFlipX}
           />
         )}
-        <div className="flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto">
-          <CanvasArea
-            ref={canvasAreaRef}
-            product={memoizedProduct}
-            items={memoizedCanvasItems}
-            selectedId={mode === "edit" ? selectedId : null}
-            setSelectedId={setSelectedId}
-            fabricRef={fabricRef}
-            scale={scale}
-            selectedBg={
-              selectedBgIdx >= 0 && selectedBgIdx < visibleBackgrounds.length
-                ? visibleBackgrounds[selectedBgIdx]
-                : null
-            }
-            onUpdateItems={setCanvasItems}
-            showDashedBorder={showDashedBorder && mode === "edit"}
-            isVisible={isVisible}
-            setItemStates={setItemStates}
-            readOnly={mode === "confirm"}
-          />
-          {mode === "edit" && (
-            <BottomBar
-              selectedId={selectedId}
-              onToggleDashedBorder={() => setShowDashedBorder((v) => !v)}
-              onToggleLayers={() => setShowLayers((v) => !v)}
-              onZoom={handleZoom}
+        {mode !== "done" && (
+          <div className="flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto">
+            <CanvasArea
+              ref={canvasAreaRef}
+              product={product}
+              items={canvasItems}
+              selectedId={mode === "edit" ? selectedId : null}
+              setSelectedId={setSelectedId}
+              fabricRef={fabricRef}
+              scale={scale}
+              selectedBg={selectedBgIdx >= 0 && selectedBgIdx < visibleBackgrounds.length ? visibleBackgrounds[selectedBgIdx] : null}
+              onUpdateItems={setCanvasItems}
+              showDashedBorder={showDashedBorder && mode === "edit"}
+              isVisible={isVisible}
+              setItemStates={setItemStates}
+              readOnly={mode === "confirm"}
             />
-          )}
-        </div>
+            {mode === "edit" && (
+              <BottomBar
+                selectedId={selectedId}
+                onToggleDashedBorder={() => setShowDashedBorder((v) => !v)}
+                onToggleLayers={() => setShowLayers((v) => !v)}
+                onZoom={handleZoom}
+              />
+            )}
+          </div>
+        )}
         {mode === "edit" && showLayers && (
           <RightSidebar
             selectedId={selectedId}
@@ -534,11 +539,13 @@ const EditPage: React.FC = () => {
           </div>
         </>
       )}
-      <FeedbackDialog
-        isOpen={isFeedbackDialogOpen}
-        onClose={() => setFeedbackDialogOpen(false)}
-        onSubmit={handleSave}
-      />
+      {mode !== "done" && (
+        <FeedbackDialog
+          isOpen={isFeedbackDialogOpen}
+          onClose={() => setFeedbackDialogOpen(false)}
+          onSubmit={handleSave}
+        />
+      )}
     </div>
   );
 };

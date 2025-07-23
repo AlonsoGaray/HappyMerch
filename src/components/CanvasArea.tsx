@@ -590,7 +590,7 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
   return (
       <div
         ref={containerRef}
-        className="relative flex max-w-2xl w-full h-[650px] max-h-[650px] bg-white overflow-hidden"
+        className="relative flex max-w-2xl w-full h-[650px] max-h-[650px] overflow-hidden"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -598,7 +598,7 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        style={{ cursor: isDragging ? 'grabbing' : 'grab', pointerEvents: readOnly ? 'none' : 'auto' }}
+        style={{ cursor: isDragging ? 'grabbing' : 'grab', pointerEvents: readOnly ? 'none' : 'auto', backgroundColor: readOnly ? 'transparent' : 'white' }}
       >
         {/* Contenedor que agrupa imagen y canvas y aplica la transformación */}
         <div
