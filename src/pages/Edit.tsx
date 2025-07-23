@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import NavBar from '../components/NavBar';
 import { TABS } from '../constants';
 import ProductSelector, { type Product } from '../components/ProductSelector';
@@ -238,7 +238,7 @@ const EditPage: React.FC = () => {
       },
     }));
   };
-  const isVisible = (id: number) => itemStates[id]?.visible !== false;
+  const isVisible = useCallback((id: number) => itemStates[id]?.visible !== false, [itemStates]);
 
   // Handler para reordenar capas desde DnD
   const handleReorderItems = (newOrder: CanvasAnyItem[]) => {
@@ -393,6 +393,10 @@ const EditPage: React.FC = () => {
     }
   }, [selectedId, itemStates, fabricRef]);
 
+  const memoizedCanvasItems = useMemo(() => canvasItems, [canvasItems]);
+  const memoizedItemStates = useMemo(() => itemStates, [itemStates]);
+  const memoizedProduct = useMemo(() => product, [product]);
+
   return (
     <div className="min-h-dvh flex flex-col bg-gray-100 max-h-dvh items-center pb-5">
       <NavBar onSave={handleSave} />
@@ -406,12 +410,12 @@ const EditPage: React.FC = () => {
         />
         <div className='flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto'>
           <CanvasArea
-            product={product}
-            items={canvasItems}
+            product={memoizedProduct}
+            items={memoizedCanvasItems}
             selectedId={selectedId}
             setSelectedId={setSelectedId}
             fabricRef={fabricRef}
-            itemStates={itemStates}
+            itemStates={memoizedItemStates}
             setItemStates={setItemStates}
             scale={scale}
             selectedBg={selectedBgIdx >= 0 && selectedBgIdx < visibleBackgrounds.length ? visibleBackgrounds[selectedBgIdx] : null}
