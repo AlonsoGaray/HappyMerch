@@ -5,6 +5,7 @@ import ProductSelector, { type Product } from '../components/ProductSelector';
 import ElementSelector from '../components/ElementSelector';
 import TextTools from '../components/TextTools';
 import CanvasArea from '../components/CanvasArea';
+import type { CanvasAreaHandle } from '../components/CanvasArea';
 import Tabs from '../components/Tabs';
 import type { CanvasItem } from '../types';
 import RightSidebar from '../components/RightSidebar';
@@ -39,6 +40,7 @@ const EditPage: React.FC = () => {
   // Cambia la definición de itemStates para incluir scaleX, scaleY y flipX
   const [itemStates, setItemStates] = useState<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } }>({});
   const fabricRef = useRef<Canvas | null>(null);
+  const canvasAreaRef = useRef<CanvasAreaHandle>(null);
   const [scale, setScale] = useState(1);
   const [showDashedBorder, setShowDashedBorder] = useState(true);
   const [showLayers, setShowLayers] = useState(true);
@@ -99,66 +101,13 @@ const EditPage: React.FC = () => {
 
   // Handlers para Sidebar
   const handleRotate = (id: number, angleIncrement: number) => {
-    setItemStates(states => {
-      let newRotation: number;
-      if (angleIncrement === -999) {
-        // Caso especial para reset a 0°
-        newRotation = 0;
-      } else {
-        const currentRotation = states[id]?.rotation ?? 0;
-        newRotation = (currentRotation + angleIncrement) % 360;
-      }
-      return {
-        ...states,
-        [id]: { ...states[id], rotation: newRotation },
-      };
-    });
-    const fabricCanvas = fabricRef.current;
-    if (fabricCanvas) {
-      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
-      if (obj) {
-        let newAngle: number;
-        if (angleIncrement === -999) {
-          // Caso especial para reset a 0°
-          newAngle = 0;
-        } else {
-          const currentAngle = obj.angle ?? 0;
-          newAngle = (currentAngle + angleIncrement) % 360;
-        }
-        obj.set('angle', newAngle);
-        fabricCanvas.renderAll();
-      }
-    }
+    canvasAreaRef.current?.rotateItem(id, angleIncrement);
   };
   const handleFlipX = (id: number) => {
-    setItemStates(states => {
-      const prev = states[id]?.flipX ?? false;
-      return {
-        ...states,
-        [id]: {
-          ...states[id],
-          flipX: !prev,
-        },
-      };
-    });
-    const fabricCanvas = fabricRef.current;
-    if (fabricCanvas) {
-      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
-      if (obj) {
-        obj.set('flipX', !(obj.flipX));
-        fabricCanvas.renderAll();
-      }
-    }
+    canvasAreaRef.current?.flipItem(id);
   };
   const handleResize = (id: number, factor: number) => {
-    setItemStates(states => {
-      const curr = states[id]?.size ?? DEFAULT_SIZE;
-      const newSize = factor > 1 ? curr * factor : Math.max(curr * factor, 10);
-      return {
-        ...states,
-        [id]: { ...states[id], size: newSize },
-      };
-    });
+    canvasAreaRef.current?.resizeItem(id, factor);
   };
   const handleLockToggle = (id: number) => {
     const fabricCanvas = fabricRef.current;
@@ -247,57 +196,9 @@ const EditPage: React.FC = () => {
 
   // Handler para alinear el elemento en el canvas según la posición 3x3
   const handleAlign = (id: number, position: string) => {
-    const fabricCanvas = fabricRef.current;
-    if (!fabricCanvas) return;
-    const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
-    if (!obj) return;
-
-    // Dimensiones del canvas de edición
-    const canvasW = product.width;
-    const canvasH = product.height;
-    // Centro puro
-    const centerX = canvasW / 2;
-    const centerY = canvasH / 2;
-    // Bordes
-    const left = 0;
-    const top = 0;
-    const right = canvasW;
-    const bottom = canvasH;
-
-    // Tamaño del objeto (asumimos centrado)
-    const objW = (obj.width ?? 0) * (obj.scaleX ?? 1);
-    const objH = (obj.height ?? 0) * (obj.scaleY ?? 1);
-
-    // Calcula la nueva posición
-    let x = centerX;
-    let y = centerY;
-    if (position.includes('left')) x = left + objW / 2;
-    if (position.includes('right')) x = right - objW / 2;
-    if (position === 'left') x = left + objW / 2;
-    if (position === 'right') x = right - objW / 2;
-    if (position === 'top-left' || position === 'top' || position === 'top-right') y = top + objH / 2;
-    if (position === 'bottom-left' || position === 'bottom' || position === 'bottom-right') y = bottom - objH / 2;
-    if (position === 'top') x = centerX;
-    if (position === 'bottom') x = centerX;
-    if (position === 'left') y = centerY;
-    if (position === 'right') y = centerY;
-    if (position === 'center') { x = centerX; y = centerY; }
-
-    // Actualiza el estado
-    setItemStates(states => ({
-      ...states,
-      [id]: {
-        ...states[id],
-        x,
-        y,
-      },
-    }));
-    // Actualiza el objeto en Fabric.js
-    obj.set({
-      left: x * scale,
-      top: y * scale,
-    });
-    fabricCanvas.renderAll();
+    if (product) {
+      canvasAreaRef.current?.alignItem(id, position, product);
+    }
   };
 
   const handleSave = async (feedbackData: {
@@ -396,7 +297,6 @@ const EditPage: React.FC = () => {
   }, [selectedId, itemStates, fabricRef]);
 
   const memoizedCanvasItems = useMemo(() => canvasItems, [canvasItems]);
-  const memoizedItemStates = useMemo(() => itemStates, [itemStates]);
   const memoizedProduct = useMemo(() => product, [product]);
 
   return (
@@ -412,13 +312,12 @@ const EditPage: React.FC = () => {
         />
         <div className='flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto'>
           <CanvasArea
+            ref={canvasAreaRef}
             product={memoizedProduct}
             items={memoizedCanvasItems}
             selectedId={selectedId}
             setSelectedId={setSelectedId}
             fabricRef={fabricRef}
-            itemStates={memoizedItemStates}
-            setItemStates={setItemStates}
             scale={scale}
             selectedBg={selectedBgIdx >= 0 && selectedBgIdx < visibleBackgrounds.length ? visibleBackgrounds[selectedBgIdx] : null}
             onUpdateItems={setCanvasItems}

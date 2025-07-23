@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { Canvas, Image, IText, Point } from 'fabric';
 import type { CanvasItem } from '../types';
 import type { Product } from './ProductSelector';
@@ -15,14 +15,20 @@ export type CanvasTextItem = {
 };
 export type CanvasAnyItem = CanvasItem | CanvasTextItem;
 
+export type CanvasAreaHandle = {
+  rotateItem: (id: number, angle: number) => void;
+  resizeItem: (id: number, factor: number) => void;
+  alignItem: (id: number, position: string, product: Product) => void;
+  flipItem: (id: number) => void;
+};
+
 type CanvasAreaProps = {
   product: Product;
   items?: CanvasAnyItem[];
   selectedId?: number | null;
   setSelectedId?: (id: number | null) => void;
   fabricRef: React.MutableRefObject<Canvas | null>;
-  itemStates: { [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } };
-  setItemStates: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } }>>;
+  // itemStates y setItemStates eliminados de las props
   scale: number;
   selectedBg?: { name: string; url: string } | null;
   onUpdateItems?: (updatedItems: CanvasAnyItem[]) => void;
@@ -33,24 +39,21 @@ type CanvasAreaProps = {
 
 const DEFAULT_SIZE = 60;
 
-// CanvasArea component renders the product image, a canvas for editing, and a sidebar for layer controls.
-const CanvasArea: React.FC<CanvasAreaProps> = ({ 
+const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({ 
   product, 
   items = [], 
   selectedId, 
   setSelectedId, 
   fabricRef, 
-  itemStates, 
-  setItemStates, 
   scale, 
   selectedBg, 
   onUpdateItems, 
   showDashedBorder, 
   isVisible 
-}) => {
+}, ref) => {
   if (!product) return <div>Cargando</div>
   const actualSelectedId = selectedId;
-  const actualSetSelectedId = setSelectedId!;
+  const actualSetSelectedId = setSelectedId;
   
   // Canvas DOM element reference
   const canvasElRef = useRef<HTMLCanvasElement>(null);
@@ -64,6 +67,10 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
+  // Estado local para itemStates
+  const itemStatesRef = useRef<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } }>({});
+  // Ref para distinguir si la selección viene del canvas
+  const isSelectionFromCanvas = useRef(false);
 
 
   // Reset pan when product changes
@@ -193,6 +200,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
       // Agregar los elementos normales y textos de forma secuencial
       const visibleItems = items.filter(item => isVisible(item.id));
       for (const item of visibleItems) {
+        const itemState = itemStatesRef.current[item.id] || {};
         if ((item as any).type === 'text') {
           const textItem = item as any;
           // Determinar el nombre real de la fuente
@@ -209,19 +217,19 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
           else if (fontFamily === 'font-georgia') fontFamily = 'Georgia';
 
           const txt = new IText(textItem.text, {
-            left: itemStates[item.id]?.x ?? textItem.x,
-            top: itemStates[item.id]?.y ?? textItem.y,
+            left: itemState.x ?? textItem.x,
+            top: itemState.y ?? textItem.y,
             fontFamily: fontFamily,
             fill: textItem.color,
-            fontSize: itemStates[item.id]?.size ?? DEFAULT_SIZE,
-            angle: itemStates[item.id]?.rotation ?? 0,
-            selectable: !(itemStates[item.id]?.locked),
-            hasControls: !(itemStates[item.id]?.locked),
-            lockMovementX: !!itemStates[item.id]?.locked,
-            lockMovementY: !!itemStates[item.id]?.locked,
-            lockScalingX: !!itemStates[item.id]?.locked,
-            lockScalingY: !!itemStates[item.id]?.locked,
-            lockRotation: !!itemStates[item.id]?.locked,
+            fontSize: itemState.size ?? DEFAULT_SIZE,
+            angle: itemState.rotation ?? 0,
+            selectable: !(itemState.locked),
+            hasControls: !(itemState.locked),
+            lockMovementX: !!itemState.locked,
+            lockMovementY: !!itemState.locked,
+            lockScalingX: !!itemState.locked,
+            lockScalingY: !!itemState.locked,
+            lockRotation: !!itemState.locked,
             hasBorders: true,
             objectCaching: false,
             originX: 'center',
@@ -231,10 +239,10 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
             cornerColor: '#fff',
             cornerStrokeColor: '#fff',
             // Nuevo: aplicar scaleX y scaleY si existen
-            scaleX: itemStates[item.id]?.scaleX ?? 1,
-            scaleY: itemStates[item.id]?.scaleY ?? 1,
+            scaleX: itemState.scaleX ?? 1,
+            scaleY: itemState.scaleY ?? 1,
             // Asegura que flipX se aplique
-            flipX: itemStates[item.id]?.flipX ?? false,
+            flipX: itemState.flipX ?? false,
           });
           (txt as any).id = item.id;
           fabricCanvas.add(txt);
@@ -251,20 +259,20 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
             const newFontSize = txt.fontSize ?? DEFAULT_SIZE;
             const newScaleX = txt.scaleX ?? 1;
             const newScaleY = txt.scaleY ?? 1;
-            setItemStates(states => ({
-              ...states,
+            itemStatesRef.current = {
+              ...itemStatesRef.current,
               [item.id]: {
                 x: txt.left ?? 0,
                 y: txt.top ?? 0,
                 size: newFontSize,
                 rotation: txt.angle ?? 0,
-                locked: itemStates[item.id]?.locked ?? false,
-                visible: itemStates[item.id]?.visible ?? true,
+                locked: itemState.locked ?? false,
+                visible: itemState.visible ?? true,
                 scaleX: newScaleX,
                 scaleY: newScaleY,
-                flipX: itemStates[item.id]?.flipX ?? false,
+                flipX: itemState.flipX ?? false,
               },
-            }));
+            };
             if (onUpdateItems) {
               onUpdateItems(items.map(it =>
                 it.id === item.id ? { ...it, size: newFontSize } : it
@@ -285,18 +293,18 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
         } else {
           const img = await Image.fromURL((item as any).src, {crossOrigin: 'anonymous'});
           img.set({
-            left: itemStates[item.id]?.x ?? (item as any).x,
-            top: itemStates[item.id]?.y ?? (item as any).y,
-            scaleX: ((itemStates[item.id]?.size ?? DEFAULT_SIZE) / (img.width ?? DEFAULT_SIZE)),
-            scaleY: ((itemStates[item.id]?.size ?? DEFAULT_SIZE) / (img.height ?? DEFAULT_SIZE)),
-            angle: itemStates[item.id]?.rotation ?? 0,
-            selectable: !(itemStates[item.id]?.locked),
-            hasControls: !(itemStates[item.id]?.locked),
-            lockMovementX: !!itemStates[item.id]?.locked,
-            lockMovementY: !!itemStates[item.id]?.locked,
-            lockScalingX: !!itemStates[item.id]?.locked,
-            lockScalingY: !!itemStates[item.id]?.locked,
-            lockRotation: !!itemStates[item.id]?.locked,
+            left: itemState.x ?? (item as any).x,
+            top: itemState.y ?? (item as any).y,
+            scaleX: ((itemState.size ?? DEFAULT_SIZE) / (img.width ?? DEFAULT_SIZE)),
+            scaleY: ((itemState.size ?? DEFAULT_SIZE) / (img.height ?? DEFAULT_SIZE)),
+            angle: itemState.rotation ?? 0,
+            selectable: !(itemState.locked),
+            hasControls: !(itemState.locked),
+            lockMovementX: !!itemState.locked,
+            lockMovementY: !!itemState.locked,
+            lockScalingX: !!itemState.locked,
+            lockScalingY: !!itemState.locked,
+            lockRotation: !!itemState.locked,
             hasBorders: true,
             objectCaching: false,
             originX: 'center',
@@ -305,7 +313,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
             cornerColor: '#fff',
             cornerStrokeColor: '#fff',
             // Asegura que flipX se aplique
-            flipX: itemStates[item.id]?.flipX ?? false,
+            flipX: itemState.flipX ?? false,
           }), {crossOrigin: 'anonymous'};
           img.setControlsVisibility({
             mt: false,
@@ -323,20 +331,20 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
             fabricCanvas.setActiveObject(img);
           }
           img.on('modified', () => {
-            setItemStates(states => ({
-              ...states,
+            itemStatesRef.current = {
+              ...itemStatesRef.current,
               [item.id]: {
                 x: img.left ?? 0,
                 y: img.top ?? 0,
                 size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)),
                 rotation: img.angle ?? 0,
-                locked: itemStates[item.id]?.locked ?? false,
-                visible: itemStates[item.id]?.visible ?? true,
+                locked: itemState.locked ?? false,
+                visible: itemState.visible ?? true,
                 scaleX: img.scaleX ?? 1,
                 scaleY: img.scaleY ?? 1,
                 flipX: img.flipX ?? false,
               },
-            }));
+            };
           });
         }
       }
@@ -355,24 +363,28 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
       fabricCanvas.absolutePan(new Point(-center.x, -center.y));
       fabricCanvas.renderAll();
     })();
-  }, [items, itemStates, selectedBg, product, scale, isVisible, fabricRef]);
+  }, [items, selectedBg, product, scale, isVisible, fabricRef]);
 
   // --- EFECTO DE SELECCIÓN ---
   useEffect(() => {
     const fabricCanvas = fabricRef.current;
     if (!fabricCanvas) return;
-    // Selecciona el objeto correspondiente si actualSelectedId cambia
-    if (actualSelectedId != null) {
-      const obj = fabricCanvas.getObjects().find(o => (o as any).id === actualSelectedId);
-      if (obj) {
-        fabricCanvas.setActiveObject(obj);
+    // Solo forzar el objeto activo si el cambio viene de React (no del canvas)
+    if (!isSelectionFromCanvas.current) {
+      if (actualSelectedId != null) {
+        const obj = fabricCanvas.getObjects().find(o => (o as any).id === actualSelectedId);
+        if (obj) {
+          fabricCanvas.setActiveObject(obj);
+        } else {
+          fabricCanvas.discardActiveObject();
+        }
       } else {
         fabricCanvas.discardActiveObject();
       }
-    } else {
-      fabricCanvas.discardActiveObject();
+      fabricCanvas.renderAll();
     }
-    fabricCanvas.renderAll();
+    // Resetear el ref después de cada render
+    isSelectionFromCanvas.current = false;
   }, [actualSelectedId, fabricRef]);
 
   // --- EFECTO DE EVENTOS (solo una vez) ---
@@ -381,12 +393,13 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
     if (!fabricCanvas) return;
     const handleSelection = (e: any) => {
       const obj = e.selected?.[0] || e.target;
-      if (obj && typeof (obj as any).id === 'number') {
+      if (obj && typeof (obj as any).id === 'number' && actualSetSelectedId) {
+        isSelectionFromCanvas.current = true;
         actualSetSelectedId((obj as any).id);
       }
     };
     const handleCleared = () => {
-      actualSetSelectedId(null);
+      if (actualSetSelectedId) actualSetSelectedId(null);
     };
     const handleDoubleClick = (e: any) => {
       if (e.target && e.target.type === 'text') {
@@ -406,49 +419,139 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
     };
   }, [fabricRef, actualSetSelectedId]);
 
-  // Ensure every item has an entry in itemStates so the action bar appears immediately
+  // En el renderizado de items, usar itemStatesRef.current en vez de prop
   useEffect(() => {
-    setItemStates(prev => {
-      const updated = { ...prev };
-      let changed = false;
-      items.forEach(item => {
-        if (!updated[item.id]) {
-          updated[item.id] = {
-            x: item.x,
-            y: item.y,
-            size: DEFAULT_SIZE,
-            rotation: 0,
-            locked: false,
-            visible: true,
-            scaleX: 1,
-            scaleY: 1,
-            flipX: false,
-          };
+    const updated = { ...itemStatesRef.current };
+    let changed = false;
+    items.forEach(item => {
+      if (!updated[item.id]) {
+        updated[item.id] = {
+          x: item.x,
+          y: item.y,
+          size: DEFAULT_SIZE,
+          rotation: 0,
+          locked: false,
+          visible: true,
+          scaleX: 1,
+          scaleY: 1,
+          flipX: false,
+        };
+        changed = true;
+      } else {
+        if (updated[item.id].scaleX === undefined) {
+          updated[item.id].scaleX = 1;
           changed = true;
-        } else {
-          // Asegura que scaleX, scaleY y flipX existan en todos los items
-          if (updated[item.id].scaleX === undefined) {
-            updated[item.id].scaleX = 1;
-            changed = true;
-          }
-          if (updated[item.id].scaleY === undefined) {
-            updated[item.id].scaleY = 1;
-            changed = true;
-          }
-          if (updated[item.id].flipX === undefined) {
-            updated[item.id].flipX = false;
-            changed = true;
-          }
         }
-      });
-      return changed ? updated : prev;
+        if (updated[item.id].scaleY === undefined) {
+          updated[item.id].scaleY = 1;
+          changed = true;
+        }
+        if (updated[item.id].flipX === undefined) {
+          updated[item.id].flipX = false;
+          changed = true;
+        }
+      }
     });
-  }, [items, setItemStates]);
+    if (changed) itemStatesRef.current = updated;
+  }, [items]);
+
+  useImperativeHandle(ref, () => ({
+    rotateItem: (id: number, angle: number) => {
+      const fabricCanvas = fabricRef.current;
+      if (!fabricCanvas) return;
+      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
+      if (obj) {
+        let newAngle: number;
+        if (angle === -999) {
+          newAngle = 0;
+        } else {
+          const currentAngle = obj.angle ?? 0;
+          newAngle = (currentAngle + angle) % 360;
+        }
+        obj.set('angle', newAngle);
+        // Actualizar el estado local
+        itemStatesRef.current[id] = {
+          ...itemStatesRef.current[id],
+          rotation: newAngle,
+        };
+        fabricCanvas.renderAll();
+      }
+    },
+    resizeItem: (id: number, factor: number) => {
+      const fabricCanvas = fabricRef.current;
+      if (!fabricCanvas) return;
+      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
+      if (obj) {
+        const curr = itemStatesRef.current[id]?.size ?? DEFAULT_SIZE;
+        const newSize = factor > 1 ? curr * factor : Math.max(curr * factor, 10);
+        const scaleX = (obj.width ? newSize / obj.width : 1);
+        const scaleY = (obj.height ? newSize / obj.height : 1);
+        obj.set({ scaleX, scaleY });
+        itemStatesRef.current[id] = {
+          ...itemStatesRef.current[id],
+          size: newSize,
+          scaleX,
+          scaleY,
+        };
+        fabricCanvas.renderAll();
+      }
+    },
+    alignItem: (id: number, position: string, product: Product) => {
+      const fabricCanvas = fabricRef.current;
+      if (!fabricCanvas) return;
+      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
+      if (!obj) return;
+      const canvasW = product.width;
+      const canvasH = product.height;
+      const centerX = canvasW / 2;
+      const centerY = canvasH / 2;
+      const left = 0;
+      const top = 0;
+      const right = canvasW;
+      const bottom = canvasH;
+      const objW = (obj.width ?? 0) * (obj.scaleX ?? 1);
+      const objH = (obj.height ?? 0) * (obj.scaleY ?? 1);
+      let x = centerX;
+      let y = centerY;
+      if (position.includes('left')) x = left + objW / 2;
+      if (position.includes('right')) x = right - objW / 2;
+      if (position === 'left') x = left + objW / 2;
+      if (position === 'right') x = right - objW / 2;
+      if (position === 'top-left' || position === 'top' || position === 'top-right') y = top + objH / 2;
+      if (position === 'bottom-left' || position === 'bottom' || position === 'bottom-right') y = bottom - objH / 2;
+      if (position === 'top') x = centerX;
+      if (position === 'bottom') x = centerX;
+      if (position === 'left') y = centerY;
+      if (position === 'right') y = centerY;
+      if (position === 'center') { x = centerX; y = centerY; }
+      obj.set({ left: x, top: y });
+      itemStatesRef.current[id] = {
+        ...itemStatesRef.current[id],
+        x,
+        y,
+      };
+      fabricCanvas.renderAll();
+    },
+    flipItem: (id: number) => {
+      const fabricCanvas = fabricRef.current;
+      if (!fabricCanvas) return;
+      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
+      if (obj) {
+        const prev = itemStatesRef.current[id]?.flipX ?? false;
+        obj.set('flipX', !prev);
+        itemStatesRef.current[id] = {
+          ...itemStatesRef.current[id],
+          flipX: !prev,
+        };
+        fabricCanvas.renderAll();
+      }
+    },
+  }), [fabricRef, product]);
 
   return (
       <div
         ref={containerRef}
-        className="relative flex max-w-2xl w-full h-[650px] max-h-[650px] bg-red-500 overflow-hidden"
+        className="relative flex max-w-2xl w-full h-[650px] max-h-[650px] bg-white overflow-hidden"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -518,6 +621,6 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
         </div>
       </div>
   );
-};
+});
 
 export default React.memo(CanvasArea); 
