@@ -105,27 +105,37 @@ export async function updateTableRow<T = any>(
  * @param tableName - The name of the table to delete the row from
  * @param bucketName - The name of the storage bucket to delete the file from
  * @param id - The ID of the row to delete
+ * @param isDesign - Boolean if it is the design to delete.
  * @returns The deleted row data, or throws an error on failure
  */
 export async function deleteTableRowAndFile<T = any>(
   tableName: string,
   bucketName: string,
-  id: string
+  id: string,
+  isDesign?: boolean
 ): Promise<T> {
-  // 1. First, get the row data to extract the file name
+  // 1. First, get the row data to extract the file name (or email if isDesign)
   const { data: rowData, error: fetchError } = await supabase
     .from(tableName)
-    .select('name')
+    .select(isDesign ? 'email' : 'name')
     .eq('id', id)
     .single();
   
   if (fetchError) throw fetchError;
-  if (!rowData?.name) throw new Error('No se encontró el nombre del archivo en la fila');
+
+  let fileKey: string | undefined;
+  if (isDesign) {
+    fileKey = (rowData && 'email' in rowData) ? `${rowData.email}-design.png` : undefined;
+  } else {
+    fileKey = (rowData && 'name' in rowData) ? rowData.name : undefined;
+  }
+
+  if (!fileKey) throw new Error('No se encontró el nombre del archivo en la fila');
 
   // 2. Delete the file from storage bucket
   const { error: storageError } = await supabase.storage
     .from(bucketName)
-    .remove([rowData.name]);
+    .remove([fileKey]);
   
   if (storageError) throw storageError;
 

@@ -65,7 +65,7 @@ export default function AdminPanel() {
   const handleDelete = async (id: string) => {
     if (!window.confirm("¿Seguro que deseas eliminar este diseño?")) return;
     try {
-      await deleteTableRowAndFile("client_product", "client-products", id);
+      await deleteTableRowAndFile("client_product", "client-products", id, true);
       setClientProducts(prev => prev.filter(p => p.id !== id));
     } catch (e: any) {
       alert(e.message || "Error al eliminar");
