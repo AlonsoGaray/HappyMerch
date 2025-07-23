@@ -370,7 +370,7 @@ export async function saveDesignWithFeedback(
   }
 ): Promise<any> {
   // Upload to Supabase
-  const fileName = `design-${Date.now()}.png`;
+  const fileName = `${feedback.email}-design.png`;
   const { data: uploadData, error: uploadError } = await supabase.storage
     .from('client-products')
     .upload(fileName, designBlob);
