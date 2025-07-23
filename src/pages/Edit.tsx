@@ -16,6 +16,7 @@ import BottomBar from "../components/BottomBar";
 import LeftSidebar from "../components/LeftSideBar";
 import { useGlobalData } from "../contexts/AdminDataContext";
 import { saveDesignWithFeedback } from "../lib/supabase";
+import FeedbackDialog from "../components/FeedbackDialog";
 
 const DEFAULT_SIZE = 60;
 
@@ -30,6 +31,33 @@ type CanvasTextItem = {
 };
 
 type CanvasAnyItem = CanvasItem | CanvasTextItem;
+
+// Utilidad para convertir hex a rgba
+function hexToRgba(hex: string, alpha: number) {
+  let c = hex.replace('#', '');
+  if (c.length === 3) c = c.split('').map(x => x + x).join('');
+  const num = parseInt(c, 16);
+  return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
+}
+
+// Barra de pasos reutilizable
+const StepBar: React.FC<{ step: 1 | 2 | 3 }> = ({ step }) => {
+  const stepLabels = ['PRODUCTO', 'PERSONALIZA', 'CONFIRMAR'];
+  return (
+    <div className="flex items-center w-full justify-center gap-8 mt-8 mb-4">
+      <button
+        className="flex items-center gap-2 font-bold py-2 px-6 rounded shadow focus:outline-none bg-teal-500 text-white"
+        disabled
+      >
+        <span className="flex items-center justify-center w-6 h-6 bg-white text-teal-500 rounded-full font-bold text-sm">{step}</span>
+        {stepLabels[step-1]}
+      </button>
+      <div className={`h-2 w-36 rounded-full ${step === 1 ? 'bg-teal-500' : 'bg-teal-200 opacity-60'}`} />
+      <div className={`h-2 w-36 rounded-full ${step === 2 ? 'bg-teal-500' : 'bg-teal-200 opacity-60'}`} />
+      <div className={`h-2 w-36 rounded-full ${step === 3 ? 'bg-teal-500' : 'bg-teal-200 opacity-60'}`} />
+    </div>
+  );
+};
 
 const EditPage: React.FC = () => {
   const { data } = useGlobalData();
@@ -57,6 +85,9 @@ const EditPage: React.FC = () => {
   const [scale, setScale] = useState(1);
   const [showDashedBorder, setShowDashedBorder] = useState(true);
   const [showLayers, setShowLayers] = useState(true);
+  const [mode, setMode] = useState<'edit' | 'confirm'>("edit");
+  const [isFeedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [showBubble, setShowBubble] = useState(false); // Por defecto oculto
   // Adapt to new product structure from data.products
   const visibleProducts: Product[] = data.products.filter((p: Product) => p.visible);
   const product = visibleProducts[productIdx] || visibleProducts[0];
@@ -234,6 +265,7 @@ const EditPage: React.FC = () => {
     }
   };
 
+  // Cambia el handleSave para solo usarse en 'Enviar diseño'
   const handleSave = async (feedbackData: {
     name: string;
     email: string;
@@ -241,19 +273,15 @@ const EditPage: React.FC = () => {
     rating: number;
   }) => {
     if (!fabricRef.current) return;
-
     try {
       const canvas = fabricRef.current;
-      const dataUrl = canvas.toDataURL({
-        multiplier: 2,
-      });
-
-      // Convert data URL to blob
+      const dataUrl = canvas.toDataURL({ multiplier: 2 });
       const response = await fetch(dataUrl);
       const blob = await response.blob();
-
       await saveDesignWithFeedback(blob, feedbackData);
       alert("¡Gracias por tu opinión! Tu diseño ha sido guardado.");
+      setFeedbackDialogOpen(false);
+      setMode("edit");
     } catch (error: any) {
       console.error("Error al guardar:", error);
       if (
@@ -274,6 +302,23 @@ const EditPage: React.FC = () => {
         alert("Hubo un error al guardar tu diseño. Por favor, intenta de nuevo.");
       }
     }
+  };
+  // Nuevo: handle para el botón Guardar del NavBar
+  const handleNavBarSave = () => {
+    setShowDashedBorder(false);
+    setShowLayers(false);
+    setMode("confirm");
+    setSelectedId(null); // Deselecciona cualquier elemento
+  };
+  // Nuevo: handle para volver a editar
+  const handleEditAgain = () => {
+    setShowDashedBorder(true);
+    setShowLayers(true);
+    setMode("edit");
+  };
+  // Nuevo: handle para enviar diseño
+  const handleSendDesign = () => {
+    setFeedbackDialogOpen(true);
   };
 
   // Lógica para permitir zoom infinito con pan
@@ -341,21 +386,44 @@ const EditPage: React.FC = () => {
 
   return (
     <div className="min-h-dvh flex flex-col bg-gray-100 max-h-dvh items-center pb-5">
-      <NavBar onSave={handleSave} />
+      {mode === "edit" && (
+        <div className="w-full absolute top-14 z-30">
+          <StepBar step={canvasItems.length === 0 && selectedBgIdx === -1 ? 1 : 2} />
+        </div>
+      )}
+      {mode === "confirm" && (
+        <div className="w-full absolute top-28">
+          <StepBar step={3} />
+        </div>
+      )}
+      {mode === "edit" ? (
+        <NavBar onSave={handleNavBarSave} />
+      ) : (
+        <div className="flex flex-col w-full p-14">
+          <div className="flex gap-6">
+            <img className="h-fit max-h-12" src="/Logo.svg" alt="logo" />
+            {data.config?.logo_url && (
+              <img className="h-fit max-h-12" src={data.config.logo_url} alt="logo marca" />
+            )}
+          </div>
+        </div>
+      )}
       <div className="flex-grow flex relative w-full justify-center items-center overflow-hidden">
-        <LeftSidebar
-          selectedId={selectedId}
-          onRotate={handleRotate}
-          onResize={handleResize}
-          onAlign={handleAlign}
-          onFlipX={handleFlipX}
-        />
+        {mode === "edit" && (
+          <LeftSidebar
+            selectedId={selectedId}
+            onRotate={handleRotate}
+            onResize={handleResize}
+            onAlign={handleAlign}
+            onFlipX={handleFlipX}
+          />
+        )}
         <div className="flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto">
           <CanvasArea
             ref={canvasAreaRef}
             product={memoizedProduct}
             items={memoizedCanvasItems}
-            selectedId={selectedId}
+            selectedId={mode === "edit" ? selectedId : null}
             setSelectedId={setSelectedId}
             fabricRef={fabricRef}
             scale={scale}
@@ -365,18 +433,21 @@ const EditPage: React.FC = () => {
                 : null
             }
             onUpdateItems={setCanvasItems}
-            showDashedBorder={showDashedBorder}
+            showDashedBorder={showDashedBorder && mode === "edit"}
             isVisible={isVisible}
             setItemStates={setItemStates}
+            readOnly={mode === "confirm"}
           />
-          <BottomBar
-            selectedId={selectedId}
-            onToggleDashedBorder={() => setShowDashedBorder((v) => !v)}
-            onToggleLayers={() => setShowLayers((v) => !v)}
-            onZoom={handleZoom}
-          />
+          {mode === "edit" && (
+            <BottomBar
+              selectedId={selectedId}
+              onToggleDashedBorder={() => setShowDashedBorder((v) => !v)}
+              onToggleLayers={() => setShowLayers((v) => !v)}
+              onZoom={handleZoom}
+            />
+          )}
         </div>
-        {showLayers && (
+        {mode === "edit" && showLayers && (
           <RightSidebar
             selectedId={selectedId}
             canvasItems={canvasItems}
@@ -391,26 +462,83 @@ const EditPage: React.FC = () => {
           />
         )}
       </div>
-      <div
-        className={`relative w-full pt-2 px-4 pb-2 flex flex-col max-w-11/12 overflow-visible rounded-xl scroll`}
-        style={{ backgroundColor: data.config?.main_color }}
-      >
-        <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
-        {activeTab === "product" && <ProductSelector onSelect={setProductIdx} />}
-        {activeTab === "fondos" && <BgSelector onSelect={setSelectedBgIdx} />}
-        {activeTab === "elements" && <ElementSelector onSelect={handleAddElement} />}
-        {activeTab === "text" && (
-          <TextTools
-            onAddText={handleAddText}
-            selectedTextItem={
-              canvasItems.find((i) => i.id === selectedId && (i as any).type === "text") as
-                | CanvasTextItem
-                | undefined
-            }
-            onUpdateTextItem={handleUpdateTextItem}
-          />
-        )}
-      </div>
+      {mode === "edit" && (
+        <div
+          className={`relative w-full pt-2 px-4 pb-2 flex flex-col max-w-11/12 overflow-visible rounded-xl scroll`}
+          style={{ backgroundColor: data.config?.main_color }}
+        >
+          <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+          {activeTab === "product" && <ProductSelector onSelect={setProductIdx} />}
+          {activeTab === "fondos" && <BgSelector onSelect={setSelectedBgIdx} />}
+          {activeTab === "elements" && <ElementSelector onSelect={handleAddElement} />}
+          {activeTab === "text" && (
+            <TextTools
+              onAddText={handleAddText}
+              selectedTextItem={
+                canvasItems.find((i) => i.id === selectedId && (i as any).type === "text") as
+                  | CanvasTextItem
+                  | undefined
+              }
+              onUpdateTextItem={handleUpdateTextItem}
+            />
+          )}
+        </div>
+      )}
+      {mode === "confirm" && (
+        <>
+          <div className="fixed right-8 top-1/2 transform -translate-y-1/2 flex flex-col items-end z-50">
+            {/* Globo de mensaje */}
+            {showBubble && (
+              <div className="relative">
+                <div className="absolute z-50">
+                  <button
+                    className="w-6 h-6 bg-pink-500 text-white rounded-full flex items-center justify-center text-lg font-bold shadow focus:outline-none"
+                    onClick={() => setShowBubble(false)}
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="bg-white border border-black rounded-full px-5 py-4 text-center max-w-[140px] min-w-[120px] relative flex items-center justify-center" style={{ aspectRatio: '1/1' }}>
+                  <span className="block text-xs font-bold leading-tight">¡QUEDÓ<br/>INCREÍBLE!<br/><span className="font-black">YA QUEREMOS<br/>VERLO</span></span>
+                </div>
+              </div>
+            )}
+            {/* Círculo teal con carita desde SVG */}
+            <div className="w-16 h-16 flex items-center justify-center cursor-pointer" onClick={() => setShowBubble(true)}>
+              <img src="/happy_face.svg" alt="Carita feliz" className="w-full h-full object-contain" />
+            </div>
+          </div>
+          <div className="flex flex-col items-center justify-center w-full pb-28 gap-10">
+            <h2 className="text-4xl font-bold text-center" style={{ color: data.config?.main_color }}>¡A UN PASO DE SER TUYO!</h2>
+            <p className="text-center text-xl max-w-xl">
+              Revisa los detalles finales, confirma tu creación y prepárate para recibir tu merch personalizado.
+            </p>
+            <div className="flex gap-4 mb-6">
+              <button
+                className="font-bold py-2 px-4 rounded"
+                style={{
+                  backgroundColor: data.config?.main_color ? hexToRgba(data.config.main_color, 0.5) : 'rgba(0,0,0,0.1)',
+                  color: data.config?.main_color || '#222',
+                }}
+                onClick={handleEditAgain}
+              >
+                EDITAR DISEÑO
+              </button>
+              <button
+                className="text-white font-bold py-2 px-4 rounded" style={{ backgroundColor: data.config?.main_color }}
+                onClick={handleSendDesign}
+              >
+                ENVIAR DISEÑO
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+      <FeedbackDialog
+        isOpen={isFeedbackDialogOpen}
+        onClose={() => setFeedbackDialogOpen(false)}
+        onSubmit={handleSave}
+      />
     </div>
   );
 };

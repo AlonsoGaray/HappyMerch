@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { signOut } from "../lib/auth";
-import FeedbackDialog from "./FeedbackDialog";
-import { useState } from "react";
 import { useGlobalData } from "@/contexts/AdminDataContext";
 
 type NavBarProps = {
@@ -11,21 +9,6 @@ type NavBarProps = {
 const NavBar = ({ onSave }: NavBarProps) => {
   const { data } = useGlobalData();
   const navigate = useNavigate();
-  const [isFeedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
-
-  const handleSave = () => {
-    setFeedbackDialogOpen(true);
-  };
-
-  const handleFeedbackSubmit = (data: {
-    name: string;
-    email: string;
-    comment: string;
-    rating: number;
-  }) => {
-    onSave(data);
-    setFeedbackDialogOpen(false);
-  };
 
   return (
     <>
@@ -47,7 +30,7 @@ const NavBar = ({ onSave }: NavBarProps) => {
             Nuevo
           </button>
           <button
-            onClick={handleSave}
+            onClick={() => onSave({ name: '', email: '', comment: '', rating: 0 })}
             className={`bg-gray-100 rounded-md px-4 py-2 text-base hover:bg-gray-200 transition ${data.config?.nav_button_font}`}
             style={{
               backgroundColor: data.config?.nav_btn_bg_color,
@@ -67,11 +50,6 @@ const NavBar = ({ onSave }: NavBarProps) => {
           </button>
         </div>
       </nav>
-      <FeedbackDialog
-        isOpen={isFeedbackDialogOpen}
-        onClose={() => setFeedbackDialogOpen(false)}
-        onSubmit={handleFeedbackSubmit}
-      />
     </>
   );
 };

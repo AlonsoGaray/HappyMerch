@@ -35,6 +35,7 @@ type CanvasAreaProps = {
   showDashedBorder?: boolean;
   isVisible: (id: number) => boolean;
   setItemStates?: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } }>>;
+  readOnly?: boolean; // NUEVO
 };
 
 
@@ -51,7 +52,8 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
   onUpdateItems, 
   showDashedBorder, 
   isVisible, 
-  setItemStates 
+  setItemStates, 
+  readOnly = false // NUEVO
 }, ref) => {
   if (!product) return <div>Cargando</div>
   const actualSelectedId = selectedId;
@@ -225,18 +227,18 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
             fill: textItem.color,
             fontSize: itemState.size ?? DEFAULT_SIZE,
             angle: itemState.rotation ?? 0,
-            selectable: !(itemState.locked),
-            hasControls: !(itemState.locked),
-            lockMovementX: !!itemState.locked,
-            lockMovementY: !!itemState.locked,
-            lockScalingX: !!itemState.locked,
-            lockScalingY: !!itemState.locked,
-            lockRotation: !!itemState.locked,
+            selectable: readOnly ? false : !(itemState.locked),
+            hasControls: readOnly ? false : !(itemState.locked),
+            lockMovementX: readOnly ? true : !!itemState.locked,
+            lockMovementY: readOnly ? true : !!itemState.locked,
+            lockScalingX: readOnly ? true : !!itemState.locked,
+            lockScalingY: readOnly ? true : !!itemState.locked,
+            lockRotation: readOnly ? true : !!itemState.locked,
             hasBorders: true,
             objectCaching: false,
             originX: 'center',
             originY: 'center',
-            editable: true,
+            editable: readOnly ? false : true,
             cornerStyle: 'circle',
             cornerColor: '#fff',
             cornerStrokeColor: '#fff',
@@ -248,50 +250,52 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           });
           (txt as any).id = item.id;
           fabricCanvas.add(txt);
-          if (actualSelectedId === item.id) {
+          if (!readOnly && actualSelectedId === item.id) {
             fabricCanvas.setActiveObject(txt);
           }
           // Configurar eventos de edición
-          txt.on('mousedblclick', () => {
-            (txt as any).enterEditing();
-            (txt as any).selectAll();
-          });
-          // Actualizar estado cuando se modifica la posición/tamaño
-          txt.on('modified', () => {
-            const newFontSize = txt.fontSize ?? DEFAULT_SIZE;
-            const newScaleX = txt.scaleX ?? 1;
-            const newScaleY = txt.scaleY ?? 1;
-            itemStatesRef.current = {
-              ...itemStatesRef.current,
-              [item.id]: {
-                x: txt.left ?? 0,
-                y: txt.top ?? 0,
-                size: newFontSize,
-                rotation: txt.angle ?? 0,
-                locked: itemState.locked ?? false,
-                visible: itemState.visible ?? true,
-                scaleX: newScaleX,
-                scaleY: newScaleY,
-                flipX: itemState.flipX ?? false,
-              },
-            };
-            if (onUpdateItems) {
-              onUpdateItems(items.map(it =>
-                it.id === item.id ? { ...it, size: newFontSize } : it
-              ));
-            }
-          });
-          (txt as any).on('editing:exited', () => {
-            const updatedItems = items.map(item => {
-              if (item.id === textItem.id) {
-                return { ...item, text: txt.text || '' };
-              }
-              return item;
+          if (!readOnly) {
+            txt.on('mousedblclick', () => {
+              (txt as any).enterEditing();
+              (txt as any).selectAll();
             });
-            if (onUpdateItems) {
-              onUpdateItems(updatedItems);
-            }
-          });
+            // Actualizar estado cuando se modifica la posición/tamaño
+            txt.on('modified', () => {
+              const newFontSize = txt.fontSize ?? DEFAULT_SIZE;
+              const newScaleX = txt.scaleX ?? 1;
+              const newScaleY = txt.scaleY ?? 1;
+              itemStatesRef.current = {
+                ...itemStatesRef.current,
+                [item.id]: {
+                  x: txt.left ?? 0,
+                  y: txt.top ?? 0,
+                  size: newFontSize,
+                  rotation: txt.angle ?? 0,
+                  locked: itemState.locked ?? false,
+                  visible: itemState.visible ?? true,
+                  scaleX: newScaleX,
+                  scaleY: newScaleY,
+                  flipX: itemState.flipX ?? false,
+                },
+              };
+              if (onUpdateItems) {
+                onUpdateItems(items.map(it =>
+                  it.id === item.id ? { ...it, size: newFontSize } : it
+                ));
+              }
+            });
+            (txt as any).on('editing:exited', () => {
+              const updatedItems = items.map(item => {
+                if (item.id === textItem.id) {
+                  return { ...item, text: txt.text || '' };
+                }
+                return item;
+              });
+              if (onUpdateItems) {
+                onUpdateItems(updatedItems);
+              }
+            });
+          }
         } else {
           const img = await Image.fromURL((item as any).src, {crossOrigin: 'anonymous'});
           img.set({
@@ -300,13 +304,13 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
             scaleX: ((itemState.size ?? DEFAULT_SIZE) / (img.width ?? DEFAULT_SIZE)),
             scaleY: ((itemState.size ?? DEFAULT_SIZE) / (img.height ?? DEFAULT_SIZE)),
             angle: itemState.rotation ?? 0,
-            selectable: !(itemState.locked),
-            hasControls: !(itemState.locked),
-            lockMovementX: !!itemState.locked,
-            lockMovementY: !!itemState.locked,
-            lockScalingX: !!itemState.locked,
-            lockScalingY: !!itemState.locked,
-            lockRotation: !!itemState.locked,
+            selectable: readOnly ? false : !(itemState.locked),
+            hasControls: readOnly ? false : !(itemState.locked),
+            lockMovementX: readOnly ? true : !!itemState.locked,
+            lockMovementY: readOnly ? true : !!itemState.locked,
+            lockScalingX: readOnly ? true : !!itemState.locked,
+            lockScalingY: readOnly ? true : !!itemState.locked,
+            lockRotation: readOnly ? true : !!itemState.locked,
             hasBorders: true,
             objectCaching: false,
             originX: 'center',
@@ -329,29 +333,31 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           });
           (img as any).id = item.id;
           fabricCanvas.add(img);
-          if (actualSelectedId === item.id) {
+          if (!readOnly && actualSelectedId === item.id) {
             fabricCanvas.setActiveObject(img);
           }
-          img.on('modified', () => {
-            itemStatesRef.current = {
-              ...itemStatesRef.current,
-              [item.id]: {
-                x: img.left ?? 0,
-                y: img.top ?? 0,
-                size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)),
-                rotation: img.angle ?? 0,
-                locked: itemState.locked ?? false,
-                visible: itemState.visible ?? true,
-                scaleX: img.scaleX ?? 1,
-                scaleY: img.scaleY ?? 1,
-                flipX: img.flipX ?? false,
-              },
-            };
-          });
+          if (!readOnly) {
+            img.on('modified', () => {
+              itemStatesRef.current = {
+                ...itemStatesRef.current,
+                [item.id]: {
+                  x: img.left ?? 0,
+                  y: img.top ?? 0,
+                  size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)),
+                  rotation: img.angle ?? 0,
+                  locked: itemState.locked ?? false,
+                  visible: itemState.visible ?? true,
+                  scaleX: img.scaleX ?? 1,
+                  scaleY: img.scaleY ?? 1,
+                  flipX: img.flipX ?? false,
+                },
+              };
+            });
+          }
         }
       }
       // --- NUEVO: volver a seleccionar el objeto activo tras renderizar todo ---
-      if (actualSelectedId != null) {
+      if (!readOnly && actualSelectedId != null) {
         const obj = fabricCanvas.getObjects().find(o => (o as any).id === actualSelectedId);
         if (obj) {
           fabricCanvas.setActiveObject(obj);
@@ -365,13 +371,22 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
       fabricCanvas.absolutePan(new Point(-center.x, -center.y));
       fabricCanvas.renderAll();
     })();
-  }, [items, selectedBg, product, scale, isVisible, fabricRef]);
+  }, [items, selectedBg, product, scale, isVisible, fabricRef, readOnly]);
 
   // --- EFECTO DE SELECCIÓN ---
   useEffect(() => {
     const fabricCanvas = fabricRef.current;
     if (!fabricCanvas) return;
-    
+    if (readOnly) {
+      fabricCanvas.discardActiveObject();
+      fabricCanvas.selection = false;
+      fabricCanvas.skipTargetFind = true;
+      fabricCanvas.renderAll();
+      return;
+    } else {
+      fabricCanvas.selection = true;
+      fabricCanvas.skipTargetFind = false;
+    }
     // Solo forzar el objeto activo si el cambio viene de React (no del canvas)
     if (!isSelectionFromCanvas.current) {
       if (actualSelectedId != null) {
@@ -393,7 +408,7 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
     }
     // Resetear el ref después de cada render
     isSelectionFromCanvas.current = false;
-  }, [actualSelectedId, fabricRef, itemStatesRef.current]);
+  }, [actualSelectedId, fabricRef, itemStatesRef.current, readOnly]);
   
   // --- EFECTO DE EVENTOS (solo una vez) ---
   useEffect(() => {
