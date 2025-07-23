@@ -56,6 +56,13 @@ export function ConfigsAdminPanel() {
     tab_button_font: '',
     nav_button_font: '',
   });
+  const [initialFontSelections, setInitialFontSelections] = useState({
+    welcome_title_font: '',
+    welcome_subtitle_font: '',
+    welcome_button_font: '',
+    tab_button_font: '',
+    nav_button_font: '',
+  });
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -71,6 +78,20 @@ export function ConfigsAdminPanel() {
     if (data.config?.inactive_btn_text_color) setInactiveBtnText(data.config.inactive_btn_text_color);
     if (data.config?.active_btn_bg_color) setActiveBtnBg(data.config.active_btn_bg_color);
     if (data.config?.active_btn_text_color) setActiveBtnText(data.config.active_btn_text_color);
+    setFontSelections({
+      welcome_title_font: data.config?.welcome_title_font || '',
+      welcome_subtitle_font: data.config?.welcome_subtitle_font || '',
+      welcome_button_font: data.config?.welcome_button_font || '',
+      tab_button_font: data.config?.tab_button_font || '',
+      nav_button_font: data.config?.nav_button_font || '',
+    });
+    setInitialFontSelections({
+      welcome_title_font: data.config?.welcome_title_font || '',
+      welcome_subtitle_font: data.config?.welcome_subtitle_font || '',
+      welcome_button_font: data.config?.welcome_button_font || '',
+      tab_button_font: data.config?.tab_button_font || '',
+      nav_button_font: data.config?.nav_button_font || '',
+    });
   }, [data.config, data.logos]);
 
   // Subir logo
@@ -162,6 +183,12 @@ export function ConfigsAdminPanel() {
     setFontSelections((prev) => ({ ...prev, [fontType]: value }));
   };
 
+  const fontChanged = Object.keys(fontSelections).some(
+    key => fontSelections[key as keyof typeof fontSelections] !== initialFontSelections[key as keyof typeof initialFontSelections]
+  );
+
+  const logoChanged = selectedLogo !== (data.config?.logo_url || "");
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="branding" className="w-full">
@@ -239,10 +266,9 @@ export function ConfigsAdminPanel() {
               {/* Botón para guardar logo seleccionado en la tabla config */}
               <div className="mt-4 flex items-center gap-3">
                 <Button
-                  variant="outline"
-                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                  className="bg-blue-600 text-white hover:bg-blue-700"
                   onClick={handleSaveLogo}
-                  disabled={saving}
+                  disabled={!logoChanged || saving}
                 >
                   {saving ? "Guardando..." : "Guardar como logo principal"}
                 </Button>
@@ -423,11 +449,13 @@ export function ConfigsAdminPanel() {
                         };
                         await updateTableRow('config', '5e46ee3c-1885-4257-b486-ff225603d3f2', updates);
                         setSaveMsg('Configuración guardada correctamente');
+                        setInitialFontSelections(updates); // Actualiza el estado inicial tras guardar
                       } catch (error) {
                         setSaveMsg('Error al guardar la configuración');
                       }
                     }}
                     className="bg-blue-600 text-white hover:bg-blue-700"
+                    disabled={!fontChanged}
                   >
                     Guardar configuración
                   </Button>
