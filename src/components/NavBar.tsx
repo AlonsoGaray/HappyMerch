@@ -5,12 +5,7 @@ import { useState } from "react";
 import { useGlobalData } from "@/contexts/AdminDataContext";
 
 type NavBarProps = {
-  onSave: (data: {
-    name: string;
-    email: string;
-    comment: string;
-    rating: number;
-  }) => void;
+  onSave: (data: { name: string; email: string; comment: string; rating: number }) => void;
 };
 
 const NavBar = ({ onSave }: NavBarProps) => {
@@ -37,13 +32,27 @@ const NavBar = ({ onSave }: NavBarProps) => {
       <nav className="flex w-full items-center justify-between bg-white shadow px-8 h-14">
         <div className="flex w-1/2 gap-6 h-fit">
           <img className="h-fit max-h-10" src="/Logo.svg" alt="logo" />
-          {data.config?.logo_url && <img className="h-fit max-h-10" src={data.config.logo_url} alt="logo marca" />}
+          {data.config?.logo_url && (
+            <img className="h-fit max-h-10" src={data.config.logo_url} alt="logo marca" />
+          )}
         </div>
         <div className="flex items-center space-x-4">
-          <button className={`bg-gray-100 rounded-md px-4 py-2 text-base hover:bg-gray-200 transition ${data.config?.nav_button_font}`}>Nuevo</button>
+          <button
+            className={`bg-gray-100 rounded-md px-4 py-2 text-base hover:bg-gray-200 transition ${data.config?.nav_button_font}`}
+            style={{
+              backgroundColor: data.config?.nav_btn_bg_color,
+              color: data.config?.nav_btn_text_color,
+            }}
+          >
+            Nuevo
+          </button>
           <button
             onClick={handleSave}
             className={`bg-gray-100 rounded-md px-4 py-2 text-base hover:bg-gray-200 transition ${data.config?.nav_button_font}`}
+            style={{
+              backgroundColor: data.config?.nav_btn_bg_color,
+              color: data.config?.nav_btn_text_color,
+            }}
           >
             Guardar
           </button>
@@ -51,7 +60,7 @@ const NavBar = ({ onSave }: NavBarProps) => {
             className={`bg-red-600 rounded-md px-4 py-2 text-base hover:bg-red-700 transition ${data.config?.nav_button_font}`}
             onClick={async () => {
               await signOut();
-              navigate('/');
+              navigate("/");
             }}
           >
             Cerrar sesión
@@ -67,4 +76,4 @@ const NavBar = ({ onSave }: NavBarProps) => {
   );
 };
 
-export default NavBar; 
+export default NavBar;

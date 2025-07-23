@@ -1,18 +1,13 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent } from "../ui/card"
-import { Button } from "../ui/button"
-import { Upload, Trash2 } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
-import {
-  uploadLogo,
-  updateBrandingConfig,
-  updateTableRow,
-  deleteLogo,
-} from "@/lib/supabase";
-import { useGlobalData } from "@/contexts/AdminDataContext"
-import { SketchPicker } from 'react-color'
-import type { ColorResult } from 'react-color'
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "../ui/accordion"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
+import { Upload, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { uploadLogo, updateBrandingConfig, updateTableRow, deleteLogo } from "@/lib/supabase";
+import { useGlobalData } from "@/contexts/AdminDataContext";
+import { SketchPicker } from "react-color";
+import type { ColorResult } from "react-color";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "../ui/accordion";
 
 const FONT_OPTIONS = [
   { value: "font-pacifico", label: "Pacifico" },
@@ -27,7 +22,6 @@ const FONT_OPTIONS = [
   { value: "font-georgia", label: "Georgia" },
 ];
 
-
 export function ConfigsAdminPanel() {
   const { data, refreshData } = useGlobalData();
   const [selectedLogo, setSelectedLogo] = useState<string>("");
@@ -36,10 +30,20 @@ export function ConfigsAdminPanel() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [mainColor, setMainColor] = useState<string>(data.config?.main_color || "#2563eb");
-  const [inactiveBtnBg, setInactiveBtnBg] = useState<string>(data.config?.inactive_btn_bg_color || "#e5e7eb");
-  const [inactiveBtnText, setInactiveBtnText] = useState<string>(data.config?.inactive_btn_text_color || "#6b7280");
-  const [activeBtnBg, setActiveBtnBg] = useState<string>(data.config?.active_btn_bg_color || "#2563eb");
-  const [activeBtnText, setActiveBtnText] = useState<string>(data.config?.active_btn_text_color || "#fff");
+  const [inactiveBtnBg, setInactiveBtnBg] = useState<string>(
+    data.config?.inactive_btn_bg_color || "#e5e7eb"
+  );
+  const [inactiveBtnText, setInactiveBtnText] = useState<string>(
+    data.config?.inactive_btn_text_color || "#6b7280"
+  );
+  const [activeBtnBg, setActiveBtnBg] = useState<string>(
+    data.config?.active_btn_bg_color || "#2563eb"
+  );
+  const [activeBtnText, setActiveBtnText] = useState<string>(
+    data.config?.active_btn_text_color || "#fff"
+  );
+  const [navBtnBg, setNavBtnBg] = useState<string>(data.config?.nav_btn_bg_color || "#fff");
+  const [navBtnText, setNavBtnText] = useState<string>(data.config?.nav_btn_text_color || "#fff");
   const [colorChanged, setColorChanged] = useState(false);
   const [savingColors, setSavingColors] = useState(false);
   const [saveColorsMsg, setSaveColorsMsg] = useState("");
@@ -50,47 +54,48 @@ export function ConfigsAdminPanel() {
     tab_button_font: string;
     nav_button_font: string;
   }>({
-    welcome_title_font: '',
-    welcome_subtitle_font: '',
-    welcome_button_font: '',
-    tab_button_font: '',
-    nav_button_font: '',
+    welcome_title_font: "",
+    welcome_subtitle_font: "",
+    welcome_button_font: "",
+    tab_button_font: "",
+    nav_button_font: "",
   });
   const [initialFontSelections, setInitialFontSelections] = useState({
-    welcome_title_font: '',
-    welcome_subtitle_font: '',
-    welcome_button_font: '',
-    tab_button_font: '',
-    nav_button_font: '',
+    welcome_title_font: "",
+    welcome_subtitle_font: "",
+    welcome_button_font: "",
+    tab_button_font: "",
+    nav_button_font: "",
   });
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    if (data.config?.logo_url === '') {
-      setSelectedLogo('');
-    } else if (data.config?.logo_url && data.logos.some(l => l.url === data.config.logo_url)) {
+    if (data.config?.logo_url === "") {
+      setSelectedLogo("");
+    } else if (data.config?.logo_url && data.logos.some((l) => l.url === data.config.logo_url)) {
       setSelectedLogo(data.config.logo_url);
     } else if (data.logos.length > 0) {
       setSelectedLogo(data.logos[0].url);
     }
     if (data.config?.main_color) setMainColor(data.config.main_color);
     if (data.config?.inactive_btn_bg_color) setInactiveBtnBg(data.config.inactive_btn_bg_color);
-    if (data.config?.inactive_btn_text_color) setInactiveBtnText(data.config.inactive_btn_text_color);
+    if (data.config?.inactive_btn_text_color)
+      setInactiveBtnText(data.config.inactive_btn_text_color);
     if (data.config?.active_btn_bg_color) setActiveBtnBg(data.config.active_btn_bg_color);
     if (data.config?.active_btn_text_color) setActiveBtnText(data.config.active_btn_text_color);
     setFontSelections({
-      welcome_title_font: data.config?.welcome_title_font || '',
-      welcome_subtitle_font: data.config?.welcome_subtitle_font || '',
-      welcome_button_font: data.config?.welcome_button_font || '',
-      tab_button_font: data.config?.tab_button_font || '',
-      nav_button_font: data.config?.nav_button_font || '',
+      welcome_title_font: data.config?.welcome_title_font || "",
+      welcome_subtitle_font: data.config?.welcome_subtitle_font || "",
+      welcome_button_font: data.config?.welcome_button_font || "",
+      tab_button_font: data.config?.tab_button_font || "",
+      nav_button_font: data.config?.nav_button_font || "",
     });
     setInitialFontSelections({
-      welcome_title_font: data.config?.welcome_title_font || '',
-      welcome_subtitle_font: data.config?.welcome_subtitle_font || '',
-      welcome_button_font: data.config?.welcome_button_font || '',
-      tab_button_font: data.config?.tab_button_font || '',
-      nav_button_font: data.config?.nav_button_font || '',
+      welcome_title_font: data.config?.welcome_title_font || "",
+      welcome_subtitle_font: data.config?.welcome_subtitle_font || "",
+      welcome_button_font: data.config?.welcome_button_font || "",
+      tab_button_font: data.config?.tab_button_font || "",
+      nav_button_font: data.config?.nav_button_font || "",
     });
   }, [data.config, data.logos]);
 
@@ -103,6 +108,7 @@ export function ConfigsAdminPanel() {
       await uploadLogo(file, file.name);
       await refreshData(); // refresca logos y config
     } catch (err) {
+      console.error("Error uploading logo:", err);
       alert("Error subiendo el logo");
     } finally {
       setUploading(false);
@@ -118,6 +124,7 @@ export function ConfigsAdminPanel() {
       await refreshData();
       setSaveMsg("¡Logo guardado correctamente!");
     } catch (err) {
+      console.error("Error uploading logo:", err);
       setSaveMsg("Error al guardar el logo");
     } finally {
       setSaving(false);
@@ -131,11 +138,7 @@ export function ConfigsAdminPanel() {
     const logoToDelete = data.logos.find((logo) => logo.url === selectedLogo);
     if (!logoToDelete) return;
 
-    if (
-      !confirm(
-        `¿Estás seguro de que quieres eliminar el logo "${logoToDelete.name}"?`
-      )
-    ) {
+    if (!confirm(`¿Estás seguro de que quieres eliminar el logo "${logoToDelete.name}"?`)) {
       return;
     }
 
@@ -148,6 +151,7 @@ export function ConfigsAdminPanel() {
       await refreshData();
       setSelectedLogo("");
     } catch (err) {
+      console.error("Error uploading logo:", err);
       alert("Error al eliminar el logo");
     }
   };
@@ -167,6 +171,8 @@ export function ConfigsAdminPanel() {
         inactive_btn_text_color: inactiveBtnText,
         active_btn_bg_color: activeBtnBg,
         active_btn_text_color: activeBtnText,
+        nav_btn_text_color: navBtnText,
+        nav_btn_bg_color: navBtnBg,
       });
       await refreshData();
       setSaveColorsMsg("¡Colores guardados!");
@@ -184,7 +190,9 @@ export function ConfigsAdminPanel() {
   };
 
   const fontChanged = Object.keys(fontSelections).some(
-    key => fontSelections[key as keyof typeof fontSelections] !== initialFontSelections[key as keyof typeof initialFontSelections]
+    (key) =>
+      fontSelections[key as keyof typeof fontSelections] !==
+      initialFontSelections[key as keyof typeof initialFontSelections]
   );
 
   const logoChanged = selectedLogo !== (data.config?.logo_url || "");
@@ -234,8 +242,10 @@ export function ConfigsAdminPanel() {
                 <div className="flex gap-4 flex-wrap">
                   <div className="text-center">
                     <button
-                      className={`border rounded-lg p-1 transition ${selectedLogo === '' ? 'ring-4 ring-pink-300' : ''}`}
-                      onClick={() => setSelectedLogo('')}
+                      className={`border rounded-lg p-1 transition ${
+                        selectedLogo === "" ? "ring-4 ring-pink-300" : ""
+                      }`}
+                      onClick={() => setSelectedLogo("")}
                       title="No usar logotipo"
                     >
                       <span className="h-16 w-16 flex items-center justify-center">Vacío</span>
@@ -244,23 +254,31 @@ export function ConfigsAdminPanel() {
                   </div>
 
                   {data.logos
-                    .filter(logo => logo.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                    .map(logo => {
-                      const formattedName = logo.name.replace(/_/g, ' ').replace(/\.[^/.]+$/, '');
+                    .filter((logo) => logo.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                    .map((logo) => {
+                      const formattedName = logo.name.replace(/_/g, " ").replace(/\.[^/.]+$/, "");
                       return (
                         <div key={logo.url} className="text-center">
                           <button
-                            className={`border rounded-lg p-1 transition ${selectedLogo === logo.url ? 'ring-4 ring-pink-300' : ''}`}
+                            className={`border rounded-lg p-1 transition ${
+                              selectedLogo === logo.url ? "ring-4 ring-pink-300" : ""
+                            }`}
                             onClick={() => setSelectedLogo(logo.url)}
                             title={formattedName}
                           >
-                            <img src={logo.url} alt={formattedName} className="h-16 w-16 object-contain" />
+                            <img
+                              src={logo.url}
+                              alt={formattedName}
+                              className="h-16 w-16 object-contain"
+                            />
                           </button>
                           <div className="mt-1">{formattedName}</div>
                         </div>
                       );
                     })}
-                  {data.logos.length === 0 && <span className="text-gray-400">No hay logos subidos</span>}
+                  {data.logos.length === 0 && (
+                    <span className="text-gray-400">No hay logos subidos</span>
+                  )}
                 </div>
               </div>
               {/* Botón para guardar logo seleccionado en la tabla config */}
@@ -287,7 +305,10 @@ export function ConfigsAdminPanel() {
                   <AccordionTrigger>
                     <div className="flex items-center gap-3">
                       <span>Color Principal</span>
-                      <span className="w-6 h-6 rounded border ml-2" style={{ background: mainColor }} />
+                      <span
+                        className="w-6 h-6 rounded border ml-2"
+                        style={{ background: mainColor }}
+                      />
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
@@ -309,7 +330,10 @@ export function ConfigsAdminPanel() {
                       <AccordionTrigger>
                         <div className="flex items-center gap-3">
                           <span>Background boton inactivo tab</span>
-                          <span className="w-6 h-6 rounded border ml-2" style={{ background: inactiveBtnBg }} />
+                          <span
+                            className="w-6 h-6 rounded border ml-2"
+                            style={{ background: inactiveBtnBg }}
+                          />
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>
@@ -325,7 +349,10 @@ export function ConfigsAdminPanel() {
                       <AccordionTrigger>
                         <div className="flex items-center gap-3">
                           <span>Texto boton inactivo tab</span>
-                          <span className="w-6 h-6 rounded border ml-2" style={{ background: inactiveBtnText }} />
+                          <span
+                            className="w-6 h-6 rounded border ml-2"
+                            style={{ background: inactiveBtnText }}
+                          />
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>
@@ -353,7 +380,10 @@ export function ConfigsAdminPanel() {
                       <AccordionTrigger>
                         <div className="flex items-center gap-3">
                           <span>Background boton activo tab</span>
-                          <span className="w-6 h-6 rounded border ml-2" style={{ background: activeBtnBg }} />
+                          <span
+                            className="w-6 h-6 rounded border ml-2"
+                            style={{ background: activeBtnBg }}
+                          />
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>
@@ -369,7 +399,10 @@ export function ConfigsAdminPanel() {
                       <AccordionTrigger>
                         <div className="flex items-center gap-3">
                           <span>Texto boton inactivo tab</span>
-                          <span className="w-6 h-6 rounded border ml-2" style={{ background: activeBtnText }} />
+                          <span
+                            className="w-6 h-6 rounded border ml-2"
+                            style={{ background: activeBtnText }}
+                          />
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>
@@ -386,6 +419,64 @@ export function ConfigsAdminPanel() {
                         style={{
                           background: activeBtnBg,
                           color: activeBtnText,
+                        }}
+                        disabled
+                      >
+                        Ejemplo activo
+                      </button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+                {/* Botones de navegacion */}
+                <AccordionItem value="nav-editing">
+                  <AccordionTrigger>
+                    <span>Botones barra navegacion</span>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    {/* Fondo */}
+                    <AccordionItem value="nav-btn-bg">
+                      <AccordionTrigger>
+                        <div className="flex items-center gap-3">
+                          <span>Fondo</span>
+                          <span
+                            className="w-6 h-6 rounded border ml-2"
+                            style={{ background: navBtnBg }}
+                          />
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <SketchPicker
+                          color={navBtnBg}
+                          onChange={handleColorChange(setNavBtnBg)}
+                          presetColors={[]}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                    {/* Text */}
+                    <AccordionItem value="nav-btn-text">
+                      <AccordionTrigger>
+                        <div className="flex items-center gap-3">
+                          <span>Texto</span>
+                          <span
+                            className="w-6 h-6 rounded border ml-2"
+                            style={{ background: navBtnText }}
+                          />
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <SketchPicker
+                          color={navBtnText}
+                          onChange={handleColorChange(setNavBtnText)}
+                          presetColors={[]}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                    <div className="mt-4">
+                      <button
+                        className="px-5 min-h-9 rounded-lg font-bold text-base border-2 border-black"
+                        style={{
+                          background: navBtnBg,
+                          color: navBtnText,
                         }}
                         disabled
                       >
@@ -415,22 +506,28 @@ export function ConfigsAdminPanel() {
               <div className="flex flex-col gap-3">
                 {/* Font Selection Inputs */}
                 {[
-                  { id: 'welcome_title_font', label: 'Título de bienvenida' },
-                  { id: 'welcome_subtitle_font', label: 'Subtítulo de bienvenida' },
-                  { id: 'welcome_button_font', label: 'Botón de bienvenida' },
-                  { id: 'tab_button_font', label: 'Botones de pestaña' },
-                  { id: 'nav_button_font', label: 'Botones de navegación' }
+                  { id: "welcome_title_font", label: "Título de bienvenida" },
+                  { id: "welcome_subtitle_font", label: "Subtítulo de bienvenida" },
+                  { id: "welcome_button_font", label: "Botón de bienvenida" },
+                  { id: "tab_button_font", label: "Botones de pestaña" },
+                  { id: "nav_button_font", label: "Botones de navegación" },
                 ].map(({ id, label }) => (
                   <div key={id} className="flex items-center gap-3">
-                    <label htmlFor={id} className="font-semibold">{label}</label>
+                    <label htmlFor={id} className="font-semibold">
+                      {label}
+                    </label>
                     <select
                       id={id}
                       className="border rounded p-2"
                       value={fontSelections[id as keyof typeof fontSelections]}
-                      onChange={(e) => handleFontChange(id as keyof typeof fontSelections, e.target.value)}
+                      onChange={(e) =>
+                        handleFontChange(id as keyof typeof fontSelections, e.target.value)
+                      }
                     >
                       {FONT_OPTIONS.map((font) => (
-                        <option key={font.value} value={font.value}>{font.label}</option>
+                        <option key={font.value} value={font.value}>
+                          {font.label}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -447,11 +544,16 @@ export function ConfigsAdminPanel() {
                           tab_button_font: fontSelections.tab_button_font,
                           nav_button_font: fontSelections.nav_button_font,
                         };
-                        await updateTableRow('config', '5e46ee3c-1885-4257-b486-ff225603d3f2', updates);
-                        setSaveMsg('Configuración guardada correctamente');
+                        await updateTableRow(
+                          "config",
+                          "5e46ee3c-1885-4257-b486-ff225603d3f2",
+                          updates
+                        );
+                        setSaveMsg("Configuración guardada correctamente");
                         setInitialFontSelections(updates); // Actualiza el estado inicial tras guardar
                       } catch (error) {
-                        setSaveMsg('Error al guardar la configuración');
+                        console.error("Error uploading logo:", error);
+                        setSaveMsg("Error al guardar la configuración");
                       }
                     }}
                     className="bg-blue-600 text-white hover:bg-blue-700"
@@ -467,5 +569,5 @@ export function ConfigsAdminPanel() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

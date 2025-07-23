@@ -330,6 +330,8 @@ export async function updateBrandingConfig(
     inactive_btn_text_color: string;
     active_btn_bg_color: string;
     active_btn_text_color: string;
+    nav_btn_text_color: string;
+    nav_btn_bg_color: string;
   }>
 ): Promise<any> {
   const CONFIG_ID = "5e46ee3c-1885-4257-b486-ff225603d3f2";

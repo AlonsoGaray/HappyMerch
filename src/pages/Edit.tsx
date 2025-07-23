@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import NavBar from "../components/NavBar";
-import { TABS } from "../constants";
+import { TABS } from "../lib/constants";
 import ProductSelector, { type Product } from "../components/ProductSelector";
 import ElementSelector from "../components/ElementSelector";
 import TextTools from "../components/TextTools";
