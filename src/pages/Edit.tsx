@@ -1,26 +1,27 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import NavBar from '../components/NavBar';
-import { TABS } from '../constants';
-import ProductSelector, { type Product } from '../components/ProductSelector';
-import ElementSelector from '../components/ElementSelector';
-import TextTools from '../components/TextTools';
-import CanvasArea from '../components/CanvasArea';
-import type { CanvasAreaHandle } from '../components/CanvasArea';
-import Tabs from '../components/Tabs';
-import type { CanvasItem } from '../types';
-import RightSidebar from '../components/RightSidebar';
-import { Canvas } from 'fabric';
-import BgSelector from '../components/BgSelector';
-import BottomBar from '../components/BottomBar';
-import LeftSidebar from '../components/LeftSideBar';
-import { useGlobalData } from '../contexts/AdminDataContext';
-import { saveDesignWithFeedback } from '../lib/supabase';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import NavBar from "../components/NavBar";
+import { TABS } from "../constants";
+import ProductSelector, { type Product } from "../components/ProductSelector";
+import ElementSelector from "../components/ElementSelector";
+import TextTools from "../components/TextTools";
+import CanvasArea from "../components/CanvasArea";
+import type { CanvasAreaHandle } from "../components/CanvasArea";
+import Tabs from "../components/Tabs";
+import type { CanvasItem } from "../types";
+import RightSidebar from "../components/RightSidebar";
+import { Canvas } from "fabric";
+import BgSelector from "../components/BgSelector";
+import BottomBar from "../components/BottomBar";
+import LeftSidebar from "../components/LeftSideBar";
+import { useGlobalData } from "../contexts/AdminDataContext";
+import { saveDesignWithFeedback } from "../lib/supabase";
 
 const DEFAULT_SIZE = 60;
 
 type CanvasTextItem = {
   id: number;
-  type: 'text';
+  type: "text";
   text: string;
   font: string;
   color: string;
@@ -33,12 +34,24 @@ type CanvasAnyItem = CanvasItem | CanvasTextItem;
 const EditPage: React.FC = () => {
   const { data } = useGlobalData();
   const [productIdx, setProductIdx] = useState(0);
-  const [activeTab, setActiveTab] = useState('product');
+  const [activeTab, setActiveTab] = useState("product");
   const [selectedBgIdx, setSelectedBgIdx] = useState(-1);
   const [canvasItems, setCanvasItems] = useState<CanvasAnyItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   // Cambia la definición de itemStates para incluir scaleX, scaleY y flipX
-  const [itemStates, setItemStates] = useState<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } }>({});
+  const [itemStates, setItemStates] = useState<{
+    [id: number]: {
+      x: number;
+      y: number;
+      size: number;
+      rotation: number;
+      locked: boolean;
+      visible: boolean;
+      scaleX: number;
+      scaleY: number;
+      flipX: boolean;
+    };
+  }>({});
   const fabricRef = useRef<Canvas | null>(null);
   const canvasAreaRef = useRef<CanvasAreaHandle>(null);
   const [scale, setScale] = useState(1);
@@ -49,12 +62,17 @@ const EditPage: React.FC = () => {
   const product = visibleProducts[productIdx] || visibleProducts[0];
   const visibleBackgrounds = data.backgrounds.filter((bg: any) => bg.visible);
 
-  const handleAddElement = (element: { id: string; name: string; url: string; visible: boolean }) => {
+  const handleAddElement = (element: {
+    id: string;
+    name: string;
+    url: string;
+    visible: boolean;
+  }) => {
     const newId = Date.now();
     // Centro puro del área de edición
     const centerX = product.width / 2;
     const centerY = product.height / 2;
-    setCanvasItems(items => [
+    setCanvasItems((items) => [
       ...items,
       {
         id: newId,
@@ -65,7 +83,7 @@ const EditPage: React.FC = () => {
     ]);
     setSelectedId(newId);
     // Inicializa el estado de escala para el nuevo elemento con tamaño pequeño y flipX en false
-    setItemStates(states => ({
+    setItemStates((states) => ({
       ...states,
       [newId]: {
         x: centerX,
@@ -82,17 +100,17 @@ const EditPage: React.FC = () => {
   };
 
   const handleDeleteItem = (id: number) => {
-    setCanvasItems(items => items.filter(item => item.id !== id));
+    setCanvasItems((items) => items.filter((item) => item.id !== id));
   };
 
-  const handleMoveItem = (id: number, direction: 'up' | 'down') => {
-    setCanvasItems(items => {
-      const idx = items.findIndex(item => item.id === id);
+  const handleMoveItem = (id: number, direction: "up" | "down") => {
+    setCanvasItems((items) => {
+      const idx = items.findIndex((item) => item.id === id);
       if (idx === -1) return items;
       const newItems = [...items];
-      if (direction === 'up' && idx < items.length - 1) {
+      if (direction === "up" && idx < items.length - 1) {
         [newItems[idx], newItems[idx + 1]] = [newItems[idx + 1], newItems[idx]];
-      } else if (direction === 'down' && idx > 0) {
+      } else if (direction === "down" && idx > 0) {
         [newItems[idx], newItems[idx - 1]] = [newItems[idx - 1], newItems[idx]];
       }
       return newItems;
@@ -112,7 +130,7 @@ const EditPage: React.FC = () => {
   const handleLockToggle = (id: number) => {
     const fabricCanvas = fabricRef.current;
     if (fabricCanvas) {
-      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
+      const obj = fabricCanvas.getObjects().find((o) => (o as any).id === id);
       if (obj) {
         const locked = !itemStates[id]?.locked;
         obj.set({
@@ -122,10 +140,10 @@ const EditPage: React.FC = () => {
           lockScalingY: locked,
           lockRotation: locked,
           hasControls: !locked,
-          hoverCursor: locked ? 'default' : 'move',
+          hoverCursor: locked ? "default" : "move",
         });
         fabricCanvas.renderAll();
-        setItemStates(states => ({
+        setItemStates((states) => ({
           ...states,
           [id]: { ...states[id], locked },
         }));
@@ -140,11 +158,11 @@ const EditPage: React.FC = () => {
     // Centro puro del área de edición
     const centerX = product.width / 2;
     const centerY = product.height / 2;
-    setCanvasItems(items => [
+    setCanvasItems((items) => [
       ...items,
       {
         id: newId,
-        type: 'text',
+        type: "text",
         text,
         font,
         color,
@@ -157,29 +175,37 @@ const EditPage: React.FC = () => {
 
   // Handler para actualizar fuente/color de un texto existente
   const handleUpdateTextItem = (id: number, changes: Partial<{ font: string; color: string }>) => {
-    setCanvasItems(items => items.map(item => {
-      if (item.id === id && (item as any).type === 'text') {
-        return { ...item, ...changes };
-      }
-      return item;
-    }));
+    setCanvasItems((items) =>
+      items.map((item) => {
+        if (item.id === id && (item as any).type === "text") {
+          return { ...item, ...changes };
+        }
+        return item;
+      })
+    );
     // Opcional: refrescar el canvas manualmente si no se actualiza solo
     const fabricCanvas = fabricRef.current;
     if (fabricCanvas) {
-      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
-      if (obj && changes.font) obj.set('fontFamily',
-        changes.font === 'font-sans' ? 'sans-serif' :
-        changes.font === 'font-serif' ? 'serif' :
-        changes.font === 'font-mono' ? 'monospace' :
-        changes.font === 'font-extrabold' ? 'inherit' : 'inherit');
-      if (obj && changes.color) obj.set('fill', changes.color);
+      const obj = fabricCanvas.getObjects().find((o) => (o as any).id === id);
+      if (obj && changes.font) {
+        let fontFamily = "inherit";
+        if (changes.font === "font-sans") {
+          fontFamily = "sans-serif";
+        } else if (changes.font === "font-serif") {
+          fontFamily = "serif";
+        } else if (changes.font === "font-mono") {
+          fontFamily = "monospace";
+        }
+        obj.set("fontFamily", fontFamily);
+      }
+      if (obj && changes.color) obj.set("fill", changes.color);
       fabricCanvas.renderAll();
     }
   };
 
   // Handler para alternar visibilidad
   const handleToggleVisible = (id: number) => {
-    setItemStates(states => ({
+    setItemStates((states) => ({
       ...states,
       [id]: {
         ...states[id],
@@ -212,7 +238,7 @@ const EditPage: React.FC = () => {
     try {
       const canvas = fabricRef.current;
       const dataUrl = canvas.toDataURL({
-        multiplier: 2
+        multiplier: 2,
       });
 
       // Convert data URL to blob
@@ -220,19 +246,26 @@ const EditPage: React.FC = () => {
       const blob = await response.blob();
 
       await saveDesignWithFeedback(blob, feedbackData);
-      alert('¡Gracias por tu opinión! Tu diseño ha sido guardado.');
-    } catch (error) {
-      console.error('Error al guardar:', error);
-      // Dump all image URLs currently in the canvas
-      const fabricCanvas = fabricRef.current;
-      if (fabricCanvas) {
-        fabricCanvas.getObjects().forEach(obj => {
-          if (obj.type === 'image' && 'getSrc' in obj) {
-            console.log('Imagen en canvas:', (obj as any).getSrc());
-          }
-        });
+      alert("¡Gracias por tu opinión! Tu diseño ha sido guardado.");
+    } catch (error: any) {
+      console.error("Error al guardar:", error);
+      if (
+        typeof error?.message === "string" &&
+        error.message.includes("The resource already exists")
+      ) {
+        alert("Ya existe un diseño con ese correo. Por favor, usa otro correo.");
+      } else {
+        // Dump all image URLs currently in the canvas
+        const fabricCanvas = fabricRef.current;
+        if (fabricCanvas) {
+          fabricCanvas.getObjects().forEach((obj) => {
+            if (obj.type === "image" && "getSrc" in obj) {
+              console.log("Imagen en canvas:", (obj as any).getSrc());
+            }
+          });
+        }
+        alert("Hubo un error al guardar tu diseño. Por favor, intenta de nuevo.");
       }
-      alert('Hubo un error al guardar tu diseño. Por favor, intenta de nuevo.');
     }
   };
 
@@ -248,10 +281,10 @@ const EditPage: React.FC = () => {
 
   // Asegurarse de que cada item tenga un estado inicial, incluyendo visible y flipX
   useEffect(() => {
-    setItemStates(prev => {
+    setItemStates((prev) => {
       const updated = { ...prev };
       let changed = false;
-      canvasItems.forEach(item => {
+      canvasItems.forEach((item) => {
         if (!updated[item.id]) {
           updated[item.id] = {
             x: (item as any).x,
@@ -288,9 +321,9 @@ const EditPage: React.FC = () => {
   // Sincroniza flipX de itemStates con Fabric.js al cambiar de selección
   useEffect(() => {
     if (selectedId !== null && fabricRef.current) {
-      const obj = fabricRef.current.getObjects().find(o => (o as any).id === selectedId);
+      const obj = fabricRef.current.getObjects().find((o) => (o as any).id === selectedId);
       if (obj && itemStates[selectedId] && obj.flipX !== itemStates[selectedId].flipX) {
-        obj.set('flipX', itemStates[selectedId].flipX);
+        obj.set("flipX", itemStates[selectedId].flipX);
         fabricRef.current.renderAll();
       }
     }
@@ -303,14 +336,14 @@ const EditPage: React.FC = () => {
     <div className="min-h-dvh flex flex-col bg-gray-100 max-h-dvh items-center pb-5">
       <NavBar onSave={handleSave} />
       <div className="flex-grow flex relative w-full justify-center items-center overflow-hidden">
-        <LeftSidebar 
+        <LeftSidebar
           selectedId={selectedId}
           onRotate={handleRotate}
           onResize={handleResize}
           onAlign={handleAlign}
           onFlipX={handleFlipX}
         />
-        <div className='flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto'>
+        <div className="flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto">
           <CanvasArea
             ref={canvasAreaRef}
             product={memoizedProduct}
@@ -319,15 +352,19 @@ const EditPage: React.FC = () => {
             setSelectedId={setSelectedId}
             fabricRef={fabricRef}
             scale={scale}
-            selectedBg={selectedBgIdx >= 0 && selectedBgIdx < visibleBackgrounds.length ? visibleBackgrounds[selectedBgIdx] : null}
+            selectedBg={
+              selectedBgIdx >= 0 && selectedBgIdx < visibleBackgrounds.length
+                ? visibleBackgrounds[selectedBgIdx]
+                : null
+            }
             onUpdateItems={setCanvasItems}
             showDashedBorder={showDashedBorder}
             isVisible={isVisible}
           />
-          <BottomBar 
+          <BottomBar
             selectedId={selectedId}
-            onToggleDashedBorder={() => setShowDashedBorder(v => !v)}
-            onToggleLayers={() => setShowLayers(v => !v)}
+            onToggleDashedBorder={() => setShowDashedBorder((v) => !v)}
+            onToggleLayers={() => setShowLayers((v) => !v)}
             onZoom={handleZoom}
           />
         </div>
@@ -346,29 +383,28 @@ const EditPage: React.FC = () => {
           />
         )}
       </div>
-      <div className={`relative w-full pt-2 px-4 pb-2 flex flex-col max-w-11/12 overflow-visible rounded-xl scroll`} style={{ backgroundColor: data.config?.main_color }}>
-        <Tabs
-          tabs={TABS}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-        {activeTab === 'product' && (
-          <ProductSelector onSelect={setProductIdx} />
+      <div
+        className={`relative w-full pt-2 px-4 pb-2 flex flex-col max-w-11/12 overflow-visible rounded-xl scroll`}
+        style={{ backgroundColor: data.config?.main_color }}
+      >
+        <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+        {activeTab === "product" && <ProductSelector onSelect={setProductIdx} />}
+        {activeTab === "fondos" && <BgSelector onSelect={setSelectedBgIdx} />}
+        {activeTab === "elements" && <ElementSelector onSelect={handleAddElement} />}
+        {activeTab === "text" && (
+          <TextTools
+            onAddText={handleAddText}
+            selectedTextItem={
+              canvasItems.find((i) => i.id === selectedId && (i as any).type === "text") as
+                | CanvasTextItem
+                | undefined
+            }
+            onUpdateTextItem={handleUpdateTextItem}
+          />
         )}
-        {activeTab === 'fondos' && (
-          <BgSelector onSelect={setSelectedBgIdx} />
-        )}
-        {activeTab === 'elements' && (
-          <ElementSelector onSelect={handleAddElement} />
-        )}
-        {activeTab === 'text' && <TextTools
-          onAddText={handleAddText}
-          selectedTextItem={canvasItems.find(i => i.id === selectedId && (i as any).type === 'text') as CanvasTextItem | undefined}
-          onUpdateTextItem={handleUpdateTextItem}
-        />}
       </div>
     </div>
   );
 };
 
-export default EditPage; 
+export default EditPage;

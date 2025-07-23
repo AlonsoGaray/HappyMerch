@@ -1,10 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+  throw new Error("Missing Supabase environment variables");
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -28,7 +30,7 @@ export async function uploadFileToBucket({
   file,
   fileName,
   tableName,
-  visible
+  visible,
 }: {
   bucketName: string;
   file: File | Blob;
@@ -45,7 +47,7 @@ export async function uploadFileToBucket({
   // 2. Url without expiration
   const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(fileName);
   const url = publicUrlData?.publicUrl;
-  if (!url) throw new Error('No se pudo obtener la URL pública del archivo');
+  if (!url) throw new Error("No se pudo obtener la URL pública del archivo");
 
   // 3. Save in table
   const { data: insertData, error: insertError } = await supabase
@@ -65,12 +67,10 @@ export async function uploadFileToBucket({
  * @returns An array of all rows from the table, or throws an error on failure
  */
 export async function getTableRows<T = any>(tableName: string): Promise<T[]> {
-  const { data, error } = await supabase
-    .from(tableName)
-    .select('*');
-  
+  const { data, error } = await supabase.from(tableName).select("*");
+
   if (error) throw error;
-  
+
   return data || [];
 }
 
@@ -90,12 +90,12 @@ export async function updateTableRow<T = any>(
   const { data, error } = await supabase
     .from(tableName)
     .update(updates)
-    .eq('id', id)
+    .eq("id", id)
     .select()
     .single();
-  
+
   if (error) throw error;
-  
+
   return data;
 }
 
@@ -117,36 +117,34 @@ export async function deleteTableRowAndFile<T = any>(
   // 1. First, get the row data to extract the file name (or email if isDesign)
   const { data: rowData, error: fetchError } = await supabase
     .from(tableName)
-    .select(isDesign ? 'email' : 'name')
-    .eq('id', id)
+    .select(isDesign ? "email" : "name")
+    .eq("id", id)
     .single();
-  
+
   if (fetchError) throw fetchError;
 
   let fileKey: string | undefined;
   if (isDesign) {
-    fileKey = (rowData && 'email' in rowData) ? `${rowData.email}-design.png` : undefined;
+    fileKey = rowData && "email" in rowData ? `${rowData.email}-design.png` : undefined;
   } else {
-    fileKey = (rowData && 'name' in rowData) ? rowData.name : undefined;
+    fileKey = rowData && "name" in rowData ? rowData.name : undefined;
   }
 
-  if (!fileKey) throw new Error('No se encontró el nombre del archivo en la fila');
+  if (!fileKey) throw new Error("No se encontró el nombre del archivo en la fila");
 
   // 2. Delete the file from storage bucket
-  const { error: storageError } = await supabase.storage
-    .from(bucketName)
-    .remove([fileKey]);
-  
+  const { error: storageError } = await supabase.storage.from(bucketName).remove([fileKey]);
+
   if (storageError) throw storageError;
 
   // 3. Delete the row from the table
   const { data: deletedRow, error: deleteError } = await supabase
     .from(tableName)
     .delete()
-    .eq('id', id)
+    .eq("id", id)
     .select()
     .single();
-  
+
   if (deleteError) throw deleteError;
 
   return deletedRow;
@@ -173,22 +171,22 @@ export async function renameFileInBucket<T = any>(
   const { data: _moveData, error: moveError } = await supabase.storage
     .from(bucketName)
     .move(oldName, newName);
-  
+
   if (moveError) throw moveError;
 
   // 2. Get the new public URL
   const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(newName);
   const newUrl = publicUrlData?.publicUrl;
-  if (!newUrl) throw new Error('No se pudo obtener la nueva URL pública del archivo');
+  if (!newUrl) throw new Error("No se pudo obtener la nueva URL pública del archivo");
 
   // 3. Update the database record with new name and URL
   const { data: updateData, error: updateError } = await supabase
     .from(tableName)
     .update({ name: newName, url: newUrl })
-    .eq('id', id)
+    .eq("id", id)
     .select()
     .single();
-  
+
   if (updateError) throw updateError;
 
   return updateData;
@@ -211,7 +209,7 @@ export async function uploadFilesInBulk<T = any>({
   bucketName,
   files,
   tableName,
-  visible
+  visible,
 }: {
   bucketName: string;
   files: (File | Blob)[];
@@ -225,13 +223,13 @@ export async function uploadFilesInBulk<T = any>({
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const fileName = file instanceof File ? file.name : `file_${i}_${Date.now()}`;
-    
+
     try {
       // 1. Upload to bucket
       const { data: _uploadData, error: uploadError } = await supabase.storage
         .from(bucketName)
         .upload(fileName, file, { upsert: true });
-      
+
       if (uploadError) {
         errors.push(`Error uploading ${fileName}: ${uploadError.message}`);
         continue;
@@ -240,7 +238,7 @@ export async function uploadFilesInBulk<T = any>({
       // 2. Get public URL
       const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(fileName);
       const url = publicUrlData?.publicUrl;
-      
+
       if (!url) {
         errors.push(`No se pudo obtener la URL pública para ${fileName}`);
         continue;
@@ -252,7 +250,7 @@ export async function uploadFilesInBulk<T = any>({
         .insert([{ name: fileName, url, visible }])
         .select()
         .single();
-      
+
       if (insertError) {
         errors.push(`Error saving ${fileName} to database: ${insertError.message}`);
         continue;
@@ -260,13 +258,17 @@ export async function uploadFilesInBulk<T = any>({
 
       results.push(insertData);
     } catch (error) {
-      errors.push(`Unexpected error processing ${fileName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      errors.push(
+        `Unexpected error processing ${fileName}: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
   // If there were any errors, throw them as a combined error
   if (errors.length > 0) {
-    throw new Error(`Bulk upload completed with errors:\n${errors.join('\n')}`);
+    throw new Error(`Bulk upload completed with errors:\n${errors.join("\n")}`);
   }
 
   return results;
@@ -279,7 +281,7 @@ export async function uploadFilesInBulk<T = any>({
  * @returns La URL pública del archivo subido
  */
 export async function uploadLogo(file: File | Blob, fileName: string): Promise<string> {
-  const bucketName = 'logos';
+  const bucketName = "logos";
   // Subir archivo
   const { error: uploadError } = await supabase.storage
     .from(bucketName)
@@ -289,7 +291,7 @@ export async function uploadLogo(file: File | Blob, fileName: string): Promise<s
   // Obtener URL pública
   const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(fileName);
   const url = publicUrlData?.publicUrl;
-  if (!url) throw new Error('No se pudo obtener la URL pública del logo');
+  if (!url) throw new Error("No se pudo obtener la URL pública del logo");
   return url;
 }
 
@@ -298,7 +300,7 @@ export async function uploadLogo(file: File | Blob, fileName: string): Promise<s
  * @returns Un array de objetos con nombre y url pública de cada archivo
  */
 export async function getAllLogos(): Promise<{ name: string; url: string }[]> {
-  const bucketName = 'logos';
+  const bucketName = "logos";
   // Listar archivos en el bucket
   const { data: listData, error: listError } = await supabase.storage.from(bucketName).list();
   if (listError) throw listError;
@@ -309,7 +311,7 @@ export async function getAllLogos(): Promise<{ name: string; url: string }[]> {
     const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(item.name);
     return {
       name: item.name,
-      url: publicUrlData?.publicUrl || ''
+      url: publicUrlData?.publicUrl || "",
     };
   });
 }
@@ -320,19 +322,21 @@ export async function getAllLogos(): Promise<{ name: string; url: string }[]> {
  * @param updates - Objeto con los campos a actualizar
  * @returns La fila actualizada
  */
-export async function updateBrandingConfig(updates: Partial<{
-  logo_url: string;
-  main_color: string;
-  inactive_btn_bg_color: string;
-  inactive_btn_text_color: string;
-  active_btn_bg_color: string;
-  active_btn_text_color: string;
-}>): Promise<any> {
-  const CONFIG_ID = '5e46ee3c-1885-4257-b486-ff225603d3f2';
+export async function updateBrandingConfig(
+  updates: Partial<{
+    logo_url: string;
+    main_color: string;
+    inactive_btn_bg_color: string;
+    inactive_btn_text_color: string;
+    active_btn_bg_color: string;
+    active_btn_text_color: string;
+  }>
+): Promise<any> {
+  const CONFIG_ID = "5e46ee3c-1885-4257-b486-ff225603d3f2";
   const { data, error } = await supabase
-    .from('config')
+    .from("config")
     .update(updates)
-    .eq('id', CONFIG_ID)
+    .eq("id", CONFIG_ID)
     .select()
     .single();
   if (error) throw error;
@@ -344,7 +348,7 @@ export async function updateBrandingConfig(updates: Partial<{
  * @param fileName - The name of the logo file to delete.
  */
 export async function deleteLogo(fileName: string): Promise<void> {
-  const bucketName = 'logos';
+  const bucketName = "logos";
   const { error } = await supabase.storage.from(bucketName).remove([fileName]);
   if (error) throw error;
 }
@@ -353,13 +357,9 @@ export async function deleteLogo(fileName: string): Promise<void> {
  * Obtiene la configuración de branding de la tabla 'config'.
  * @returns La fila de configuración (o null si no existe)
  */
-export async function getBrandingConfig(): Promise<any | null> {
-  const CONFIG_ID = '5e46ee3c-1885-4257-b486-ff225603d3f2';
-  const { data, error } = await supabase
-    .from('config')
-    .select('*')
-    .eq('id', CONFIG_ID)
-    .single();
+export async function getBrandingConfig(): Promise<any> {
+  const CONFIG_ID = "5e46ee3c-1885-4257-b486-ff225603d3f2";
+  const { data, error } = await supabase.from("config").select("*").eq("id", CONFIG_ID).single();
   if (error) throw error;
   return data;
 }
@@ -382,24 +382,22 @@ export async function saveDesignWithFeedback(
   // Upload to Supabase
   const fileName = `${feedback.email}-design.png`;
   const { data: uploadData, error: uploadError } = await supabase.storage
-    .from('client-products')
+    .from("client-products")
     .upload(fileName, designBlob);
 
   if (uploadError) throw uploadError;
-  if (!uploadData) throw new Error('No data returned from upload');
+  if (!uploadData) throw new Error("No data returned from upload");
 
   // Get public URL
-  const { data: urlData } = supabase.storage
-    .from('client-products')
-    .getPublicUrl(uploadData.path);
+  const { data: urlData } = supabase.storage.from("client-products").getPublicUrl(uploadData.path);
 
   // Save to database
   const { name, email, comment, rating } = feedback;
-  const [firstName, ...lastNameParts] = name.split(' ');
-  const lastName = lastNameParts.join(' ');
+  const [firstName, ...lastNameParts] = name.split(" ");
+  const lastName = lastNameParts.join(" ");
 
   const { data: insertData, error: insertError } = await supabase
-    .from('client_product')
+    .from("client_product")
     .insert({
       name: firstName,
       last_name: lastName,
@@ -420,10 +418,7 @@ export async function saveDesignWithFeedback(
  * @returns Un array de objetos de la tabla client_product
  */
 export async function getAllClientProducts(): Promise<any[]> {
-  const { data, error } = await supabase
-    .from('client_product')
-    .select('*');
+  const { data, error } = await supabase.from("client_product").select("*");
   if (error) throw error;
   return data || [];
 }
-
