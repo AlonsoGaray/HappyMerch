@@ -598,7 +598,7 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+        style={{ cursor: isDragging ? 'grabbing' : 'grab', pointerEvents: readOnly ? 'none' : 'auto' }}
       >
         {/* Contenedor que agrupa imagen y canvas y aplica la transformación */}
         <div
