@@ -310,7 +310,9 @@ const EditPage: React.FC = () => {
 
     try {
       const canvas = fabricRef.current;
-      const dataUrl = canvas.toDataURL();
+      const dataUrl = canvas.toDataURL({
+        multiplier: 2
+      });
 
       // Convert data URL to blob
       const response = await fetch(dataUrl);
