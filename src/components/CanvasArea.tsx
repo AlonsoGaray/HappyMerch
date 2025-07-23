@@ -430,7 +430,7 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
   return (
       <div
         ref={containerRef}
-        className="relative flex max-w-md w-full h-[460px] max-h-[460px] bg-white overflow-hidden"
+        className="relative flex max-w-2xl w-full h-[650px] max-h-[650px] bg-red-500 overflow-hidden"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -443,8 +443,8 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
         {/* Contenedor que agrupa imagen y canvas y aplica la transformación */}
         <div
           style={{
-            width: 400,
-            height: 400,
+            width: 600,
+            height: 600,
             position: 'absolute',
             left: '50%',
             top: '50%',
@@ -461,13 +461,11 @@ const CanvasArea: React.FC<CanvasAreaProps> = ({
             className="absolute left-0 top-0 object-contain pointer-events-none select-none"
             draggable={false}
             style={{
-              width: 400,
-              height: 400,
+              width: 600,
+              height: 600,
               display: 'block',
               zIndex: 1,
               position: 'absolute',
-              left: 0,
-              top: 0,
             }}
             ref={imgRef}
           />
