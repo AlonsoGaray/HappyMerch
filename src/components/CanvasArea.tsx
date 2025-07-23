@@ -34,6 +34,7 @@ type CanvasAreaProps = {
   onUpdateItems?: (updatedItems: CanvasAnyItem[]) => void;
   showDashedBorder?: boolean;
   isVisible: (id: number) => boolean;
+  setItemStates?: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } }>>;
 };
 
 
@@ -49,7 +50,8 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
   selectedBg, 
   onUpdateItems, 
   showDashedBorder, 
-  isVisible 
+  isVisible, 
+  setItemStates 
 }, ref) => {
   if (!product) return <div>Cargando</div>
   const actualSelectedId = selectedId;
@@ -369,12 +371,18 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
   useEffect(() => {
     const fabricCanvas = fabricRef.current;
     if (!fabricCanvas) return;
+    
     // Solo forzar el objeto activo si el cambio viene de React (no del canvas)
     if (!isSelectionFromCanvas.current) {
       if (actualSelectedId != null) {
         const obj = fabricCanvas.getObjects().find(o => (o as any).id === actualSelectedId);
         if (obj) {
           fabricCanvas.setActiveObject(obj);
+          // Sincroniza flipX del estado al objeto
+          const flipXState = itemStatesRef.current[actualSelectedId]?.flipX;
+          if (typeof flipXState === 'boolean' && obj.flipX !== flipXState) {
+            obj.set('flipX', flipXState);
+          }
         } else {
           fabricCanvas.discardActiveObject();
         }
@@ -385,8 +393,8 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
     }
     // Resetear el ref después de cada render
     isSelectionFromCanvas.current = false;
-  }, [actualSelectedId, fabricRef]);
-
+  }, [actualSelectedId, fabricRef, itemStatesRef.current]);
+  
   // --- EFECTO DE EVENTOS (solo una vez) ---
   useEffect(() => {
     const fabricCanvas = fabricRef.current;
@@ -396,6 +404,12 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
       if (obj && typeof (obj as any).id === 'number' && actualSetSelectedId) {
         isSelectionFromCanvas.current = true;
         actualSetSelectedId((obj as any).id);
+        // Sincroniza flipX del estado al objeto
+        const flipXState = itemStatesRef.current[(obj as any).id]?.flipX;
+        if (typeof flipXState === 'boolean' && obj.flipX !== flipXState) {
+          obj.set('flipX', flipXState);
+          fabricCanvas.renderAll();
+        }
       }
     };
     const handleCleared = () => {
@@ -417,7 +431,7 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
       fabricCanvas.off('selection:cleared', handleCleared);
       fabricCanvas.off('mouse:dblclick', handleDoubleClick);
     };
-  }, [fabricRef, actualSetSelectedId]);
+  }, [fabricRef, actualSetSelectedId, itemStatesRef.current]);
 
   // En el renderizado de items, usar itemStatesRef.current en vez de prop
   useEffect(() => {
@@ -543,6 +557,16 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           ...itemStatesRef.current[id],
           flipX: !prev,
         };
+        // Actualiza el estado global si se pasó la prop
+        if (typeof setItemStates === 'function') {
+          setItemStates((states) => ({
+            ...states,
+            [id]: {
+              ...states[id],
+              flipX: !prev,
+            },
+          }));
+        }
         fabricCanvas.renderAll();
       }
     },

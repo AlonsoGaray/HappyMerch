@@ -123,6 +123,13 @@ const EditPage: React.FC = () => {
   };
   const handleFlipX = (id: number) => {
     canvasAreaRef.current?.flipItem(id);
+    setItemStates((states) => ({
+      ...states,
+      [id]: {
+        ...states[id],
+        flipX: !states[id]?.flipX,
+      },
+    }));
   };
   const handleResize = (id: number, factor: number) => {
     canvasAreaRef.current?.resizeItem(id, factor);
@@ -360,6 +367,7 @@ const EditPage: React.FC = () => {
             onUpdateItems={setCanvasItems}
             showDashedBorder={showDashedBorder}
             isVisible={isVisible}
+            setItemStates={setItemStates}
           />
           <BottomBar
             selectedId={selectedId}
