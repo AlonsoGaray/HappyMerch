@@ -9,12 +9,12 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GenericAdminPanel } from "@/components/admin/GenericAdminPanel";
 import { ConfigsAdminPanel } from "@/components/admin/ConfigsAdminPanel";
 import { signOut } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 import { DesignsAdminPanel } from "@/components/admin/DesignsAdminPanel";
+import { UsersAdminPanel } from "@/components/admin/UsersAdminPanel";
 
 const sidebarItems = [
   { id: "diseños_clientes", label: "Diseños de Clientes", icon: Palette },
@@ -168,21 +168,7 @@ export default function AdminPanel() {
           {activeSection === "personalizacion" && <ConfigsAdminPanel />}
 
           {activeSection === "usuarios" && (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gestión de Usuarios</CardTitle>
-                  <CardDescription>
-                    Administra los usuarios registrados en tu plataforma
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-500">
-                    Funcionalidad de gestión de usuarios en desarrollo...
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+            <UsersAdminPanel />
           )}
 
           {activeSection === "diseños_clientes" && <DesignsAdminPanel />}

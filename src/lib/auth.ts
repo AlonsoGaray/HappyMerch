@@ -36,3 +36,33 @@ export async function getUserRole(authId: string): Promise<string | null> {
   if (error) throw error;
   return data?.role || null;
 } 
+
+/**
+ * Crea un usuario autoconfirmado en Supabase Auth y lo agrega a la tabla 'user'.
+ * @param email - Correo del usuario
+ * @param password - Contraseña del usuario
+ * @param role - Rol del usuario ('editor' o 'admin')
+ * @returns El usuario creado (objeto con id, email, role)
+ */
+export async function createAutoconfirmedUser(email: string, password: string, role: 'editor' | 'admin') {
+  // 1. Crear usuario en Auth (autoconfirmado)
+  // Requiere service_role key, pero si el proyecto tiene habilitado el método admin, se puede usar:
+  // @ts-ignore
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (error) throw error;
+  const user = data.user;
+  if (!user) throw new Error('No se pudo crear el usuario en Auth');
+
+  // 2. Insertar en la tabla 'user'
+  const { error: insertError } = await supabase
+    .from('user')
+    .insert({ auth_id: user.id, email, role })
+    .select();
+  if (insertError) throw insertError;
+
+  return { id: user.id, email, role };
+} 

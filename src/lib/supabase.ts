@@ -416,11 +416,12 @@ export async function saveDesignWithFeedback(
 }
 
 /**
- * Obtiene todas las filas de la tabla 'client_product'.
- * @returns Un array de objetos de la tabla client_product
+ * Obtiene todas las filas de la tabla especificada.
+ * @param tableName El nombre de la tabla
+ * @returns Un array de objetos de la tabla seleccionada
  */
-export async function getAllClientProducts(): Promise<any[]> {
-  const { data, error } = await supabase.from("client_product").select("*");
+export async function getAllTableRows(tableName: string): Promise<any[]> {
+  const { data, error } = await supabase.from(tableName).select("*");
   if (error) throw error;
   return data || [];
 }

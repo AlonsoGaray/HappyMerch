@@ -3,7 +3,7 @@ import { Download, Eye, Star, Trash2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { useEffect, useState } from "react";
-import { deleteTableRowAndFile, getAllClientProducts } from "@/lib/supabase";
+import { deleteTableRowAndFile, getAllTableRows } from "@/lib/supabase";
 import { downloadCmykFromEdgeFn } from "@/lib/PanelUtils";
 
 export function DesignsAdminPanel() {
@@ -16,7 +16,7 @@ export function DesignsAdminPanel() {
   useEffect(() => {
     setLoadingClientProducts(true);
     setErrorClientProducts(null);
-    getAllClientProducts()
+    getAllTableRows("client_product")
       .then(setClientProducts)
       .catch((e) => setErrorClientProducts(e.message || "Error al cargar los productos"))
       .finally(() => setLoadingClientProducts(false));
