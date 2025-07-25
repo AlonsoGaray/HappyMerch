@@ -319,10 +319,12 @@ export async function getAllLogos(): Promise<{ name: string; url: string }[]> {
 /**
  * Actualiza la configuración de branding en la tabla 'config'.
  * Solo actualiza los campos recibidos (parcial).
+ * @param id - El id de la config a actualizar
  * @param updates - Objeto con los campos a actualizar
  * @returns La fila actualizada
  */
 export async function updateBrandingConfig(
+  id: string,
   updates: Partial<{
     logo_url: string;
     main_color: string;
@@ -332,17 +334,32 @@ export async function updateBrandingConfig(
     active_btn_text_color: string;
     nav_btn_text_color: string;
     nav_btn_bg_color: string;
+    welcome_title_font: string;
+    welcome_subtitle_font: string;
+    welcome_button_font: string;
+    tab_button_font: string;
+    nav_button_font: string;
+    user_id: string; // <-- Agregado para permitir actualizar user_id
   }>
 ): Promise<any> {
-  const CONFIG_ID = "5e46ee3c-1885-4257-b486-ff225603d3f2";
   const { data, error } = await supabase
     .from("config")
     .update(updates)
-    .eq("id", CONFIG_ID)
+    .eq("id", id)
     .select()
     .single();
   if (error) throw error;
   return data;
+}
+
+/**
+ * Obtiene todas las configuraciones de branding usando la función RPC get_all_configs.
+ * @returns Un array de todas las configs
+ */
+export async function getAllBrandingConfigs(): Promise<any[]> {
+  const { data, error } = await supabase.rpc('get_all_configs');
+  if (error) throw error;
+  return data || [];
 }
 
 /**
@@ -353,17 +370,6 @@ export async function deleteLogo(fileName: string): Promise<void> {
   const bucketName = "logos";
   const { error } = await supabase.storage.from(bucketName).remove([fileName]);
   if (error) throw error;
-}
-
-/**
- * Obtiene la configuración de branding de la tabla 'config'.
- * @returns La fila de configuración (o null si no existe)
- */
-export async function getBrandingConfig(): Promise<any> {
-  const CONFIG_ID = "5e46ee3c-1885-4257-b486-ff225603d3f2";
-  const { data, error } = await supabase.from("config").select("*").eq("id", CONFIG_ID).single();
-  if (error) throw error;
-  return data;
 }
 
 /**
@@ -424,4 +430,48 @@ export async function getAllTableRows(tableName: string): Promise<any[]> {
   const { data, error } = await supabase.from(tableName).select("*");
   if (error) throw error;
   return data || [];
+}
+
+/**
+ * Crea una nueva configuración de branding en la tabla 'config' con solo el brand_name y el resto de los campos en null.
+ * @param brandName - El nombre de la marca
+ * @returns La fila creada
+ */
+export async function createBrandingConfig(brandName: string): Promise<any> {
+  const { data, error } = await supabase
+    .from("config")
+    .insert({
+      brand_name: brandName,
+      logo_url: null,
+      main_color: null,
+      inactive_btn_bg_color: null,
+      inactive_btn_text_color: null,
+      active_btn_bg_color: null,
+      active_btn_text_color: null,
+      nav_btn_text_color: null,
+      nav_btn_bg_color: null,
+      welcome_title_font: null,
+      welcome_subtitle_font: null,
+      welcome_button_font: null,
+      tab_button_font: null,
+      nav_button_font: null,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteUserCompletely(authId: string) {
+  const response = await fetch('https://fuhdflljcbjcnhppccyr.supabase.co/functions/v1/delete-user', {
+    method: 'POST',
+    body: JSON.stringify({ user_id: authId }),
+  });
+
+  if (!response.ok) {
+    console.error('Error deleting user from auth:', response.statusText);
+    return;
+  }
+
+  console.log('User deleted successfully from both user and auth: ', response);
 }

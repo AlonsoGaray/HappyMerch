@@ -3,11 +3,13 @@ import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Upload, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { uploadLogo, updateBrandingConfig, updateTableRow, deleteLogo } from "@/lib/supabase";
+import { uploadLogo, updateBrandingConfig, deleteLogo, createBrandingConfig } from "@/lib/supabase";
 import { useGlobalData } from "@/contexts/AdminDataContext";
 import { SketchPicker } from "react-color";
 import type { ColorResult } from "react-color";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "../ui/accordion";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { supabase } from "@/lib/supabase";
 
 const FONT_OPTIONS = [
   { value: "font-pacifico", label: "Pacifico" },
@@ -23,7 +25,7 @@ const FONT_OPTIONS = [
 ];
 
 export function ConfigsAdminPanel() {
-  const { data, refreshData } = useGlobalData();
+  const { data, refreshData, selectConfig } = useGlobalData();
   const [selectedLogo, setSelectedLogo] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +70,51 @@ export function ConfigsAdminPanel() {
     nav_button_font: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedConfigId, setSelectedConfigId] = useState<string>(data.config?.id || "");
+  const [showNewConfigModal, setShowNewConfigModal] = useState(false);
+  const [newBrandName, setNewBrandName] = useState("");
+  const [creatingConfig, setCreatingConfig] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [users, setUsers] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [savingUser, setSavingUser] = useState(false);
+  const [userSaveMsg, setUserSaveMsg] = useState("");
+  const [userSaveError, setUserSaveError] = useState("");
+
+  // Sync selectedConfigId with context config
+  useEffect(() => {
+    if (data.config?.id && data.config?.id !== selectedConfigId) {
+      setSelectedConfigId(data.config.id);
+    }
+  }, [data.config?.id]);
+
+  // Cuando cambia el select, actualizar el contexto
+  const handleConfigSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const id = e.target.value;
+    setSelectedConfigId(id);
+    selectConfig(id);
+  };
+
+  const handleCreateConfig = async () => {
+    if (!newBrandName.trim()) {
+      setCreateError("El nombre de la marca es requerido");
+      return;
+    }
+    setCreatingConfig(true);
+    setCreateError("");
+    try {
+      const newConfig = await createBrandingConfig(newBrandName.trim());
+      await refreshData();
+      setSelectedConfigId(newConfig.id);
+      selectConfig(newConfig.id);
+      setShowNewConfigModal(false);
+      setNewBrandName("");
+    } catch (err: any) {
+      setCreateError(err.message || "Error al crear la configuración");
+    } finally {
+      setCreatingConfig(false);
+    }
+  };
 
   useEffect(() => {
     if (data.config?.logo_url === "") {
@@ -120,8 +167,8 @@ export function ConfigsAdminPanel() {
     setSaving(true);
     setSaveMsg("");
     try {
-      await updateBrandingConfig({ logo_url: selectedLogo });
-      await refreshData();
+      await updateBrandingConfig(data.config.id, { logo_url: selectedLogo });
+      await refreshData(); // No cambiar selectedConfigId ni llamar selectConfig
       setSaveMsg("¡Logo guardado correctamente!");
     } catch (err) {
       console.error("Error uploading logo:", err);
@@ -146,7 +193,7 @@ export function ConfigsAdminPanel() {
       await deleteLogo(logoToDelete.name);
 
       if (data.config.logo_url === selectedLogo) {
-        await updateBrandingConfig({ logo_url: "" });
+        await updateBrandingConfig(data.config.id, { logo_url: "" });
       }
       await refreshData();
       setSelectedLogo("");
@@ -165,7 +212,7 @@ export function ConfigsAdminPanel() {
     setSavingColors(true);
     setSaveColorsMsg("");
     try {
-      await updateBrandingConfig({
+      await updateBrandingConfig(data.config.id, {
         main_color: mainColor,
         inactive_btn_bg_color: inactiveBtnBg,
         inactive_btn_text_color: inactiveBtnText,
@@ -174,7 +221,7 @@ export function ConfigsAdminPanel() {
         nav_btn_text_color: navBtnText,
         nav_btn_bg_color: navBtnBg,
       });
-      await refreshData();
+      await refreshData(); 
       setSaveColorsMsg("¡Colores guardados!");
       setColorChanged(false);
     } catch {
@@ -197,8 +244,151 @@ export function ConfigsAdminPanel() {
 
   const logoChanged = selectedLogo !== (data.config?.logo_url || "");
 
+  // Obtener usuarios al montar
+  useEffect(() => {
+    async function fetchUsers() {
+      const { data, error } = await supabase.rpc('get_all_users');
+      if (!error && data) {
+        setUsers(data);
+      }
+    }
+    fetchUsers();
+  }, []);
+
+  // Sincronizar usuario seleccionado con config
+  useEffect(() => {
+    if (data.config?.user_id) {
+      setSelectedUserId(data.config.user_id);
+    } else {
+      setSelectedUserId("");
+    }
+  }, [data.config?.user_id]);
+
+  // Cuando cambia el usuario, solo actualiza el select, no guarda
+  const handleUserSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedUserId(e.target.value);
+    setUserSaveMsg("");
+    setUserSaveError("");
+  };
+
+  // Guardar usuario seleccionado en config
+  const handleSaveUser = async () => {
+    if (!selectedUserId || !data.config?.id) return;
+    setSavingUser(true);
+    setUserSaveMsg("");
+    setUserSaveError("");
+    try {
+      await updateBrandingConfig(data.config.id, { user_id: selectedUserId });
+      await refreshData();
+      setUserSaveMsg("Usuario guardado correctamente");
+    } catch (err: any) {
+      if (err?.message?.includes("duplicate") || err?.message?.includes("unique")) {
+        setUserSaveError("Este usuario ya está asignado a otra configuración.");
+      } else {
+        setUserSaveError("Error al guardar el usuario");
+      }
+    } finally {
+      setSavingUser(false);
+      setTimeout(() => {
+        setUserSaveMsg("");
+        setUserSaveError("");
+      }, 2500);
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Selector de configuración en la parte superior */}
+      <div className="flex items-center gap-4 mb-4">
+        <label htmlFor="config-select" className="font-semibold text-lg">
+          Seleccionar configuración:
+        </label>
+        <select
+          id="config-select"
+          value={selectedConfigId}
+          onChange={handleConfigSelect}
+          className="border rounded p-2 min-w-[200px]"
+        >
+          {data.configs.map((cfg) => (
+            <option key={cfg.id} value={cfg.id}>
+              {cfg.brand_name}
+            </option>
+          ))}
+        </select>
+        {/* Select de usuario */}
+        <label htmlFor="user-select" className="ml-4 font-semibold text-lg">
+          Usuario:
+        </label>
+        <select
+          id="user-select"
+          value={selectedUserId}
+          onChange={handleUserSelect}
+          className="border rounded p-2 min-w-[200px]"
+          disabled={savingUser}
+        >
+          <option value="">Sin usuario</option>
+          {users.map((user) => (
+            <option key={user.id} value={user.id}>
+              {user.email}
+            </option>
+          ))}
+        </select>
+        <Button
+          className="ml-2"
+          onClick={handleSaveUser}
+          disabled={savingUser || !selectedUserId}
+        >
+          {savingUser ? "Guardando..." : "Guardar usuario"}
+        </Button>
+        {userSaveMsg && <span className="text-green-600 text-sm ml-2">{userSaveMsg}</span>}
+        {userSaveError && <span className="text-red-600 text-sm ml-2">{userSaveError}</span>}
+        {/* Botón para agregar nueva configuración usando DialogTrigger */}
+        <Dialog open={showNewConfigModal} onOpenChange={setShowNewConfigModal}>
+          <DialogTrigger asChild>
+            <Button className="ml-2">
+              + Nueva configuración
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-transparent shadow-none border-none p-0 max-w-xs">
+            <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col gap-4">
+              <DialogHeader>
+                <DialogTitle>Nueva configuración</DialogTitle>
+              </DialogHeader>
+              <input
+                type="text"
+                placeholder="Nombre de la marca"
+                value={newBrandName}
+                onChange={e => setNewBrandName(e.target.value)}
+                className="border rounded p-2"
+                autoFocus
+              />
+              {createError && <span className="text-red-600 text-sm">{createError}</span>}
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowNewConfigModal(false);
+                    setNewBrandName("");
+                    setCreateError("");
+                  }}
+                  disabled={creatingConfig}
+                  type="button"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  className="bg-blue-600 text-white hover:bg-blue-700"
+                  onClick={handleCreateConfig}
+                  disabled={creatingConfig}
+                  type="button"
+                >
+                  {creatingConfig ? "Creando..." : "Crear"}
+                </Button>
+              </DialogFooter>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
       <Tabs defaultValue="branding" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="branding">Marca</TabsTrigger>
@@ -217,6 +407,7 @@ export function ConfigsAdminPanel() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="border rounded p-2"
                 />
+                {/* El select de configuración se ha movido a la parte superior */}
                 <Button onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                   <Upload className="mr-2 h-4 w-4" />
                   {uploading ? "Subiendo..." : "Subir nuevo logotipo"}
@@ -524,6 +715,7 @@ export function ConfigsAdminPanel() {
                         handleFontChange(id as keyof typeof fontSelections, e.target.value)
                       }
                     >
+                      <option value="">Fuente no seleccionada</option>
                       {FONT_OPTIONS.map((font) => (
                         <option key={font.value} value={font.value}>
                           {font.label}
@@ -544,13 +736,13 @@ export function ConfigsAdminPanel() {
                           tab_button_font: fontSelections.tab_button_font,
                           nav_button_font: fontSelections.nav_button_font,
                         };
-                        await updateTableRow(
-                          "config",
-                          "5e46ee3c-1885-4257-b486-ff225603d3f2",
+                        await updateBrandingConfig(
+                          data.config.id,
                           updates
                         );
                         setSaveMsg("Configuración guardada correctamente");
                         setInitialFontSelections(updates); // Actualiza el estado inicial tras guardar
+                        await refreshData(); // No cambiar selectedConfigId ni llamar selectConfig
                       } catch (error) {
                         console.error("Error uploading logo:", error);
                         setSaveMsg("Error al guardar la configuración");

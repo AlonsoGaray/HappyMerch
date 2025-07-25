@@ -1,4 +1,4 @@
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
@@ -10,13 +10,14 @@ import { Badge } from "../ui/badge";
 import { useEffect, useState } from "react";
 import { SearchInput } from "../ui/search-input";
 import { supabase } from "@/lib/supabase";
-import { getAllTableRows } from "@/lib/supabase";
+import { deleteUserCompletely } from "@/lib/supabase";
 
 interface User {
   id: string
   email: string
   role: string
   brand_name: string
+  auth_id: string
 }
 
 const roles = ["Admin", "Editor"]
@@ -25,9 +26,6 @@ export function UsersAdminPanel() {
   const [users, setUsers] = useState<User[]>([]);
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false)
   const [newUser, setNewUser] = useState({ email: "", role: "", password: "" })
-  const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [editBrandValue, setEditBrandValue] = useState<string>("");
-  const [brands, setBrands] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   console.log(users)
 
@@ -44,40 +42,13 @@ export function UsersAdminPanel() {
       "".toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const handleEditUser = async (user: User) => {
-    setEditingUserId(user.id);
-    setEditBrandValue(user.brand_name);
-    // Fetch brands from config table
+  const handleDeleteUser = async (userId: string) => {
     try {
-      const configRows = await getAllTableRows("config");
-      const brandNames = configRows
-        .map((row: any) => row.brand_name)
-        .filter((b: string | undefined) => !!b);
-      setBrands(Array.from(new Set(brandNames)));
-    } catch (e) {
-      setBrands([]);
+      await deleteUserCompletely(userId);
+      await getAllUsers(); // Refresca la lista después de eliminar
+    } catch (error) {
+      console.error("Error deleting user:", error);
     }
-  };
-
-  const handleUpdateUser = async (user: User) => {
-    // Aquí deberías hacer la petición para actualizar la marca del usuario en la base de datos
-    // Por ahora solo actualiza el estado local
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === user.id ? { ...u, brand_name: editBrandValue } : u
-      )
-    );
-    setEditingUserId(null);
-    setEditBrandValue("");
-  };
-
-  const handleCancelEdit = () => {
-    setEditingUserId(null);
-    setEditBrandValue("");
-  };
-
-  const handleDeleteUser = (userId: string) => {
-    console.log("Deleting user:", userId)
   }
 
   const getAllUsers = async () => {
@@ -140,42 +111,14 @@ export function UsersAdminPanel() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {editingUserId === user.id ? (
-                      <div className="flex items-center gap-2">
-                        <Select value={editBrandValue} onValueChange={setEditBrandValue}>
-                          <SelectTrigger className="w-40">
-                            <SelectValue placeholder="Seleccionar marca" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {brands.map((brand) => (
-                              <SelectItem key={brand} value={brand}>
-                                {brand}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button size="icon" variant="ghost" onClick={() => handleUpdateUser(user)}>
-                          <span role="img" aria-label="Confirmar">✔</span>
-                        </Button>
-                        <Button size="icon" variant="ghost" onClick={handleCancelEdit}>
-                          <span role="img" aria-label="Cancelar">✖</span>
-                        </Button>
-                      </div>
-                    ) : (
-                      <span className="text-gray-900">{user.brand_name}</span>
-                    )}
+                    <span className="text-gray-900">{user.brand_name}</span>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-2">
-                      {editingUserId === user.id ? null : (
-                        <Button variant="ghost" size="sm" onClick={() => handleEditUser(user)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      )}
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
+                        onClick={() => handleDeleteUser(user.auth_id)}
                         className="text-red-600 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4" />

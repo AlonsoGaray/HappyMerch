@@ -1,12 +1,13 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import type { ReactNode } from "react"
-import { getTableRows, getBrandingConfig, getAllLogos } from "@/lib/supabase"
+import { getTableRows, getAllLogos, getAllBrandingConfigs } from "@/lib/supabase"
 
 interface GlobalData {
   products: any[]
   elements: any[]
   backgrounds: any[]
-  config: any | null
+  configs: any[] // todas las configs
+  config: any | null // config seleccionada
   logos: { name: string; url: string }[]
   loading: boolean
   error: string | null
@@ -17,6 +18,7 @@ interface GlobalDataContextType {
   refreshData: () => Promise<void>
   refreshTable: (tableName: string) => Promise<void>
   updateItem: (tableName: string, itemId: string, updates: { name?: string; visible?: boolean }) => void
+  selectConfig: (id: string) => void
 }
 
 const GlobalDataContext = createContext<GlobalDataContextType | undefined>(undefined)
@@ -26,6 +28,7 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
     products: [],
     elements: [],
     backgrounds: [],
+    configs: [],
     config: null,
     logos: [],
     loading: true,
@@ -36,23 +39,25 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
     try {
       setData(prev => ({ ...prev, loading: true, error: null }))
       
-      const [products, elements, backgrounds, config, logos] = await Promise.all([
+      const [products, elements, backgrounds, configs, logos] = await Promise.all([
         getTableRows('product'),
         getTableRows('element'),
         getTableRows('background'),
-        getBrandingConfig(),
+        getAllBrandingConfigs(),
         getAllLogos()
       ])
 
-      setData({
+      setData(prev => ({
+        ...prev,
         products,
         elements,
         backgrounds,
-        config,
+        configs,
+        config: configs.length > 0 ? configs[0] : null,
         logos,
         loading: false,
         error: null
-      })
+      }))
     } catch (error) {
       console.error('Error loading global data:', error)
       setData(prev => ({
@@ -99,12 +104,20 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  // Seleccionar config por id
+  const selectConfig = (id: string) => {
+    setData(prev => {
+      const config = prev.configs.find(c => c.id === id) || null;
+      return { ...prev, config };
+    });
+  }
+
   useEffect(() => {
     loadAllData()
   }, [])
 
   return (
-    <GlobalDataContext.Provider value={{ data, refreshData, refreshTable, updateItem }}>
+    <GlobalDataContext.Provider value={{ data, refreshData, refreshTable, updateItem, selectConfig }}>
       {children}
     </GlobalDataContext.Provider>
   )
