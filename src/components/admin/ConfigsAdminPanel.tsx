@@ -300,94 +300,100 @@ export function ConfigsAdminPanel() {
     <div className="space-y-6">
       {/* Selector de configuración en la parte superior */}
       <div className="flex items-center gap-4 mb-4">
-        <label htmlFor="config-select" className="font-semibold text-lg">
-          Seleccionar configuración:
-        </label>
-        <select
-          id="config-select"
-          value={selectedConfigId}
-          onChange={handleConfigSelect}
-          className="border rounded p-2 min-w-[200px]"
-        >
-          {data.configs.map((cfg) => (
-            <option key={cfg.id} value={cfg.id}>
-              {cfg.brand_name}
-            </option>
-          ))}
-        </select>
-        {/* Select de usuario */}
-        <label htmlFor="user-select" className="ml-4 font-semibold text-lg">
-          Usuario:
-        </label>
-        <select
-          id="user-select"
-          value={selectedUserId}
-          onChange={handleUserSelect}
-          className="border rounded p-2 min-w-[200px]"
-          disabled={savingUser}
-        >
-          <option value="">Sin usuario</option>
-          {users.map((user) => (
-            <option key={user.id} value={user.id}>
-              {user.email}
-            </option>
-          ))}
-        </select>
-        <Button
-          className="ml-2"
-          onClick={handleSaveUser}
-          disabled={savingUser}
-        >
-          {savingUser ? "Guardando..." : "Guardar usuario"}
-        </Button>
-        {userSaveMsg && <span className="text-green-600 text-sm ml-2">{userSaveMsg}</span>}
-        {userSaveError && <span className="text-red-600 text-sm ml-2">{userSaveError}</span>}
-        {/* Botón para agregar nueva configuración usando DialogTrigger */}
-        <Dialog open={showNewConfigModal} onOpenChange={setShowNewConfigModal}>
-          <DialogTrigger asChild>
-            <Button className="ml-2">
-              + Nueva configuración
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-transparent shadow-none border-none p-0 max-w-xs">
-            <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col gap-4">
-              <DialogHeader>
-                <DialogTitle>Nueva configuración</DialogTitle>
-              </DialogHeader>
-              <input
-                type="text"
-                placeholder="Nombre de la marca"
-                value={newBrandName}
-                onChange={e => setNewBrandName(e.target.value)}
-                className="border rounded p-2"
-                autoFocus
-              />
-              {createError && <span className="text-red-600 text-sm">{createError}</span>}
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowNewConfigModal(false);
-                    setNewBrandName("");
-                    setCreateError("");
-                  }}
-                  disabled={creatingConfig}
-                  type="button"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  className="bg-blue-600 text-white hover:bg-blue-700"
-                  onClick={handleCreateConfig}
-                  disabled={creatingConfig}
-                  type="button"
-                >
-                  {creatingConfig ? "Creando..." : "Crear"}
-                </Button>
-              </DialogFooter>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2 items-center flex-col lg:flex-row">
+          <div className="flex flex-col items-center gap-2">
+            <label htmlFor="config-select" className="font-semibold text-lg">
+              Seleccionar configuración:
+            </label>
+            <select
+              id="config-select"
+              value={selectedConfigId}
+              onChange={handleConfigSelect}
+              className="border rounded p-2 min-w-[200px]"
+              >
+              {data.configs.map((cfg) => (
+                <option key={cfg.id} value={cfg.id}>
+                  {cfg.brand_name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* Select de usuario */}
+          <div className="flex flex-col items-center gap-2">
+            <label htmlFor="user-select" className="ml-4 font-semibold text-lg">
+              Usuario:
+            </label>
+            <select
+              id="user-select"
+              value={selectedUserId}
+              onChange={handleUserSelect}
+              className="border rounded p-2 min-w-[200px]"
+              disabled={savingUser}
+              >
+              <option value="">Sin usuario</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.email}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Button
+            className="ml-2"
+            onClick={handleSaveUser}
+            disabled={savingUser}
+            >
+            {savingUser ? "Guardando..." : "Guardar usuario"}
+          </Button>
+          {/* Botón para agregar nueva configuración usando DialogTrigger */}
+          <Dialog open={showNewConfigModal} onOpenChange={setShowNewConfigModal}>
+            <DialogTrigger asChild>
+              <Button className="ml-2">
+                + Nueva configuración
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-transparent shadow-none border-none p-0 max-w-xs">
+              <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col gap-4">
+                <DialogHeader>
+                  <DialogTitle>Nueva configuración</DialogTitle>
+                </DialogHeader>
+                <input
+                  type="text"
+                  placeholder="Nombre de la marca"
+                  value={newBrandName}
+                  onChange={e => setNewBrandName(e.target.value)}
+                  className="border rounded p-2"
+                  autoFocus
+                />
+                {createError && <span className="text-red-600 text-sm">{createError}</span>}
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowNewConfigModal(false);
+                      setNewBrandName("");
+                      setCreateError("");
+                    }}
+                    disabled={creatingConfig}
+                    type="button"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    className="bg-blue-600 text-white hover:bg-blue-700"
+                    onClick={handleCreateConfig}
+                    disabled={creatingConfig}
+                    type="button"
+                  >
+                    {creatingConfig ? "Creando..." : "Crear"}
+                  </Button>
+                </DialogFooter>
+              </div>
+            </DialogContent>
+          </Dialog>
+          {userSaveMsg && <span className="text-green-600 text-sm ml-2">{userSaveMsg}</span>}
+          {userSaveError && <span className="text-red-600 text-sm ml-2">{userSaveError}</span>}
+        </div>
       </div>
       <Tabs defaultValue="branding" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
@@ -710,12 +716,11 @@ export function ConfigsAdminPanel() {
                     <select
                       id={id}
                       className="border rounded p-2"
-                      value={fontSelections[id as keyof typeof fontSelections] ?? ""}
+                      value={fontSelections[id as keyof typeof fontSelections]}
                       onChange={(e) =>
                         handleFontChange(id as keyof typeof fontSelections, e.target.value)
                       }
                     >
-                      <option value="">Fuente no seleccionada</option>
                       {FONT_OPTIONS.map((font) => (
                         <option key={font.value} value={font.value}>
                           {font.label}
