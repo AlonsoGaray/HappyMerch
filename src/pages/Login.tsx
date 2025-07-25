@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { signIn, getCurrentUser, getUserRole } from '../lib/auth';
 import { useNavigate } from 'react-router-dom';
+import { getConfigByUserId } from '../lib/supabase';
+import { useGlobalData } from '../contexts/AdminDataContext';
 
 /**
  * Login Component
@@ -17,6 +19,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { setConfigGlobal } = useGlobalData();
 
   useEffect(() => {
     async function checkLoggedIn() {
@@ -36,7 +39,7 @@ export default function Login() {
       } catch {}
     }
     checkLoggedIn();
-  }, [navigate]);
+  }, [navigate, setConfigGlobal]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +50,9 @@ export default function Login() {
       await signIn(email, password);
       const user = await getCurrentUser();
       if (user) {
+        // Obtener config y setear global
+        const config = await getConfigByUserId(user.id);
+        if (config) setConfigGlobal(config);
         const role = await getUserRole(user.id);
         if (role === 'admin') {
           navigate('/admin', { replace: true });

@@ -347,7 +347,6 @@ export async function updateBrandingConfig(
     .update(updates)
     .eq("id", id)
     .select()
-    .single();
   if (error) throw error;
   return data;
 }
@@ -462,6 +461,21 @@ export async function createBrandingConfig(brandName: string): Promise<any> {
   return data;
 }
 
+/**
+ * Obtiene la configuración de branding de la tabla 'config' para un usuario específico.
+ * @param userId - El id del usuario
+ * @returns La fila de configuración correspondiente o null si no existe
+ */
+export async function getConfigByUserId(userId: string): Promise<any | null> {
+  const { data, error } = await supabase
+    .from('config')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+  if (error && error.code !== 'PGRST116') throw error; // PGRST116: No rows found
+  return data || null;
+}
+
 export async function deleteUserCompletely(authId: string) {
   const response = await fetch('https://fuhdflljcbjcnhppccyr.supabase.co/functions/v1/delete-user', {
     method: 'POST',
@@ -474,4 +488,14 @@ export async function deleteUserCompletely(authId: string) {
   }
 
   console.log('User deleted successfully from both user and auth: ', response);
+}
+
+export async function getUserByAuthId(authId: string): Promise<any | null> {
+  const { data, error } = await supabase
+    .from('user')
+    .select('*')
+    .eq('auth_id', authId)
+    .single();
+  if (error && error.code !== 'PGRST116') throw error; // PGRST116: No rows found
+  return data || null;
 }

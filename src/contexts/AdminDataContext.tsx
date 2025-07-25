@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import type { ReactNode } from "react"
-import { getTableRows, getAllLogos, getAllBrandingConfigs } from "@/lib/supabase"
+import { getTableRows, getAllLogos, getAllBrandingConfigs, getUserByAuthId } from "@/lib/supabase"
+import { getCurrentUser } from '../lib/auth';
 
 interface GlobalData {
   products: any[]
@@ -19,6 +20,7 @@ interface GlobalDataContextType {
   refreshTable: (tableName: string) => Promise<void>
   updateItem: (tableName: string, itemId: string, updates: { name?: string; visible?: boolean }) => void
   selectConfig: (id: string) => void
+  setConfigGlobal: (configObj: any) => void
 }
 
 const GlobalDataContext = createContext<GlobalDataContextType | undefined>(undefined)
@@ -47,10 +49,19 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
         getAllLogos()
       ])
 
-      // Mantener la configuración seleccionada si existe
+      // Obtener usuario logueado
+      let user = null;
+      let userId = null;
+      try {
+        user = await getCurrentUser();
+        if (user) userId = await getUserByAuthId(user.id);
+      } catch {}
+
+      let newConfig = null;
       setData(prev => {
-        let newConfig = null;
-        if (prev.config && configs.length > 0) {
+        if (userId) {
+          newConfig = configs.find(c => c.user_id === userId.id) || null;
+        } else if (prev.config && configs.length > 0) {
           newConfig = configs.find(c => c.id === prev.config.id) || (configs.length > 0 ? configs[0] : null);
         } else {
           newConfig = configs.length > 0 ? configs[0] : null;
@@ -65,8 +76,8 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
           logos,
           loading: false,
           error: null
-        }
-      })
+        };
+      });
     } catch (error) {
       console.error('Error loading global data:', error)
       setData(prev => ({
@@ -121,12 +132,17 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
     });
   }
 
+  // Setear config directamente
+  const setConfigGlobal = (configObj: any) => {
+    setData(prev => ({ ...prev, config: configObj }));
+  }
+
   useEffect(() => {
     loadAllData()
   }, [])
 
   return (
-    <GlobalDataContext.Provider value={{ data, refreshData, refreshTable, updateItem, selectConfig }}>
+    <GlobalDataContext.Provider value={{ data, refreshData, refreshTable, updateItem, selectConfig, setConfigGlobal }}>
       {children}
     </GlobalDataContext.Provider>
   )

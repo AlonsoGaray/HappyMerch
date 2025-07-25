@@ -38,6 +38,7 @@ export function UsersAdminPanel() {
         newUser.role as "editor" | "admin"
       );
       console.log(response)
+      await getAllUsers();
   }
 
   const filteredUsers = users.filter(

@@ -278,6 +278,7 @@ export function ConfigsAdminPanel() {
     setUserSaveMsg("");
     setUserSaveError("");
     try {
+      console.log("selectedUserId", selectedUserId)
       await updateBrandingConfig(data.config.id, { user_id: selectedUserId === "" ? null : selectedUserId });
       await refreshData();
       setUserSaveMsg("Usuario guardado correctamente");
