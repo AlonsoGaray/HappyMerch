@@ -168,7 +168,6 @@ export function ConfigsAdminPanel() {
     setSaveMsg("");
     try {
       await updateBrandingConfig(data.config.id, { logo_url: selectedLogo });
-      await refreshData(); // No cambiar selectedConfigId ni llamar selectConfig
       setSaveMsg("¡Logo guardado correctamente!");
     } catch (err) {
       console.error("Error uploading logo:", err);
@@ -221,7 +220,6 @@ export function ConfigsAdminPanel() {
         nav_btn_text_color: navBtnText,
         nav_btn_bg_color: navBtnBg,
       });
-      await refreshData(); 
       setSaveColorsMsg("¡Colores guardados!");
       setColorChanged(false);
     } catch {
@@ -280,7 +278,6 @@ export function ConfigsAdminPanel() {
     try {
       console.log("selectedUserId", selectedUserId)
       await updateBrandingConfig(data.config.id, { user_id: selectedUserId === "" ? null : selectedUserId });
-      await refreshData();
       setUserSaveMsg("Usuario guardado correctamente");
     } catch (err: any) {
       if (err?.message?.includes("duplicate") || err?.message?.includes("unique")) {
@@ -748,7 +745,6 @@ export function ConfigsAdminPanel() {
                         );
                         setSaveMsg("Configuración guardada correctamente");
                         setInitialFontSelections(updates); // Actualiza el estado inicial tras guardar
-                        await refreshData(); // No cambiar selectedConfigId ni llamar selectConfig
                       } catch (error) {
                         console.error("Error uploading logo:", error);
                         setSaveMsg("Error al guardar la configuración");
