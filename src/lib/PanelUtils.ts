@@ -180,7 +180,7 @@ export const handleDeleteItem = async <T extends { id: string; name: string }>(
  */
 export async function downloadCmykFromEdgeFn(imageUrl: string): Promise<void> {
   // Construir la URL con parámetro
-  const url = `https://fuhdflljcbjcnhppccyr.supabase.co/functions/v1/clever-handler?url=${encodeURIComponent(
+  const url = `https://fuhdflljcbjcnhppccyr.supabase.co/functions/v1/convert-download?url=${encodeURIComponent(
     imageUrl
   )}`;
 

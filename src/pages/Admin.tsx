@@ -112,12 +112,12 @@ export default function AdminPanel() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <button
+            {/* <button
               className={`bg-blue-400 rounded-md px-4 py-2 text-base hover:bg-blue-700 transition cursor-pointer`}
               onClick={() => window.open("/edit", "_blank")}
             >
               Preview Edit
-            </button>
+            </button> */}
             <button
               className={`bg-red-600 rounded-md px-4 py-2 text-base hover:bg-red-700 transition cursor-pointer`}
               onClick={async () => {
