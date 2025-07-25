@@ -714,11 +714,12 @@ export function ConfigsAdminPanel() {
                     <select
                       id={id}
                       className="border rounded p-2"
-                      value={fontSelections[id as keyof typeof fontSelections]}
+                      value={fontSelections[id as keyof typeof fontSelections] || ""}
                       onChange={(e) =>
                         handleFontChange(id as keyof typeof fontSelections, e.target.value)
                       }
                     >
+                      <option value="">Fuente no seleccionada</option>
                       {FONT_OPTIONS.map((font) => (
                         <option key={font.value} value={font.value}>
                           {font.label}
