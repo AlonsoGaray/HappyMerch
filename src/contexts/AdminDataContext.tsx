@@ -47,17 +47,26 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
         getAllLogos()
       ])
 
-      setData(prev => ({
-        ...prev,
-        products,
-        elements,
-        backgrounds,
-        configs,
-        config: configs.length > 0 ? configs[0] : null,
-        logos,
-        loading: false,
-        error: null
-      }))
+      // Mantener la configuración seleccionada si existe
+      setData(prev => {
+        let newConfig = null;
+        if (prev.config && configs.length > 0) {
+          newConfig = configs.find(c => c.id === prev.config.id) || (configs.length > 0 ? configs[0] : null);
+        } else {
+          newConfig = configs.length > 0 ? configs[0] : null;
+        }
+        return {
+          ...prev,
+          products,
+          elements,
+          backgrounds,
+          configs,
+          config: newConfig,
+          logos,
+          loading: false,
+          error: null
+        }
+      })
     } catch (error) {
       console.error('Error loading global data:', error)
       setData(prev => ({

@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { SearchInput } from "../ui/search-input";
 import { supabase } from "@/lib/supabase";
 import { deleteUserCompletely } from "@/lib/supabase";
+import { createAutoconfirmedUser } from "@/lib/auth";
 
 interface User {
   id: string
@@ -20,7 +21,7 @@ interface User {
   auth_id: string
 }
 
-const roles = ["Admin", "Editor"]
+const roles = ["admin", "editor"]
 
 export function UsersAdminPanel() {
   const [users, setUsers] = useState<User[]>([]);
@@ -29,10 +30,14 @@ export function UsersAdminPanel() {
   const [searchTerm, setSearchTerm] = useState("");
   console.log(users)
 
-  const handleCreateUser = () => {
-    console.log("Creating user:", newUser)
-    setIsCreateUserOpen(false)
-    setNewUser({ email: "", role: "", password: "" })
+  const handleCreateUser = async () => {
+      setIsCreateUserOpen(false);
+      const response = await createAutoconfirmedUser(
+        newUser.email,
+        newUser.password,
+        newUser.role as "editor" | "admin"
+      );
+      console.log(response)
   }
 
   const filteredUsers = users.filter(
@@ -163,7 +168,7 @@ export function UsersAdminPanel() {
                 id="password"
                 type="password"
                 value={newUser.password}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                 className="col-span-3"
                 placeholder="Password"
               />

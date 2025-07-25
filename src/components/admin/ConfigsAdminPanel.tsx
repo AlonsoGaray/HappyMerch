@@ -273,12 +273,12 @@ export function ConfigsAdminPanel() {
 
   // Guardar usuario seleccionado en config
   const handleSaveUser = async () => {
-    if (!selectedUserId || !data.config?.id) return;
+    if (selectedUserId === undefined || !data.config?.id) return;
     setSavingUser(true);
     setUserSaveMsg("");
     setUserSaveError("");
     try {
-      await updateBrandingConfig(data.config.id, { user_id: selectedUserId });
+      await updateBrandingConfig(data.config.id, { user_id: selectedUserId === "" ? null : selectedUserId });
       await refreshData();
       setUserSaveMsg("Usuario guardado correctamente");
     } catch (err: any) {
@@ -336,7 +336,7 @@ export function ConfigsAdminPanel() {
         <Button
           className="ml-2"
           onClick={handleSaveUser}
-          disabled={savingUser || !selectedUserId}
+          disabled={savingUser}
         >
           {savingUser ? "Guardando..." : "Guardar usuario"}
         </Button>
@@ -710,7 +710,7 @@ export function ConfigsAdminPanel() {
                     <select
                       id={id}
                       className="border rounded p-2"
-                      value={fontSelections[id as keyof typeof fontSelections]}
+                      value={fontSelections[id as keyof typeof fontSelections] ?? ""}
                       onChange={(e) =>
                         handleFontChange(id as keyof typeof fontSelections, e.target.value)
                       }

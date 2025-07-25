@@ -45,24 +45,27 @@ export async function getUserRole(authId: string): Promise<string | null> {
  * @returns El usuario creado (objeto con id, email, role)
  */
 export async function createAutoconfirmedUser(email: string, password: string, role: 'editor' | 'admin') {
-  // 1. Crear usuario en Auth (autoconfirmado)
-  // Requiere service_role key, pero si el proyecto tiene habilitado el método admin, se puede usar:
-  // @ts-ignore
-  const { data, error } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-  });
-  if (error) throw error;
-  const user = data.user;
-  if (!user) throw new Error('No se pudo crear el usuario en Auth');
+  try {
+    const res = await fetch('https://fuhdflljcbjcnhppccyr.supabase.co/functions/v1/create-user', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password, role }),
+    });
 
-  // 2. Insertar en la tabla 'user'
-  const { error: insertError } = await supabase
-    .from('user')
-    .insert({ auth_id: user.id, email, role })
-    .select();
-  if (insertError) throw insertError;
+    if (!res.ok) {
+      const errorText = await res.text(); // puedes parsear .json() si sabes que viene JSON
+      console.error('Error:', errorText);
+      alert(errorText);
+      return;
+    }
 
-  return { id: user.id, email, role };
+    const data = await res.json();
+    console.log('Usuario creado:', data);
+    alert('✅ Usuario creado correctamente');
+  } catch (err) {
+    console.error('Error de red o inesperado:', err);
+    alert('❌ Error inesperado al crear usuario');
+  }
 } 
