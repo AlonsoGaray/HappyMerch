@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import type { ReactNode } from "react"
-import { getTableRows, getAllLogos, getAllBrandingConfigs, getUserByAuthId } from "@/lib/supabase"
+import { getTableRows, getAllLogos, getAllWelcomeImages, getAllBrandingConfigs, getUserByAuthId } from "@/lib/supabase"
 import { getCurrentUser } from '../lib/auth';
 
 interface GlobalData {
@@ -10,6 +10,7 @@ interface GlobalData {
   configs: any[] // todas las configs
   config: any | null // config seleccionada
   logos: { name: string; url: string }[]
+  welcomeImages: { name: string; url: string }[]
   loading: boolean
   error: string | null
 }
@@ -33,6 +34,7 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
     configs: [],
     config: null,
     logos: [],
+    welcomeImages: [],
     loading: true,
     error: null
   })
@@ -41,12 +43,13 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
     try {
       setData(prev => ({ ...prev, loading: true, error: null }))
       
-      const [products, elements, backgrounds, configs, logos] = await Promise.all([
+      const [products, elements, backgrounds, configs, logos, welcomeImages] = await Promise.all([
         getTableRows('product'),
         getTableRows('element'),
         getTableRows('background'),
         getAllBrandingConfigs(),
-        getAllLogos()
+        getAllLogos(),
+        getAllWelcomeImages()
       ])
 
       // Obtener usuario logueado
@@ -74,6 +77,7 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
           configs,
           config: newConfig,
           logos,
+          welcomeImages,
           loading: false,
           error: null
         };

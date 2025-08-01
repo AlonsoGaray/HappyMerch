@@ -16,7 +16,7 @@ const Welcome = () => {
         {data.config?.logo_url && <img className="max-w-64" src={data.config.logo_url} alt="logo" />}
         <span className={`text-xl text-gray-200 ${data.config?.welcome_subtitle_font}`} style={{ color: data.config?.welcome_subtitle_color }}>Diseña tu merch a tu estilo, en tiempo real. <br/> Elige, edita y hazlo único en solo unos pasos</span>
       </div>
-      <img className="max-w-2xl" src="/Welcome.png" alt="Products" />
+      {data.config?.welcome_image && <img className="max-w-2xl" src={data.config.welcome_image} alt="Products" />}
       <button type="button" className={`p-4 text-white font-bold rounded cursor-pointer text-2xl ${data.config?.welcome_button_font}`} onClick={() => navigate("/edit")} style={{ background: data.config?.welcome_button_color, color: data.config?.welcome_button_text_color }}>¡MANOS A LA OBRA!</button>
 
       <img className="absolute top-0 right-0 w-80" src="/Asset_2.png" alt="asset_2" />

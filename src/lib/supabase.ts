@@ -344,6 +344,7 @@ export async function updateBrandingConfig(
     welcome_button_text_color: string;
     welcome_title_color: string;
     welcome_subtitle_color: string;
+    welcome_image: string;
   }>
 ): Promise<any> {
   const { data, error } = await supabase
@@ -371,6 +372,58 @@ export async function getAllBrandingConfigs(): Promise<any[]> {
  */
 export async function deleteLogo(fileName: string): Promise<void> {
   const bucketName = "logos";
+  const { error } = await supabase.storage.from(bucketName).remove([fileName]);
+  if (error) throw error;
+}
+
+/**
+ * Sube una imagen de bienvenida al bucket 'welcome-images'.
+ * @param file - El archivo a subir
+ * @param fileName - El nombre con el que se guardará el archivo en el bucket
+ * @returns La URL pública del archivo subido
+ */
+export async function uploadWelcomeImage(file: File | Blob, fileName: string): Promise<string> {
+  const bucketName = "others";
+  // Subir archivo
+  const { error: uploadError } = await supabase.storage
+    .from(bucketName)
+    .upload(fileName, file, { upsert: true });
+  if (uploadError) throw uploadError;
+
+  // Obtener URL pública
+  const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(fileName);
+  const url = publicUrlData?.publicUrl;
+  if (!url) throw new Error("No se pudo obtener la URL pública de la imagen");
+  return url;
+}
+
+/**
+ * Obtiene todas las imágenes del bucket 'others' con sus URLs públicas.
+ * @returns Un array de objetos con nombre y url pública de cada archivo
+ */
+export async function getAllWelcomeImages(): Promise<{ name: string; url: string }[]> {
+  const bucketName = "others";
+  // Listar archivos en el bucket
+  const { data: listData, error: listError } = await supabase.storage.from(bucketName).list();
+  if (listError) throw listError;
+  if (!listData) return [];
+
+  // Mapear a nombre y url pública
+  return listData.map((item) => {
+    const { data: publicUrlData } = supabase.storage.from(bucketName).getPublicUrl(item.name);
+    return {
+      name: item.name,
+      url: publicUrlData?.publicUrl || "",
+    };
+  });
+}
+
+/**
+ * Deletes a welcome image from the 'others' bucket.
+ * @param fileName - The name of the welcome image file to delete.
+ */
+export async function deleteWelcomeImage(fileName: string): Promise<void> {
+  const bucketName = "others";
   const { error } = await supabase.storage.from(bucketName).remove([fileName]);
   if (error) throw error;
 }

@@ -3,7 +3,7 @@ import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Upload, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { uploadLogo, updateBrandingConfig, deleteLogo, createBrandingConfig } from "@/lib/supabase";
+import { uploadLogo, updateBrandingConfig, deleteLogo, createBrandingConfig, uploadWelcomeImage, deleteWelcomeImage } from "@/lib/supabase";
 import { useGlobalData } from "@/contexts/AdminDataContext";
 import { SketchPicker } from "react-color";
 import type { ColorResult } from "react-color";
@@ -84,6 +84,12 @@ export function ConfigsAdminPanel() {
   const [savingUser, setSavingUser] = useState(false);
   const [userSaveMsg, setUserSaveMsg] = useState("");
   const [userSaveError, setUserSaveError] = useState("");
+  const [selectedWelcomeImage, setSelectedWelcomeImage] = useState<string>("");
+  const [uploadingWelcomeImage, setUploadingWelcomeImage] = useState(false);
+  const [savingWelcomeImage, setSavingWelcomeImage] = useState(false);
+  const [saveWelcomeImageMsg, setSaveWelcomeImageMsg] = useState("");
+  const [welcomeImageSearchTerm, setWelcomeImageSearchTerm] = useState("");
+  const welcomeImageInputRef = useRef<HTMLInputElement>(null);
 
   // Sync selectedConfigId with context config
   useEffect(() => {
@@ -138,6 +144,13 @@ export function ConfigsAdminPanel() {
     if (data.config?.welcome_button_text_color) setWelcomeBtnTextColor(data.config.welcome_button_text_color);
     if (data.config?.welcome_title_color) setWelcomeTitleColor(data.config.welcome_title_color);
     if (data.config?.welcome_subtitle_color) setWelcomeSubtitleColor(data.config.welcome_subtitle_color);
+    if (data.config?.welcome_image === "") {
+      setSelectedWelcomeImage("");
+    } else if (data.config?.welcome_image && data.welcomeImages?.some((img) => img.url === data.config.welcome_image)) {
+      setSelectedWelcomeImage(data.config.welcome_image);
+    } else if (data.welcomeImages?.length > 0) {
+      setSelectedWelcomeImage(data.welcomeImages[0].url);
+    }
     setFontSelections({
       welcome_title_font: data.config?.welcome_title_font || "",
       welcome_subtitle_font: data.config?.welcome_subtitle_font || "",
@@ -210,6 +223,62 @@ export function ConfigsAdminPanel() {
     }
   };
 
+  // Welcome Image functions
+  const handleUploadWelcomeImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingWelcomeImage(true);
+    try {
+      await uploadWelcomeImage(file, file.name);
+      await refreshData(); // refresca welcome images y config
+    } catch (err) {
+      console.error("Error uploading welcome image:", err);
+      alert("Error subiendo la imagen de bienvenida");
+    } finally {
+      setUploadingWelcomeImage(false);
+      if (welcomeImageInputRef.current) welcomeImageInputRef.current.value = "";
+    }
+  };
+
+  const handleSaveWelcomeImage = async () => {
+    setSavingWelcomeImage(true);
+    setSaveWelcomeImageMsg("");
+    try {
+      await updateBrandingConfig(data.config.id, { welcome_image: selectedWelcomeImage });
+      setSaveWelcomeImageMsg("¡Imagen de bienvenida guardada correctamente!");
+    } catch (err) {
+      console.error("Error saving welcome image:", err);
+      setSaveWelcomeImageMsg("Error al guardar la imagen de bienvenida");
+    } finally {
+      setSavingWelcomeImage(false);
+      setTimeout(() => setSaveWelcomeImageMsg(""), 2000);
+    }
+  };
+
+  const handleDeleteWelcomeImage = async () => {
+    if (!selectedWelcomeImage) return;
+
+    const imageToDelete = data.welcomeImages.find((image) => image.url === selectedWelcomeImage);
+    if (!imageToDelete) return;
+
+    if (!confirm(`¿Estás seguro de que quieres eliminar la imagen "${imageToDelete.name}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteWelcomeImage(imageToDelete.name);
+
+      if (data.config.welcome_image === selectedWelcomeImage) {
+        await updateBrandingConfig(data.config.id, { welcome_image: "" });
+      }
+      await refreshData();
+      setSelectedWelcomeImage("");
+    } catch (err) {
+      console.error("Error deleting welcome image:", err);
+      alert("Error al eliminar la imagen de bienvenida");
+    }
+  };
+
   const handleColorChange = (setter: (v: string) => void) => (c: ColorResult) => {
     setter(c.hex);
     setColorChanged(true);
@@ -253,6 +322,7 @@ export function ConfigsAdminPanel() {
   );
 
   const logoChanged = selectedLogo !== (data.config?.logo_url || "");
+  const welcomeImageChanged = selectedWelcomeImage !== (data.config?.welcome_image || "");
 
   // Obtener usuarios al montar
   useEffect(() => {
@@ -406,8 +476,9 @@ export function ConfigsAdminPanel() {
         </div>
       </div>
       <Tabs defaultValue="branding" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="branding">Marca</TabsTrigger>
+          <TabsTrigger value="welcome-page">Welcome Page</TabsTrigger>
           <TabsTrigger value="colors">Colores</TabsTrigger>
           <TabsTrigger value="texts">Texto</TabsTrigger>
         </TabsList>
@@ -500,10 +571,100 @@ export function ConfigsAdminPanel() {
                 {saveMsg && <span className="text-sm text-gray-600">{saveMsg}</span>}
               </div>
             </CardContent>
-          </Card>
-        </TabsContent>
+                     </Card>
+         </TabsContent>
 
-        <TabsContent value="colors" className="space-y-6">
+         <TabsContent value="welcome-page" className="space-y-6">
+           <Card>
+             <CardContent className="space-y-6">
+               <div className="flex items-center space-x-6">
+                 <input
+                   type="text"
+                   placeholder="Buscar por nombre"
+                   value={welcomeImageSearchTerm}
+                   onChange={(e) => setWelcomeImageSearchTerm(e.target.value)}
+                   className="border rounded p-2"
+                 />
+                 <Button onClick={() => welcomeImageInputRef.current?.click()} disabled={uploadingWelcomeImage}>
+                   <Upload className="mr-2 h-4 w-4" />
+                   {uploadingWelcomeImage ? "Subiendo..." : "Subir nueva imagen de bienvenida"}
+                 </Button>
+                 <Button
+                   variant="destructive"
+                   onClick={handleDeleteWelcomeImage}
+                   disabled={!selectedWelcomeImage || selectedWelcomeImage === ""}
+                 >
+                   <Trash2 className="h-4 w-4" />
+                 </Button>
+                 <input
+                   ref={welcomeImageInputRef}
+                   type="file"
+                   accept="image/*"
+                   className="hidden"
+                   onChange={handleUploadWelcomeImage}
+                 />
+               </div>
+               {/* Lista de imágenes de bienvenida */}
+               <div className="mt-6">
+                 <div className="mb-2 font-semibold">Imágenes de bienvenida disponibles:</div>
+                 <div className="flex gap-4 flex-wrap">
+                   <div className="text-center">
+                     <button
+                       className={`border rounded-lg p-1 transition ${
+                         selectedWelcomeImage === "" ? "ring-4 ring-pink-300" : ""
+                       }`}
+                       onClick={() => setSelectedWelcomeImage("")}
+                       title="No usar imagen de bienvenida"
+                     >
+                       <span className="h-16 w-16 flex items-center justify-center">Vacío</span>
+                     </button>
+                     <div className="mt-1">Vacío</div>
+                   </div>
+
+                   {data.welcomeImages
+                     .filter((image) => image.name.toLowerCase().includes(welcomeImageSearchTerm.toLowerCase()))
+                     .map((image) => {
+                       const formattedName = image.name.replace(/_/g, " ").replace(/\.[^/.]+$/, "");
+                       return (
+                         <div key={image.url} className="text-center">
+                           <button
+                             className={`border rounded-lg p-1 transition ${
+                               selectedWelcomeImage === image.url ? "ring-4 ring-pink-300" : ""
+                             }`}
+                             onClick={() => setSelectedWelcomeImage(image.url)}
+                             title={formattedName}
+                           >
+                             <img
+                               src={image.url}
+                               alt={formattedName}
+                               className="h-16 w-16 object-contain"
+                             />
+                           </button>
+                           <div className="mt-1">{formattedName}</div>
+                         </div>
+                       );
+                     })}
+                   {data.welcomeImages.length === 0 && (
+                     <span className="text-gray-400">No hay imágenes de bienvenida subidas</span>
+                   )}
+                 </div>
+               </div>
+               {/* Botón para guardar imagen seleccionada en la tabla config */}
+               <div className="mt-4 flex items-center gap-3">
+                 <Button
+                   className="bg-blue-600 text-white hover:bg-blue-700"
+                   onClick={handleSaveWelcomeImage}
+                   disabled={!welcomeImageChanged || savingWelcomeImage}
+                 >
+                   {savingWelcomeImage ? "Guardando..." : "Guardar como imagen de bienvenida principal"}
+                 </Button>
+                 {saveWelcomeImageMsg && <span className="text-sm text-gray-600">{saveWelcomeImageMsg}</span>}
+               </div>
+             </CardContent>
+           </Card>
+         </TabsContent>
+
+         <TabsContent value="colors" className="space-y-6">
           <Card>
             <CardContent>
               <Accordion type="multiple" className="w-full">
