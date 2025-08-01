@@ -46,6 +46,10 @@ export function ConfigsAdminPanel() {
   );
   const [navBtnBg, setNavBtnBg] = useState<string>(data.config?.nav_btn_bg_color || "#fff");
   const [navBtnText, setNavBtnText] = useState<string>(data.config?.nav_btn_text_color || "#fff");
+  const [welcomeBtnColor, setWelcomeBtnColor] = useState<string>(data.config?.welcome_button_color || "#fff");
+  const [welcomeBtnTextColor, setWelcomeBtnTextColor] = useState<string>(data.config?.welcome_button_text_color || "#000");
+  const [welcomeTitleColor, setWelcomeTitleColor] = useState<string>(data.config?.welcome_title_color || "#000");
+  const [welcomeSubtitleColor, setWelcomeSubtitleColor] = useState<string>(data.config?.welcome_subtitle_color || "#666");
   const [colorChanged, setColorChanged] = useState(false);
   const [savingColors, setSavingColors] = useState(false);
   const [saveColorsMsg, setSaveColorsMsg] = useState("");
@@ -130,6 +134,10 @@ export function ConfigsAdminPanel() {
       setInactiveBtnText(data.config.inactive_btn_text_color);
     if (data.config?.active_btn_bg_color) setActiveBtnBg(data.config.active_btn_bg_color);
     if (data.config?.active_btn_text_color) setActiveBtnText(data.config.active_btn_text_color);
+    if (data.config?.welcome_button_color) setWelcomeBtnColor(data.config.welcome_button_color);
+    if (data.config?.welcome_button_text_color) setWelcomeBtnTextColor(data.config.welcome_button_text_color);
+    if (data.config?.welcome_title_color) setWelcomeTitleColor(data.config.welcome_title_color);
+    if (data.config?.welcome_subtitle_color) setWelcomeSubtitleColor(data.config.welcome_subtitle_color);
     setFontSelections({
       welcome_title_font: data.config?.welcome_title_font || "",
       welcome_subtitle_font: data.config?.welcome_subtitle_font || "",
@@ -219,6 +227,10 @@ export function ConfigsAdminPanel() {
         active_btn_text_color: activeBtnText,
         nav_btn_text_color: navBtnText,
         nav_btn_bg_color: navBtnBg,
+        welcome_button_color: welcomeBtnColor,
+        welcome_button_text_color: welcomeBtnTextColor,
+        welcome_title_color: welcomeTitleColor,
+        welcome_subtitle_color: welcomeSubtitleColor,
       });
       setSaveColorsMsg("¡Colores guardados!");
       setColorChanged(false);
@@ -514,6 +526,102 @@ export function ConfigsAdminPanel() {
                     />
                   </AccordionContent>
                 </AccordionItem>
+                {/* Pagina de bienvenida (Accordion padre) */}
+                <AccordionItem value="welcome-page">
+                  <AccordionTrigger>
+                    <span>Pagina de bienvenida</span>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    {/* Welcome Button Color */}
+                    <AccordionItem value="welcome-button-color" className="ml-4">
+                      <AccordionTrigger>
+                        <div className="flex items-center gap-3">
+                          <span>Color del botón</span>
+                          <span
+                            className="w-6 h-6 rounded border ml-2"
+                            style={{ background: welcomeBtnColor }}
+                          />
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <SketchPicker
+                          color={welcomeBtnColor}
+                          onChange={handleColorChange(setWelcomeBtnColor)}
+                          presetColors={[]}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                    {/* Welcome Text Color */}
+                    <AccordionItem value="welcome-text-color" className="ml-4">
+                      <AccordionTrigger>
+                        <div className="flex items-center gap-3">
+                          <span>Color del texto de bienvenida</span>
+                          <span
+                            className="w-6 h-6 rounded border ml-2"
+                            style={{ background: welcomeBtnTextColor }}
+                          />
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <SketchPicker
+                          color={welcomeBtnTextColor}
+                          onChange={handleColorChange(setWelcomeBtnTextColor)}
+                          presetColors={[]}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                    <div className="mt-4 ml-4">
+                      <button
+                        className="px-5 min-h-9 rounded-lg font-bold text-base"
+                        style={{
+                          background: welcomeBtnColor,
+                          color: welcomeBtnTextColor,
+                        }}
+                        disabled
+                      >
+                        Ejemplo botón bienvenida
+                      </button>
+                    </div>
+                    {/* Welcome Title Color */}
+                    <AccordionItem value="welcome-title-color" className="ml-4">
+                      <AccordionTrigger>
+                        <div className="flex items-center gap-3">
+                          <span>Color del título</span>
+                          <span
+                            className="w-6 h-6 rounded border ml-2"
+                            style={{ background: welcomeTitleColor }}
+                          />
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <SketchPicker
+                          color={welcomeTitleColor}
+                          onChange={handleColorChange(setWelcomeTitleColor)}
+                          presetColors={[]}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                    {/* Welcome Subtitle Color */}
+                    <AccordionItem value="welcome-subtitle-color" className="ml-4">
+                      <AccordionTrigger>
+                        <div className="flex items-center gap-3">
+                          <span>Color del subtítulo</span>
+                          <span
+                            className="w-6 h-6 rounded border ml-2"
+                            style={{ background: welcomeSubtitleColor }}
+                          />
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <SketchPicker
+                          color={welcomeSubtitleColor}
+                          onChange={handleColorChange(setWelcomeSubtitleColor)}
+                          presetColors={[]}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                  </AccordionContent>
+                </AccordionItem>
                 {/* Pestañas de edición (Accordion padre) */}
                 <AccordionItem value="tab-editing">
                   <AccordionTrigger>
@@ -521,7 +629,7 @@ export function ConfigsAdminPanel() {
                   </AccordionTrigger>
                   <AccordionContent>
                     {/* Inactive Button Background */}
-                    <AccordionItem value="inactive-btn-bg">
+                    <AccordionItem value="inactive-btn-bg" className="ml-4">
                       <AccordionTrigger>
                         <div className="flex items-center gap-3">
                           <span>Background boton inactivo tab</span>
@@ -540,7 +648,7 @@ export function ConfigsAdminPanel() {
                       </AccordionContent>
                     </AccordionItem>
                     {/* Inactive Button Text */}
-                    <AccordionItem value="inactive-btn-text">
+                    <AccordionItem value="inactive-btn-text" className="ml-4">
                       <AccordionTrigger>
                         <div className="flex items-center gap-3">
                           <span>Texto boton inactivo tab</span>
@@ -558,7 +666,7 @@ export function ConfigsAdminPanel() {
                         />
                       </AccordionContent>
                     </AccordionItem>
-                    <div className="mt-4">
+                    <div className="mt-4 ml-4">
                       <button
                         className="px-5 min-h-9 rounded-lg font-bold text-base"
                         style={{
@@ -571,7 +679,7 @@ export function ConfigsAdminPanel() {
                       </button>
                     </div>
                     {/* Active Button Background */}
-                    <AccordionItem value="active-btn-bg">
+                    <AccordionItem value="active-btn-bg" className="ml-4">
                       <AccordionTrigger>
                         <div className="flex items-center gap-3">
                           <span>Background boton activo tab</span>
@@ -590,7 +698,7 @@ export function ConfigsAdminPanel() {
                       </AccordionContent>
                     </AccordionItem>
                     {/* Active Button Text */}
-                    <AccordionItem value="active-btn-text">
+                    <AccordionItem value="active-btn-text" className="ml-4">
                       <AccordionTrigger>
                         <div className="flex items-center gap-3">
                           <span>Texto boton inactivo tab</span>
@@ -608,7 +716,7 @@ export function ConfigsAdminPanel() {
                         />
                       </AccordionContent>
                     </AccordionItem>
-                    <div className="mt-4">
+                    <div className="mt-4 ml-4">
                       <button
                         className="px-5 min-h-9 rounded-lg font-bold text-base border-2 border-black"
                         style={{
@@ -629,7 +737,7 @@ export function ConfigsAdminPanel() {
                   </AccordionTrigger>
                   <AccordionContent>
                     {/* Fondo */}
-                    <AccordionItem value="nav-btn-bg">
+                    <AccordionItem value="nav-btn-bg" className="ml-4">
                       <AccordionTrigger>
                         <div className="flex items-center gap-3">
                           <span>Fondo</span>
@@ -648,7 +756,7 @@ export function ConfigsAdminPanel() {
                       </AccordionContent>
                     </AccordionItem>
                     {/* Text */}
-                    <AccordionItem value="nav-btn-text">
+                    <AccordionItem value="nav-btn-text" className="ml-4">
                       <AccordionTrigger>
                         <div className="flex items-center gap-3">
                           <span>Texto</span>
@@ -666,7 +774,7 @@ export function ConfigsAdminPanel() {
                         />
                       </AccordionContent>
                     </AccordionItem>
-                    <div className="mt-4">
+                    <div className="mt-4 ml-4">
                       <button
                         className="px-5 min-h-9 rounded-lg font-bold text-base border-2 border-black"
                         style={{

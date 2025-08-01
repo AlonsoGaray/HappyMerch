@@ -339,7 +339,11 @@ export async function updateBrandingConfig(
     welcome_button_font: string;
     tab_button_font: string;
     nav_button_font: string;
-    user_id: string | null; 
+    user_id: string | null;
+    welcome_button_color: string;
+    welcome_button_text_color: string;
+    welcome_title_color: string;
+    welcome_subtitle_color: string;
   }>
 ): Promise<any> {
   const { data, error } = await supabase
