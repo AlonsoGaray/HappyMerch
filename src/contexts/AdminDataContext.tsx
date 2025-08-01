@@ -19,7 +19,16 @@ interface GlobalDataContextType {
   data: GlobalData
   refreshData: () => Promise<void>
   refreshTable: (tableName: string) => Promise<void>
-  updateItem: (tableName: string, itemId: string, updates: { name?: string; visible?: boolean }) => void
+  updateItem: (tableName: string, itemId: string, updates: { 
+    name?: string; 
+    visible?: boolean;
+    width?: number;
+    height?: number;
+    top?: number;
+    left?: number;
+    imageWidth?: number;
+    imageHeight?: number;
+  }) => void
   selectConfig: (id: string) => void
   setConfigGlobal: (configObj: any) => void
 }
@@ -110,7 +119,16 @@ export function GlobalDataProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const updateItem = (tableName: string, itemId: string, updates: { name?: string; visible?: boolean }) => {
+  const updateItem = (tableName: string, itemId: string, updates: { 
+    name?: string; 
+    visible?: boolean;
+    width?: number;
+    height?: number;
+    top?: number;
+    left?: number;
+    imageWidth?: number;
+    imageHeight?: number;
+  }) => {
     setData(prev => {
       const tableKey = tableName === 'product' ? 'products' : 
                       tableName === 'element' ? 'elements' : 

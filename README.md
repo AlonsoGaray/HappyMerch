@@ -1,69 +1,67 @@
-# React + TypeScript + Vite
+# HappyMerch
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Una aplicación web para personalización de productos con canvas editable.
 
-Currently, two official plugins are available:
+## Características
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Edición de Canvas de Productos
 
-## Expanding the ESLint configuration
+La aplicación ahora incluye una funcionalidad avanzada para editar el área de canvas de cada producto. Esto permite definir exactamente dónde los usuarios pueden colocar elementos en cada producto.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+#### Cómo usar la edición de canvas:
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. **Acceder al panel de administración**
+   - Ve a la sección "Productos" en el panel de administración
+   - Haz clic en el botón de editar (ícono de lápiz) en cualquier producto
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+2. **Editar el canvas**
+   - Se abrirá un modal con una vista previa visual del producto
+   - El rectángulo rojo muestra el área editable actual
+   - Puedes ajustar:
+     - **Ancho del Canvas**: El ancho del área editable en píxeles
+     - **Alto del Canvas**: El alto del área editable en píxeles
+     - **Posición X (Left)**: La posición horizontal del canvas
+     - **Posición Y (Top)**: La posición vertical del canvas
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+3. **Posiciones predefinidas**
+   - El modal incluye botones para posiciones comunes:
+     - Esquina superior izquierda
+     - Esquina superior derecha
+     - Centro superior
+     - Ancho completo
+
+4. **Vista previa en tiempo real**
+   - La vista previa se actualiza automáticamente mientras cambias los valores
+   - Esto te permite ver exactamente cómo se verá el área editable
+
+#### Campos del Canvas:
+
+- **width**: Ancho del área editable en píxeles
+- **height**: Alto del área editable en píxeles
+- **top**: Posición vertical desde la parte superior
+- **left**: Posición horizontal desde la izquierda
+
+#### Ejemplo de uso:
+
+Para un producto como una cartuchera, podrías configurar:
+- **width**: 200px
+- **height**: 150px
+- **top**: 50px
+- **left**: 100px
+
+Esto crearía un área editable de 200x150 píxeles posicionada 50px desde arriba y 100px desde la izquierda de la imagen del producto.
+
+## Instalación
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Tecnologías utilizadas
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- React
+- TypeScript
+- Fabric.js (para el canvas)
+- Supabase (base de datos)
+- Tailwind CSS

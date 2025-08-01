@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   handleAddItemWithUpload,
   handleVisibilityToggle,
@@ -19,6 +20,7 @@ import {
   handleNameChange,
   handleBulkUpload,
 } from "@/lib/PanelUtils";
+import { updateTableRow } from "@/lib/supabase";
 import { useGlobalData } from "@/contexts/AdminDataContext";
 
 interface GenericAdminPanelProps {
@@ -35,6 +37,10 @@ interface Items {
   name: string;
   url: string;
   visible: boolean;
+  width?: number;
+  height?: number;
+  top?: number;
+  left?: number;
 }
 
 export function GenericAdminPanel({
@@ -50,9 +56,16 @@ export function GenericAdminPanel({
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCanvasEditModal, setShowCanvasEditModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<Items | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [canvasEditData, setCanvasEditData] = useState({
+    width: 0,
+    height: 0,
+    top: 0,
+    left: 0,
+  });
   const [newItem, setNewItem] = useState({
     image: "",
     name: "",
@@ -63,6 +76,7 @@ export function GenericAdminPanel({
   const [isDragOver, setIsDragOver] = useState(false);
   const [bulkVisible, setBulkVisible] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [savingCanvas, setSavingCanvas] = useState(false);
 
   // Obtener los datos correspondientes según la tabla
   const getTableData = () => {
@@ -107,6 +121,36 @@ export function GenericAdminPanel({
   const handleEditClick = (item: Items) => {
     setEditingItemId(item.id);
     setEditingName(item.name);
+  };
+
+  const handleCanvasEditClick = (item: Items) => {
+    setCanvasEditData({
+      width: item.width || 0,
+      height: item.height || 0,
+      top: item.top || 0,
+      left: item.left || 0,
+    });
+    setEditingItemId(item.id);
+    setShowCanvasEditModal(true);
+  };
+
+  const handleSaveCanvas = async () => {
+    if (!editingItemId) return;
+    
+    setSavingCanvas(true);
+    try {
+      // Actualizar en la base de datos
+      await updateTableRow(tableName, editingItemId, canvasEditData);
+      // Actualizar el contexto local
+      updateItem(tableName, editingItemId, canvasEditData);
+      setShowCanvasEditModal(false);
+      setEditingItemId(null);
+      setCanvasEditData({ width: 0, height: 0, top: 0, left: 0 });
+    } catch (error) {
+      console.error("Error al guardar el canvas:", error);
+    } finally {
+      setSavingCanvas(false);
+    }
   };
 
   const handleSaveName = async () => {
@@ -289,7 +333,7 @@ export function GenericAdminPanel({
                   alt={item.name}
                   className="h-28 w-2h-28 object-cover rounded mb-2"
                 />
-                {editingItemId === item.id ? (
+                {editingName === item.name ? (
                   <div className="flex items-center space-x-1 mb-2">
                     <Input
                       value={editingName}
@@ -325,9 +369,15 @@ export function GenericAdminPanel({
                     checked={item.visible}
                     onCheckedChange={() => handleVisibilityChange(item.id)}
                   />
-                  <Button variant="ghost" size="sm" onClick={() => handleEditClick(item)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                  {tableName === "product" ? (
+                    <Button variant="ghost" size="sm" onClick={() => handleCanvasEditClick(item)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button variant="ghost" size="sm" onClick={() => handleEditClick(item)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -384,6 +434,132 @@ export function GenericAdminPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal para editar canvas de productos */}
+      {tableName === "product" && (
+        <Dialog open={showCanvasEditModal} onOpenChange={setShowCanvasEditModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Editar Canvas del Producto</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              {/* Vista previa visual */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-3">Vista Previa del Canvas</h4>
+                {(() => {
+                  const currentProduct = items.find(item => item.id === editingItemId);
+                  const productWidth = 600;
+                  const productHeight = 600;
+                  
+                  const scaleX = 500 / productWidth;
+                  const scaleY = 400 / productHeight;
+                  const scale = Math.min(scaleX, scaleY, 1);
+                  
+                  const displayWidth = productWidth * scale;
+                  const displayHeight = productHeight * scale;
+                  
+                  return (
+                    <div className="space-y-3">
+                      <div className="relative bg-white border rounded-lg overflow-hidden mx-auto flex items-center justify-center" 
+                           style={{ width: '400px', height: '400px' }}>
+                        {/* Contenedor del producto escalado */}
+                        <div 
+                          className="relative"
+                          style={{ 
+                            width: `${displayWidth}px`, 
+                            height: `${displayHeight}px` 
+                          }}
+                        >
+                          {/* Imagen del producto de fondo */}
+                          <img
+                            src={currentProduct?.url || ''}
+                            alt="Producto"
+                            className="w-full h-full object-contain"
+                            style={{ maxWidth: '100%', maxHeight: '100%' }}
+                          />
+                          {/* Canvas overlay escalado */}
+                          <div
+                            className="absolute border-2 border-red-500 border-dashed bg-red-100 bg-opacity-20"
+                            style={{
+                              width: `${canvasEditData.width * scale}px`,
+                              height: `${canvasEditData.height * scale}px`,
+                              left: `${canvasEditData.left * scale}px`,
+                              top: `${canvasEditData.top * scale}px`,
+                            }}
+                          >
+                            <div className="absolute inset-0 flex items-center justify-center text-red-600 text-xs font-medium">
+                              Área editable
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-600 text-center">
+                        <p>Dimensiones del producto: {productWidth} × {productHeight}px</p>
+                        <p>Escala de vista previa: {Math.round(scale * 100)}%</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  El rectángulo rojo muestra el área donde los usuarios podrán editar
+                </p>
+              </div>
+
+              {/* Controles de edición */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="canvas-width">Ancho del Canvas</Label>
+                  <Input
+                    id="canvas-width"
+                    type="number"
+                    value={canvasEditData.width}
+                    onChange={(e) => setCanvasEditData(prev => ({ ...prev, width: parseInt(e.target.value) || 0 }))}
+                    placeholder="Ancho"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="canvas-height">Alto del Canvas</Label>
+                  <Input
+                    id="canvas-height"
+                    type="number"
+                    value={canvasEditData.height}
+                    onChange={(e) => setCanvasEditData(prev => ({ ...prev, height: parseInt(e.target.value) || 0 }))}
+                    placeholder="Alto"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="canvas-left">Posición X (Left)</Label>
+                  <Input
+                    id="canvas-left"
+                    type="number"
+                    value={canvasEditData.left}
+                    onChange={(e) => setCanvasEditData(prev => ({ ...prev, left: parseInt(e.target.value) || 0 }))}
+                    placeholder="Posición X"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="canvas-top">Posición Y (Top)</Label>
+                  <Input
+                    id="canvas-top"
+                    type="number"
+                    value={canvasEditData.top}
+                    onChange={(e) => setCanvasEditData(prev => ({ ...prev, top: parseInt(e.target.value) || 0 }))}
+                    placeholder="Posición Y"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowCanvasEditModal(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSaveCanvas} disabled={savingCanvas}>
+                {savingCanvas ? "Guardando..." : "Guardar Canvas"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Modal de confirmación para eliminar */}
       <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
