@@ -375,7 +375,7 @@ const EditPage: React.FC = () => {
   }, [selectedId, itemStates, fabricRef]);
 
   return (
-    <div className="min-h-dvh flex flex-col bg-gray-100 max-h-dvh items-center">
+    <div className="min-h-dvh flex flex-col max-h-dvh items-center" style={{ background: mode === "done" ? data.config?.main_color : "#f3f4f6" }}>
       {mode === "edit" && (
         <div className="w-full absolute top-14 z-30">
           <StepBar step={canvasItems.length === 0 && selectedBgIdx === -1 ? 1 : 2} />
@@ -385,16 +385,6 @@ const EditPage: React.FC = () => {
         <div className="w-full absolute top-28">
           <StepBar step={3} />
         </div>
-      )}
-      {mode === "done" && (
-        <Done
-          product={product}
-          items={canvasItems}
-          selectedBg={selectedBgIdx >= 0 && selectedBgIdx < visibleBackgrounds.length ? visibleBackgrounds[selectedBgIdx] : null}
-          mainColor={data.config?.main_color}
-          titleFont={data.config?.welcome_title_font}
-          subtitleFont={data.config?.welcome_subtitle_font}
-        />
       )}
       {mode === "edit" ? (
         <NavBar onSave={handleNavBarSave} />
@@ -408,7 +398,7 @@ const EditPage: React.FC = () => {
           </div>
         </div>
       ) : null}
-      <div className="flex-grow flex relative w-full justify-center items-center overflow-hidden">
+      <div className={`flex-grow flex relative w-full justify-center items-center overflow-hidden ${mode === "done" && "flex-col"}`}>
         {mode === "edit" && (
           <LeftSidebar
             selectedId={selectedId}
@@ -418,7 +408,6 @@ const EditPage: React.FC = () => {
             onFlipX={handleFlipX}
           />
         )}
-        {mode !== "done" && (
           <div className="flex flex-col w-full h-full justify-center items-center gap-5 overflow-auto">
             <CanvasArea
               ref={canvasAreaRef}
@@ -433,7 +422,7 @@ const EditPage: React.FC = () => {
               showDashedBorder={showDashedBorder && mode === "edit"}
               isVisible={isVisible}
               setItemStates={setItemStates}
-              readOnly={mode === "confirm"}
+              readOnly={mode !== "edit"}
             />
             {mode === "edit" && (
               <BottomBar
@@ -444,7 +433,6 @@ const EditPage: React.FC = () => {
               />
             )}
           </div>
-        )}
         {mode === "edit" && showLayers && (
           <RightSidebar
             selectedId={selectedId}
@@ -458,6 +446,9 @@ const EditPage: React.FC = () => {
             isVisible={isVisible}
             onReorderItems={handleReorderItems}
           />
+        )}
+        {mode === "done" && (
+          <Done titleFont={data.config?.welcome_title_font} subtitleFont={data.config?.welcome_subtitle_font} />
         )}
       </div>
       {mode === "edit" && (
