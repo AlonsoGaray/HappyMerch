@@ -93,6 +93,7 @@ export function useHorizontalDragScroll() {
 
 // Nuevo hook para manejar selección segura de items por índice
 import { useRef as useReactRef } from 'react';
+import { useEffect } from 'react';
 
 export function useSafeItemSelect({
   onSelect,
@@ -102,27 +103,66 @@ export function useSafeItemSelect({
   dragScroll: ReturnType<typeof useHorizontalDragScroll> | ReturnType<typeof useVerticalDragScroll>;
 }) {
   const pressedIdx = useReactRef<number | null>(null);
+  const lastProcessedIdx = useReactRef<number | null>(null);
+  const lastEventType = useReactRef<'mouse' | 'touch' | null>(null);
+  const touchTimer = useReactRef<NodeJS.Timeout | null>(null);
+
+  // Clear any pending timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (touchTimer.current) {
+        clearTimeout(touchTimer.current);
+      }
+    };
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent, idx: number) => {
+    if (lastEventType.current === 'touch') return;
+    lastEventType.current = 'mouse';
     pressedIdx.current = idx;
     dragScroll.onMouseDown(e);
   };
+
   const handleMouseUp = (_e: React.MouseEvent, idx: number) => {
+    if (lastEventType.current !== 'mouse' || pressedIdx.current !== idx) return;
+    
     dragScroll.onMouseUp();
     if (dragScroll.isClick() && pressedIdx.current === idx) {
-      onSelect(idx);
+      // Prevent processing the same index twice
+      if (lastProcessedIdx.current !== idx) {
+        lastProcessedIdx.current = idx;
+        onSelect(idx);
+        // Reset after a short delay to allow for rapid consecutive clicks
+        setTimeout(() => {
+          lastProcessedIdx.current = null;
+        }, 100);
+      }
     }
     dragScroll.resetDrag();
     pressedIdx.current = null;
   };
+
   const handleTouchStart = (e: React.TouchEvent, idx: number) => {
+    // Clear any pending mouse events
+    lastEventType.current = 'touch';
     pressedIdx.current = idx;
     dragScroll.onTouchStart(e);
   };
+
   const handleTouchEnd = (_e: React.TouchEvent, idx: number) => {
+    if (lastEventType.current !== 'touch' || pressedIdx.current !== idx) return;
+    
     dragScroll.onTouchEnd();
     if (dragScroll.isClick() && pressedIdx.current === idx) {
-      onSelect(idx);
+      // Prevent processing the same index twice
+      if (lastProcessedIdx.current !== idx) {
+        lastProcessedIdx.current = idx;
+        onSelect(idx);
+        // Reset after a short delay to allow for rapid consecutive taps
+        touchTimer.current = setTimeout(() => {
+          lastProcessedIdx.current = null;
+        }, 100);
+      }
     }
     dragScroll.resetDrag();
     pressedIdx.current = null;
