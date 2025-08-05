@@ -5,6 +5,89 @@
 @import url('https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Chewy&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bubblegum+Sans&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Spicy+Rice&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Henny+Penny&display=swap');
+
+@font-face {
+  font-family: 'Amsterdam';
+  src: url('/fonts/Amsterdam.ttf');
+}
+
+@font-face {
+  font-family: 'Apricotsy';
+  src: url('/fonts/Apricotsy.ttf');
+}
+
+@font-face {
+  font-family: 'Brittany Signature';
+  src: url('/fonts/Brittany Signature.ttf');
+}
+
+@font-face {
+  font-family: 'Clementine Sketch';
+  src: url('/fonts/Clementine Sketch.ttf');
+}
+
+@font-face {
+  font-family: 'Genty';
+  src: url('/fonts/Genty Regular.ttf');
+}
+
+@font-face {
+  font-family: 'Hello Honey';
+  src: url('/fonts/Hello Honey.otf');
+}
+
+@font-face {
+  font-family: 'Junglefe';
+  src: url('/fonts/Junglefe.TTF');
+}
+
+@font-face {
+  font-family: 'Lovelo';
+  src: url('/fonts/Lovelo Black.otf');
+}
+
+@font-face {
+  font-family: 'Magilio';
+  src: url('/fonts/Magilio.ttf');
+}
+
+@font-face {
+  font-family: 'Neon Tubes';
+  src: url('/fonts/Neon Tubes.ttf');
+}
+
+@font-face {
+  font-family: 'Playlist Script';
+  src: url('/fonts/Playlist Script.otf');
+}
+
+@font-face {
+  font-family: 'Selima';
+  src: url('/fonts/Selima.ttf');
+}
+
+@font-face {
+  font-family: 'Sunset Club';
+  src: url('/fonts/Sunset Club.ttf');
+}
+
+@font-face {
+  font-family: 'Wedges';
+  src: url('/fonts/Wedges.ttf');
+}
 
 @import "tailwindcss";
 
@@ -23,6 +106,33 @@
   --font-verdana: verdana-pro, sans-serif;
   --font-courier: courier-new, sans-serif;
   --font-georgia: georgia, sans-serif;
+
+  --font-genty: Genty, sans-serif;
+  --font-great-vibes: Great Vibes, sans-serif;
+  --font-fredoka: Fredoka, sans-serif;
+  --font-league-spartan: League Spartan, sans-serif;
+  --font-bebas-neue: Bebas Neue, sans-serif;
+  --font-baloo-2: Baloo 2, sans-serif;
+  --font-chewy: Chewy, sans-serif;
+  --font-bubblegum-sans: Bubblegum Sans, sans-serif;
+  --font-luckiest-guy: Luckiest Guy, sans-serif;
+  --font-comic-neue: Comic Neue, sans-serif;
+  --font-gloria-hallelujah: Gloria Hallelujah, sans-serif;
+  --font-bungee: Bungee, sans-serif;
+  --font-spicy-rice: Spicy Rice, sans-serif;
+  --font-henny-penny: Henny Penny, sans-serif;
+  --font-apricotsy: Apricotsy, sans-serif;
+  --font-brittany-signature: 'Brittany Signature', sans-serif;
+  --font-clementine-sketch: 'Clementine Sketch', sans-serif;
+  --font-hello-honey: 'Hello Honey', sans-serif;
+  --font-junglefe: Junglefe, sans-serif;
+  --font-lovelo: Lovelo, sans-serif;
+  --font-magilio: Magilio, sans-serif;
+  --font-neon-tubes: 'Neon Tubes', sans-serif;
+  --font-playlist-script: 'Playlist Script', sans-serif;
+  --font-selima: Selima, sans-serif;
+  --font-sunset-club: 'Sunset Club', sans-serif;
+  --font-wedges: Wedges, sans-serif;
 }
 
 @theme inline {

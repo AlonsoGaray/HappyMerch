@@ -219,6 +219,32 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           else if (fontFamily === 'font-verdana') fontFamily = 'Verdana';
           else if (fontFamily === 'font-courier') fontFamily = 'Courier';
           else if (fontFamily === 'font-georgia') fontFamily = 'Georgia';
+          else if (fontFamily === 'font-genty') fontFamily = 'Genty';
+          else if (fontFamily === 'font-great-vibes') fontFamily = 'Great Vibes';
+          else if (fontFamily === 'font-fredoka') fontFamily = 'Fredoka';
+          else if (fontFamily === 'font-league-spartan') fontFamily = 'League Spartan';
+          else if (fontFamily === 'font-bebas-neue') fontFamily = 'Bebas Neue';
+          else if (fontFamily === 'font-baloo-2') fontFamily = 'Baloo 2';
+          else if (fontFamily === 'font-chewy') fontFamily = 'Chewy';
+          else if (fontFamily === 'font-bubblegum-sans') fontFamily = 'Bubblegum Sans';
+          else if (fontFamily === 'font-luckiest-guy') fontFamily = 'Luckiest Guy';
+          else if (fontFamily === 'font-comic-neue') fontFamily = 'Comic Neue';
+          else if (fontFamily === 'font-gloria-hallelujah') fontFamily = 'Gloria Hallelujah';
+          else if (fontFamily === 'font-bungee') fontFamily = 'Bungee';
+          else if (fontFamily === 'font-spicy-rice') fontFamily = 'Spicy Rice';
+          else if (fontFamily === 'font-henny-penny') fontFamily = 'Henny Penny';
+          else if (fontFamily === 'font-apricotsy') fontFamily = 'Apricotsy';
+          else if (fontFamily === 'font-brittany-signature') fontFamily = 'Brittany Signature';
+          else if (fontFamily === 'font-clementine-sketch') fontFamily = 'Clementine Sketch';
+          else if (fontFamily === 'font-hello-honey') fontFamily = 'Hello Honey';
+          else if (fontFamily === 'font-junglefe') fontFamily = 'Junglefe';
+          else if (fontFamily === 'font-lovelo') fontFamily = 'Lovelo';
+          else if (fontFamily === 'font-magilio') fontFamily = 'Magilio';
+          else if (fontFamily === 'font-neon-tubes') fontFamily = 'Neon Tubes';
+          else if (fontFamily === 'font-playlist-script') fontFamily = 'Playlist Script';
+          else if (fontFamily === 'font-selima') fontFamily = 'Selima';
+          else if (fontFamily === 'font-sunset-club') fontFamily = 'Sunset Club';
+          else if (fontFamily === 'font-wedges') fontFamily = 'Wedges';
 
           const txt = new IText(textItem.text, {
             left: itemState.x ?? textItem.x,
