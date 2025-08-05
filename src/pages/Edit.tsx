@@ -160,27 +160,7 @@ const EditPage: React.FC = () => {
     canvasAreaRef.current?.resizeItem(id, factor);
   };
   const handleLockToggle = (id: number) => {
-    const fabricCanvas = fabricRef.current;
-    if (fabricCanvas) {
-      const obj = fabricCanvas.getObjects().find((o) => (o as any).id === id);
-      if (obj) {
-        const locked = !itemStates[id]?.locked;
-        obj.set({
-          lockMovementX: locked,
-          lockMovementY: locked,
-          lockScalingX: locked,
-          lockScalingY: locked,
-          lockRotation: locked,
-          hasControls: !locked,
-          hoverCursor: locked ? "default" : "move",
-        });
-        fabricCanvas.renderAll();
-        setItemStates((states) => ({
-          ...states,
-          [id]: { ...states[id], locked },
-        }));
-      }
-    }
+    canvasAreaRef.current?.lockItem(id);
   };
   const isLocked = (id: number) => !!itemStates[id]?.locked;
 

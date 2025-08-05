@@ -20,6 +20,7 @@ export type CanvasAreaHandle = {
   resizeItem: (id: number, factor: number) => void;
   alignItem: (id: number, position: string, product: Product) => void;
   flipItem: (id: number) => void;
+  lockItem: (id: number) => void;
 };
 
 type CanvasAreaProps = {
@@ -605,6 +606,26 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
             [id]: {
               ...states[id],
               flipX: !prev,
+            },
+          }));
+        }
+        fabricCanvas.renderAll();
+      }
+    },
+    lockItem: (id: number) => {
+      const fabricCanvas = fabricRef.current;
+      if (!fabricCanvas) return;
+      const obj = fabricCanvas.getObjects().find(o => (o as any).id === id);
+      if (obj) {
+        const prev = itemStatesRef.current[id]?.locked ?? false;
+        obj.set('locked', !prev);
+        itemStatesRef.current[id].locked = !prev;
+        if (typeof setItemStates === 'function') {
+          setItemStates((states) => ({
+            ...states,
+            [id]: {
+              ...states[id],
+              locked: !prev,
             },
           }));
         }
