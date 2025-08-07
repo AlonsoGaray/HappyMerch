@@ -21,7 +21,6 @@ interface RightSidebarProps {
   canvasItems: CanvasAnyItem[];
   setSelectedId: (id: number | null) => void;
   onDeleteItem: (id: number) => void;
-  onMoveItem: (id: number, direction: 'up' | 'down') => void;
   onLockToggle: (id: number) => void;
   isLocked: (id: number) => boolean;
   onToggleVisible: (id: number) => void;

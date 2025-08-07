@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import NavBar from "../components/NavBar";
 import { TABS } from "../lib/constants";
@@ -33,7 +32,6 @@ type CanvasTextItem = {
 
 type CanvasAnyItem = CanvasItem | CanvasTextItem;
 
-// Utilidad para convertir hex a rgba
 function hexToRgba(hex: string, alpha: number) {
   let c = hex.replace('#', '');
   if (c.length === 3) c = c.split('').map(x => x + x).join('');
@@ -41,7 +39,6 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${(num >> 16) & 255}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`;
 }
 
-// Barra de pasos reutilizable
 const StepBar: React.FC<{ step: 1 | 2 | 3 }> = ({ step }) => {
   const stepLabels = ['PRODUCTO', 'PERSONALIZA', 'CONFIRMAR'];
   return (
@@ -67,7 +64,6 @@ const EditPage: React.FC = () => {
   const [selectedBgIdx, setSelectedBgIdx] = useState(-1);
   const [canvasItems, setCanvasItems] = useState<CanvasAnyItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  // Cambia la definición de itemStates para incluir scaleX, scaleY y flipX
   const [itemStates, setItemStates] = useState<{
     [id: number]: {
       x: number;
@@ -89,7 +85,6 @@ const EditPage: React.FC = () => {
   const [mode, setMode] = useState<'edit' | 'confirm' | 'done'>("edit");
   const [isFeedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [showBubble, setShowBubble] = useState(false); // Por defecto oculto
-  // Adapt to new product structure from data.products
   const visibleProducts: Product[] = data.products.filter((p: Product) => p.visible);
   const product = visibleProducts[productIdx] || visibleProducts[0];
   const visibleBackgrounds = data.backgrounds.filter((bg: any) => bg.visible);
@@ -101,7 +96,6 @@ const EditPage: React.FC = () => {
     visible: boolean;
   }) => {
     const newId = Date.now();
-    // Centro puro del área de edición
     const centerX = product.width / 2;
     const centerY = product.height / 2;
     setCanvasItems((items) => [
@@ -114,7 +108,6 @@ const EditPage: React.FC = () => {
       },
     ]);
     setSelectedId(newId);
-    // Inicializa el estado de escala para el nuevo elemento con tamaño pequeño y flipX en false
     setItemStates((states) => ({
       ...states,
       [newId]: {
@@ -129,45 +122,33 @@ const EditPage: React.FC = () => {
         flipX: false,
       },
     }));
+    
   };
 
   const handleDeleteItem = (id: number) => {
     setCanvasItems((items) => items.filter((item) => item.id !== id));
   };
 
-  const handleMoveItem = (id: number, direction: "up" | "down") => {
-    setCanvasItems((items) => {
-      const idx = items.findIndex((item) => item.id === id);
-      if (idx === -1) return items;
-      const newItems = [...items];
-      if (direction === "up" && idx < items.length - 1) {
-        [newItems[idx], newItems[idx + 1]] = [newItems[idx + 1], newItems[idx]];
-      } else if (direction === "down" && idx > 0) {
-        [newItems[idx], newItems[idx - 1]] = [newItems[idx - 1], newItems[idx]];
-      }
-      return newItems;
-    });
-  };
-
-  // Handlers para Sidebar
   const handleRotate = (id: number, angleIncrement: number) => {
     canvasAreaRef.current?.rotateItem(id, angleIncrement);
+    
   };
   const handleFlipX = (id: number) => {
     canvasAreaRef.current?.flipItem(id);
+    
   };
   const handleResize = (id: number, factor: number) => {
     canvasAreaRef.current?.resizeItem(id, factor);
+    
   };
   const handleLockToggle = (id: number) => {
     canvasAreaRef.current?.lockItem(id);
+    
   };
   const isLocked = (id: number) => !!itemStates[id]?.locked;
 
-  // Handler para agregar texto
   const handleAddText = (text: string, font: string, color: string) => {
     const newId = Date.now();
-    // Centro puro del área de edición
     const centerX = product.width / 2;
     const centerY = product.height / 2;
     setCanvasItems((items) => [
@@ -185,7 +166,6 @@ const EditPage: React.FC = () => {
     setSelectedId(newId);
   };
 
-  // Handler para actualizar fuente/color de un texto existente
   const handleUpdateTextItem = (id: number, changes: Partial<{ font: string; color: string }>) => {
     setCanvasItems((items) =>
       items.map((item) => {
@@ -195,7 +175,6 @@ const EditPage: React.FC = () => {
         return item;
       })
     );
-    // Opcional: refrescar el canvas manualmente si no se actualiza solo
     const fabricCanvas = fabricRef.current;
     if (fabricCanvas) {
       const obj = fabricCanvas.getObjects().find((o) => (o as any).id === id);
@@ -213,9 +192,9 @@ const EditPage: React.FC = () => {
       if (obj && changes.color) obj.set("fill", changes.color);
       fabricCanvas.renderAll();
     }
+    
   };
 
-  // Handler para alternar visibilidad
   const handleToggleVisible = (id: number) => {
     setItemStates((states) => ({
       ...states,
@@ -224,22 +203,21 @@ const EditPage: React.FC = () => {
         visible: !states[id]?.visible,
       },
     }));
+    
   };
   const isVisible = useCallback((id: number) => itemStates[id]?.visible !== false, [itemStates]);
 
-  // Handler para reordenar capas desde DnD
   const handleReorderItems = (newOrder: CanvasAnyItem[]) => {
     setCanvasItems(newOrder);
+    
   };
-
-  // Handler para alinear el elemento en el canvas según la posición 3x3
   const handleAlign = (id: number, position: string) => {
     if (product) {
       canvasAreaRef.current?.alignItem(id, position, product);
     }
+    
   };
 
-  // Cambia el handleSave para solo usarse en 'Enviar diseño'
   const handleSave = async (feedbackData: {
     name: string;
     email: string;
@@ -254,7 +232,7 @@ const EditPage: React.FC = () => {
       const blob = await response.blob();
       await saveDesignWithFeedback(blob, feedbackData);
       setFeedbackDialogOpen(false);
-      setMode("done"); // Go to done mode after feedback
+      setMode("done");
     } catch (error: any) {
       console.error("Error al guardar:", error);
       if (
@@ -263,7 +241,6 @@ const EditPage: React.FC = () => {
       ) {
         alert("Ya existe un diseño con ese correo. Por favor, usa otro correo.");
       } else {
-        // Dump all image URLs currently in the canvas
         const fabricCanvas = fabricRef.current;
         if (fabricCanvas) {
           fabricCanvas.getObjects().forEach((obj) => {
@@ -276,35 +253,28 @@ const EditPage: React.FC = () => {
       }
     }
   };
-  // Nuevo: handle para el botón Guardar del NavBar
   const handleNavBarSave = () => {
     setShowDashedBorder(false);
     setShowLayers(false);
     setMode("confirm");
-    setSelectedId(null); // Deselecciona cualquier elemento
+    setSelectedId(null);
   };
-  // Nuevo: handle para volver a editar
   const handleEditAgain = () => {
     setShowDashedBorder(true);
     setShowLayers(true);
     setMode("edit");
   };
-  // Nuevo: handle para enviar diseño
   const handleSendDesign = () => {
     setFeedbackDialogOpen(true);
   };
 
-  // Lógica para permitir zoom infinito con pan
   const handleZoom = (factor: number) => {
-    // El nuevo scale propuesto
     let newScale = scale * factor;
-    // Solo limitar el zoom mínimo para que no desaparezca completamente
-    const minScale = 0.1; // No menos de 0.1x
+    const minScale = 0.1;
     if (newScale < minScale) newScale = minScale;
     setScale(newScale);
   };
 
-  // Asegurarse de que cada item tenga un estado inicial, incluyendo visible y flipX
   useEffect(() => {
     setItemStates((prev) => {
       const updated = { ...prev };
@@ -324,7 +294,6 @@ const EditPage: React.FC = () => {
           };
           changed = true;
         } else {
-          // Asegura que scaleX, scaleY y flipX existan en todos los items
           if (updated[item.id].scaleX === undefined) {
             updated[item.id].scaleX = 1;
             changed = true;
@@ -343,7 +312,6 @@ const EditPage: React.FC = () => {
     });
   }, [canvasItems, setItemStates]);
 
-  // Sincroniza flipX de itemStates con Fabric.js al cambiar de selección
   useEffect(() => {
     if (selectedId !== null && fabricRef.current) {
       const obj = fabricRef.current.getObjects().find((o) => (o as any).id === selectedId);
@@ -419,7 +387,6 @@ const EditPage: React.FC = () => {
             canvasItems={canvasItems}
             setSelectedId={setSelectedId}
             onDeleteItem={handleDeleteItem}
-            onMoveItem={handleMoveItem}
             onLockToggle={handleLockToggle}
             isLocked={isLocked}
             onToggleVisible={handleToggleVisible}
