@@ -3,7 +3,6 @@ import { Canvas, Image, IText, Point } from 'fabric';
 import type { CanvasItem } from '../types';
 import type { Product } from './ProductSelector';
 
-// Define también aquí el tipo CanvasTextItem y CanvasAnyItem
 export type CanvasTextItem = {
   id: number;
   type: 'text';
@@ -29,16 +28,14 @@ type CanvasAreaProps = {
   selectedId?: number | null;
   setSelectedId?: (id: number | null) => void;
   fabricRef: React.MutableRefObject<Canvas | null>;
-  // itemStates y setItemStates eliminados de las props
   scale: number;
   selectedBg?: { name: string; url: string } | null;
   onUpdateItems?: (updatedItems: CanvasAnyItem[]) => void;
   showDashedBorder?: boolean;
   isVisible: (id: number) => boolean;
   setItemStates?: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } }>>;
-  readOnly?: boolean; // NUEVO
+  readOnly?: boolean;
 };
-
 
 const DEFAULT_SIZE = 60;
 
@@ -54,38 +51,28 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
   showDashedBorder, 
   isVisible, 
   setItemStates, 
-  readOnly = false // NUEVO
+  readOnly = false
 }, ref) => {
   if (!product) return <div>Cargando</div>
   const actualSelectedId = selectedId;
   const actualSetSelectedId = setSelectedId;
   
-  // Canvas DOM element reference
   const canvasElRef = useRef<HTMLCanvasElement>(null);
-  // Product image reference
   const imgRef = useRef<HTMLImageElement>(null);
-  // Container div reference
   const containerRef = useRef<HTMLDivElement>(null);
-  // Pan state for dragging the view
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  // Pan drag state
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // Estado local para itemStates
   const itemStatesRef = useRef<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } }>({});
-  // Ref para distinguir si la selección viene del canvas
   const isSelectionFromCanvas = useRef(false);
 
 
-  // Reset pan when product changes
   useEffect(() => {
     setPan({ x: 0, y: 0 });
   }, [product]);
 
-  // Pan handlers
   const handleMouseDown = (e: React.MouseEvent) => {
-    // Solo activar pan si no se está haciendo clic en el canvas o sus elementos
     const target = e.target as HTMLElement;
     const canvasContainer = target.closest('[data-canvas-container]');
     if (!canvasContainer) {
@@ -124,7 +111,7 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (isDragging && e.touches.length === 1) {
-      e.preventDefault(); // Prevent scrolling
+      e.preventDefault();
       setPan({
         x: e.touches[0].clientX - dragStart.x,
         y: e.touches[0].clientY - dragStart.y,
@@ -136,11 +123,8 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
     setIsDragging(false);
   };
 
-  /**
-   * Initialize Fabric.js canvas when the component mounts or when canvas size changes.
-   */
   useEffect(() => {
-    if (!canvasElRef.current || !product) return; // <-- agrega !product aquí
+    if (!canvasElRef.current || !product) return;
     const fabricCanvas = new Canvas(canvasElRef.current, {
       width: product.width,
       height: product.height,
@@ -157,7 +141,6 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
     };
   }, [product, fabricRef]);
 
-  // --- EFECTO DE RENDERIZADO DE ITEMS Y FONDO ---
   useEffect(() => {
     (async () => {
       const fabricCanvas = fabricRef.current;
@@ -166,13 +149,10 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
       fabricCanvas.backgroundColor = 'rgba(0,0,0,0)';
       fabricCanvas.renderAll();
 
-      // Limpiar fondo anterior si existe
       const bgObj = fabricCanvas.getObjects().find(obj => (obj as any).id === 'background');
       if (bgObj) {
         fabricCanvas.remove(bgObj);
       }
-
-      // Agregar fondo si hay uno seleccionado
       if (selectedBg) {
         await Image.fromURL(selectedBg.url, {crossOrigin: 'anonymous'}).then((bgImg) => {
           const scaleX = product.width / (bgImg.width ?? 1);
@@ -202,13 +182,11 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
         });
       }
 
-      // Agregar los elementos normales y textos de forma secuencial
       const visibleItems = items.filter(item => isVisible(item.id));
       for (const item of visibleItems) {
         const itemState = itemStatesRef.current[item.id] || {};
         if ((item as any).type === 'text') {
           const textItem = item as any;
-          // Determinar el nombre real de la fuente
           let fontFamily = textItem.font;
           if (fontFamily === 'font-pacifico') fontFamily = 'Pacifico';
           else if (fontFamily === 'font-anton') fontFamily = 'Anton';
@@ -269,10 +247,8 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
             cornerStyle: 'circle',
             cornerColor: '#fff',
             cornerStrokeColor: '#fff',
-            // Nuevo: aplicar scaleX y scaleY si existen
             scaleX: itemState.scaleX ?? 1,
             scaleY: itemState.scaleY ?? 1,
-            // Asegura que flipX se aplique
             flipX: itemState.flipX ?? false,
           });
           (txt as any).id = item.id;
@@ -280,13 +256,11 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           if (!readOnly && actualSelectedId === item.id) {
             fabricCanvas.setActiveObject(txt);
           }
-          // Configurar eventos de edición
           if (!readOnly) {
             txt.on('mousedblclick', () => {
               (txt as any).enterEditing();
               (txt as any).selectAll();
             });
-            // Actualizar estado cuando se modifica la posición/tamaño
             txt.on('modified', () => {
               const newFontSize = txt.fontSize ?? DEFAULT_SIZE;
               const newScaleX = txt.scaleX ?? 1;
@@ -325,11 +299,13 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           }
         } else {
           const img = await Image.fromURL((item as any).src, {crossOrigin: 'anonymous'});
+          const baseSize = img.width ?? DEFAULT_SIZE;
+          const scale = (itemState.size ?? DEFAULT_SIZE) / baseSize;
           img.set({
             left: itemState.x ?? (item as any).x,
             top: itemState.y ?? (item as any).y,
-            scaleX: ((itemState.size ?? DEFAULT_SIZE) / (img.width ?? DEFAULT_SIZE)),
-            scaleY: ((itemState.size ?? DEFAULT_SIZE) / (img.height ?? DEFAULT_SIZE)),
+            scaleX: scale,
+            scaleY: scale,
             angle: itemState.rotation ?? 0,
             selectable: readOnly ? false : !(itemState.locked),
             hasControls: readOnly ? false : !(itemState.locked),
@@ -345,7 +321,6 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
             cornerStyle: 'circle',
             cornerColor: '#fff',
             cornerStrokeColor: '#fff',
-            // Asegura que flipX se aplique
             flipX: itemState.flipX ?? false,
           }), {crossOrigin: 'anonymous'};
           img.setControlsVisibility({
@@ -383,7 +358,6 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           }
         }
       }
-      // --- NUEVO: volver a seleccionar el objeto activo tras renderizar todo ---
       if (!readOnly && actualSelectedId != null) {
         const obj = fabricCanvas.getObjects().find(o => (o as any).id === actualSelectedId);
         if (obj) {
@@ -400,7 +374,6 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
     })();
   }, [items, selectedBg, product, scale, isVisible, fabricRef, readOnly]);
 
-  // --- EFECTO DE SELECCIÓN ---
   useEffect(() => {
     const fabricCanvas = fabricRef.current;
     if (!fabricCanvas) return;
@@ -414,13 +387,11 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
       fabricCanvas.selection = true;
       fabricCanvas.skipTargetFind = false;
     }
-    // Solo forzar el objeto activo si el cambio viene de React (no del canvas)
     if (!isSelectionFromCanvas.current) {
       if (actualSelectedId != null) {
         const obj = fabricCanvas.getObjects().find(o => (o as any).id === actualSelectedId);
         if (obj) {
           fabricCanvas.setActiveObject(obj);
-          // Sincroniza flipX del estado al objeto
           const flipXState = itemStatesRef.current[actualSelectedId]?.flipX;
           if (typeof flipXState === 'boolean' && obj.flipX !== flipXState) {
             obj.set('flipX', flipXState);
@@ -433,11 +404,9 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
       }
       fabricCanvas.renderAll();
     }
-    // Resetear el ref después de cada render
     isSelectionFromCanvas.current = false;
   }, [actualSelectedId, fabricRef, itemStatesRef.current, readOnly]);
   
-  // --- EFECTO DE EVENTOS (solo una vez) ---
   useEffect(() => {
     const fabricCanvas = fabricRef.current;
     if (!fabricCanvas) return;
@@ -446,7 +415,6 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
       if (obj && typeof (obj as any).id === 'number' && actualSetSelectedId) {
         isSelectionFromCanvas.current = true;
         actualSetSelectedId((obj as any).id);
-        // Sincroniza flipX del estado al objeto
         const flipXState = itemStatesRef.current[(obj as any).id]?.flipX;
         if (typeof flipXState === 'boolean' && obj.flipX !== flipXState) {
           obj.set('flipX', flipXState);
@@ -475,7 +443,6 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
     };
   }, [fabricRef, actualSetSelectedId, itemStatesRef.current]);
 
-  // En el renderizado de items, usar itemStatesRef.current en vez de prop
   useEffect(() => {
     const updated = { ...itemStatesRef.current };
     let changed = false;
@@ -525,7 +492,6 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           newAngle = (currentAngle + angle) % 360;
         }
         obj.set('angle', newAngle);
-        // Actualizar el estado local
         itemStatesRef.current[id] = {
           ...itemStatesRef.current[id],
           rotation: newAngle,
@@ -599,7 +565,6 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           ...itemStatesRef.current[id],
           flipX: !prev,
         };
-        // Actualiza el estado global si se pasó la prop
         if (typeof setItemStates === 'function') {
           setItemStates((states) => ({
             ...states,
@@ -647,7 +612,6 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
         onTouchEnd={handleTouchEnd}
         style={{ cursor: isDragging ? 'grabbing' : 'grab', pointerEvents: readOnly ? 'none' : 'auto'}}
       >
-        {/* Contenedor que agrupa imagen y canvas y aplica la transformación */}
         <div
           style={{
             width: 600,
@@ -655,13 +619,12 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
             position: 'absolute',
             left: '50%',
             top: '50%',
-            transform: `translate(-50%, -50%) translateX(${pan.x}px) translateY(${pan.y}px) scale(${scale})`, // <--- volver a agregar scale aquí
-            transformOrigin: 'center center', // Cambiado de 'top left' a 'center center'
+            transform: `translate(-50%, -50%) translateX(${pan.x}px) translateY(${pan.y}px) scale(${scale})`,
+            transformOrigin: 'center center',
             zIndex: 1,
             pointerEvents: 'none',
           }}
         >
-          {/* Imagen centrada, sin transform individual */}
           <img
             src={product.url}
             alt={product.name}
@@ -676,7 +639,6 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
             }}
             ref={imgRef}
           />
-          {/* Canvas overlay centrado, sin transform individual */}
           <div
             data-canvas-container
             style={{
@@ -689,7 +651,6 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
               pointerEvents: 'auto',
             }}
           >
-            {/* Borde siempre presente, solo cambia visibilidad */}
             <div
               className={`absolute left-0 top-0 w-full h-full border-2 border-dashed border-red-500 rounded z-10 ${showDashedBorder ? '' : 'invisible'}`}
               key="border"
