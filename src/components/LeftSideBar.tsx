@@ -1,4 +1,4 @@
-import { Grid3x3, RefreshCcw, RotateCw, MoveUpLeft, MoveUpRight, MoveDownLeft, MoveDownRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Circle, ZoomIn, ZoomOut, SquareSplitHorizontal } from 'lucide-react';
+import { Grid3x3, RefreshCcw, RotateCw, MoveUpLeft, MoveUpRight, MoveDownLeft, MoveDownRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Circle, ZoomIn, ZoomOut, SquareSplitHorizontal, Undo2, Redo2 } from 'lucide-react';
 import React, { useRef, useState, useEffect } from 'react';
 
 interface LeftSidebarProps {
@@ -64,7 +64,8 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
   };
 
   return (
-    <div className="absolute top-1/2 -translate-y-1/2 left-10 flex flex-col justify-around z-50 gap-12">
+    <div className="absolute top-1/2 -translate-y-1/2 left-10 flex flex-col justify-around z-50 gap-12">      
+      {/* Existing buttons */}
       <div className="relative">
         <button
           ref={buttonRef}

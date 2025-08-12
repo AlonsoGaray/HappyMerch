@@ -4,9 +4,13 @@ import { useGlobalData } from "@/contexts/AdminDataContext";
 
 type NavBarProps = {
   onSave: (data: { name: string; email: string; comment: string; rating: number }) => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 };
 
-const NavBar = ({ onSave }: NavBarProps) => {
+const NavBar = ({ onSave, onUndo, onRedo, canUndo = false, canRedo = false }: NavBarProps) => {
   const { data } = useGlobalData();
   const navigate = useNavigate();
 
@@ -29,6 +33,43 @@ const NavBar = ({ onSave }: NavBarProps) => {
           >
             Nuevo
           </button>
+          
+          {/* Undo/Redo buttons */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={onUndo}
+              disabled={!canUndo}
+              className={`rounded-md px-3 py-2 text-base transition ${data.config?.nav_button_font} ${
+                canUndo 
+                  ? 'bg-gray-100 hover:bg-gray-200' 
+                  : 'bg-gray-300 cursor-not-allowed opacity-50'
+              }`}
+              style={{
+                backgroundColor: canUndo ? (data.config?.nav_btn_bg_color || '#f3f4f6') : '#d1d5db',
+                color: data.config?.nav_btn_text_color || '#374151',
+              }}
+              title="Deshacer (Ctrl+Z)"
+            >
+              ↶
+            </button>
+            <button
+              onClick={onRedo}
+              disabled={!canRedo}
+              className={`rounded-md px-3 py-2 text-base transition ${data.config?.nav_button_font} ${
+                canRedo 
+                  ? 'bg-gray-100 hover:bg-gray-200' 
+                  : 'bg-gray-300 cursor-not-allowed opacity-50'
+              }`}
+              style={{
+                backgroundColor: canRedo ? (data.config?.nav_btn_bg_color || '#f3f4f6') : '#d1d5db',
+                color: data.config?.nav_btn_text_color || '#374151',
+              }}
+              title="Rehacer (Ctrl+Y)"
+            >
+              ↷
+            </button>
+          </div>
+          
           <button
             onClick={() => onSave({ name: '', email: '', comment: '', rating: 0 })}
             className={`bg-gray-100 rounded-md px-4 py-2 text-base hover:bg-gray-200 transition ${data.config?.nav_button_font}`}

@@ -25,12 +25,20 @@ type CanvasTextItem = {
   type: "text";
   text: string;
   font: string;
-  color: string;
+  color: string
   x: number;
   y: number;
 };
 
 type CanvasAnyItem = CanvasItem | CanvasTextItem;
+
+// Undo/Redo state management
+type CanvasState = {
+  canvasItems: CanvasAnyItem[];
+  itemStates: { [id: number]: any };
+  selectedBgIdx: number;
+  productIdx: number;
+};
 
 function hexToRgba(hex: string, alpha: number) {
   let c = hex.replace('#', '');
@@ -62,6 +70,13 @@ const EditPage: React.FC = () => {
   const [productIdx, setProductIdx] = useState(0);
   const [activeTab, setActiveTab] = useState("product");
   const [selectedBgIdx, setSelectedBgIdx] = useState(-1);
+  
+  // Handle background selection with state saving
+  const handleBackgroundSelection = (bgIdx: number) => {
+    setSelectedBgIdx(bgIdx);
+    
+    // State will be saved automatically by canvas object:modified event
+  };
   const [canvasItems, setCanvasItems] = useState<CanvasAnyItem[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [itemStates, setItemStates] = useState<{
@@ -85,9 +100,226 @@ const EditPage: React.FC = () => {
   const [mode, setMode] = useState<'edit' | 'confirm' | 'done'>("edit");
   const [isFeedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [showBubble, setShowBubble] = useState(false); // Por defecto oculto
+  
+  // Undo/Redo state management
+  const [undoStates, setUndoStates] = useState<CanvasState[]>([]);
+  const [activeStateIndex, setActiveStateIndex] = useState(-1);
+  const [isRestoring, setIsRestoring] = useState(false);
+
   const visibleProducts: Product[] = data.products.filter((p: Product) => p.visible);
   const product = visibleProducts[productIdx] || visibleProducts[0];
   const visibleBackgrounds = data.backgrounds.filter((bg: any) => bg.visible);
+
+  // Capture current canvas state
+  const captureCanvasState = useCallback((): CanvasState => {
+    return {
+      canvasItems: [...canvasItems],
+      itemStates: { ...itemStates },
+      selectedBgIdx,
+      productIdx,
+    };
+  }, [canvasItems, itemStates, selectedBgIdx, productIdx]);
+
+  // Save state to undo history
+  const saveState = useCallback(() => {
+    if (isRestoring) {
+      console.log('⏸️ Skipping state save - currently restoring');
+      return; // Don't save while restoring
+    }
+    
+    const stateToSave = captureCanvasState();
+    
+    console.log('💾 Saving canvas state:', {
+      canvasItems: stateToSave.canvasItems.length,
+      itemStates: Object.keys(stateToSave.itemStates).length,
+      background: stateToSave.selectedBgIdx,
+      product: stateToSave.productIdx
+    });
+    
+    setUndoStates(prev => {
+      // Remove future states if we're not at the end
+      const statesToKeep = prev.slice(0, activeStateIndex + 1);
+      
+      // Add new state
+      const newStates = [...statesToKeep, stateToSave];
+      
+      // Limit undo history to prevent memory issues (keep last 50 states)
+      if (newStates.length > 50) {
+        return newStates.slice(-50);
+      }
+      
+      return newStates;
+    });
+    
+    setActiveStateIndex(prev => prev + 1);
+    
+    console.log('💾 State saved successfully. Total states:', undoStates.length + 1);
+  }, [captureCanvasState, activeStateIndex, isRestoring, undoStates.length]);
+
+  // Restore canvas state
+  const restoreCanvasState = useCallback((state: CanvasState) => {
+    console.log('🔄 Restoring canvas state:', {
+      canvasItems: state.canvasItems.length,
+      itemStates: Object.keys(state.itemStates).length,
+      background: state.selectedBgIdx,
+      product: state.productIdx
+    });
+    
+    setIsRestoring(true);
+    
+    // Temporarily disable canvas events
+    if (fabricRef.current) {
+      fabricRef.current.off('object:modified');
+      fabricRef.current.off('object:added');
+      fabricRef.current.off('object:removed');
+    }
+    
+    // Restore state
+    setCanvasItems(state.canvasItems);
+    setItemStates(state.itemStates);
+    setSelectedBgIdx(state.selectedBgIdx);
+    setProductIdx(state.productIdx);
+    
+    // Re-enable canvas events after a short delay
+    setTimeout(() => {
+      if (fabricRef.current) {
+        setupCanvasEventListeners();
+      }
+      setIsRestoring(false);
+      console.log('✅ Canvas state restored successfully');
+    }, 100);
+  }, []);
+
+  // Undo function
+  const handleUndo = useCallback(() => {
+    if (activeStateIndex > 0) {
+      const previousState = undoStates[activeStateIndex - 2];
+      if (previousState) {
+        console.log('⬅️ Undo triggered:', {
+          fromIndex: activeStateIndex,
+          toIndex: activeStateIndex - 1,
+          totalStates: undoStates.length
+        });
+        restoreCanvasState(previousState);
+        setActiveStateIndex(activeStateIndex - 1);
+      }
+    } else {
+      console.log('⚠️ Cannot undo: Already at the beginning');
+    }
+  }, [activeStateIndex, undoStates, restoreCanvasState]);
+
+  // Redo function
+  const handleRedo = useCallback(() => {
+    if (activeStateIndex < undoStates.length - 1) {
+      const nextState = undoStates[activeStateIndex + 1];
+      if (nextState) {
+        console.log('➡️ Redo triggered:', {
+          fromIndex: activeStateIndex,
+          toIndex: activeStateIndex + 1,
+          totalStates: undoStates.length
+        });
+        restoreCanvasState(nextState);
+        setActiveStateIndex(activeStateIndex + 1);
+      }
+    } else {
+      console.log('⚠️ Cannot redo: Already at the latest state');
+    }
+  }, [activeStateIndex, undoStates, restoreCanvasState]);
+
+  // Setup canvas event listeners for undo/redo
+  const setupCanvasEventListeners = useCallback(() => {
+    if (!fabricRef.current) return;
+    
+    const canvas = fabricRef.current;
+    
+    console.log('🎯 Setting up canvas event listeners');
+    
+    // Object modified event - when objects are moved, resized, rotated, etc.
+    const handleObjectModified = (e: any) => {
+      console.log('🔄 Object modified:', e.target?.type, e.target?.id);
+      if (!isRestoring) {
+        // Small delay to ensure all modifications are complete
+        setTimeout(() => saveState(), 50);
+      }
+    };
+    
+    // Object added event - when new objects are added to canvas
+    const handleObjectAdded = (e: any) => {
+      console.log('➕ Object added:', e.target?.type, e.target?.id);
+      if (!isRestoring) {
+        setTimeout(() => saveState(), 50);
+      }
+    };
+    
+    // Object removed event - when objects are deleted from canvas
+    const handleObjectRemoved = (e: any) => {
+      console.log('➖ Object removed:', e.target?.type, e.target?.id);
+      if (!isRestoring) {
+        setTimeout(() => saveState(), 50);
+      }
+    };
+    
+    canvas.on('object:modified', handleObjectModified);
+    canvas.on('object:added', handleObjectAdded);
+    canvas.on('object:removed', handleObjectRemoved);
+    
+    return () => {
+      canvas.off('object:modified', handleObjectModified);
+      canvas.off('object:added', handleObjectAdded);
+      canvas.off('object:removed', handleObjectRemoved);
+    };
+  }, [saveState, isRestoring]);
+
+
+
+  // Setup canvas event listeners when fabric canvas is ready
+  useEffect(() => {
+    if (fabricRef.current && !isRestoring) {
+      console.log('🎨 Fabric canvas ready, setting up event listeners');
+      const cleanup = setupCanvasEventListeners();
+      return cleanup;
+    }
+  }, [setupCanvasEventListeners, isRestoring]);
+
+  // Initialize undo system with initial state when items are first added
+  useEffect(() => {
+    if (canvasItems.length > 0 || selectedBgIdx !== -1) {
+      const initialState = captureCanvasState();
+      if (undoStates.length === 0) {
+        console.log('🚀 Initializing undo system with state:', {
+          canvasItems: initialState.canvasItems.length,
+          itemStates: Object.keys(initialState.itemStates).length,
+          background: initialState.selectedBgIdx,
+          product: initialState.productIdx
+        });
+        setUndoStates([initialState]);
+        setActiveStateIndex(0);
+        console.log('✅ Undo system initialized with index 0');
+      }
+    }
+  }, [canvasItems.length, selectedBgIdx, undoStates.length, captureCanvasState]);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          handleUndo();
+        } else if (e.key === 'z' && e.shiftKey) {
+          e.preventDefault();
+          handleRedo();
+        } else if (e.key === 'y') {
+          e.preventDefault();
+          handleRedo();
+        }
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo]);
+
 
   const handleAddElement = (element: {
     id: string;
@@ -123,27 +355,34 @@ const EditPage: React.FC = () => {
       },
     }));
     
+    // State will be saved automatically by canvas object:added event
   };
 
   const handleDeleteItem = (id: number) => {
     setCanvasItems((items) => items.filter((item) => item.id !== id));
+    
+    // State will be saved automatically by canvas object:removed event
   };
 
   const handleRotate = (id: number, angleIncrement: number) => {
     canvasAreaRef.current?.rotateItem(id, angleIncrement);
     
+    // State will be saved automatically by canvas object:modified event
   };
   const handleFlipX = (id: number) => {
     canvasAreaRef.current?.flipItem(id);
     
+    // State will be saved automatically by canvas object:modified event
   };
   const handleResize = (id: number, factor: number) => {
     canvasAreaRef.current?.resizeItem(id, factor);
     
+    // State will be saved automatically by canvas object:modified event
   };
   const handleLockToggle = (id: number) => {
     canvasAreaRef.current?.lockItem(id);
     
+    // State will be saved automatically by canvas object:modified event
   };
   const isLocked = (id: number) => !!itemStates[id]?.locked;
 
@@ -164,6 +403,8 @@ const EditPage: React.FC = () => {
       },
     ]);
     setSelectedId(newId);
+    
+    // State will be saved automatically by canvas object:added event
   };
 
   const handleUpdateTextItem = (id: number, changes: Partial<{ font: string; color: string }>) => {
@@ -193,6 +434,7 @@ const EditPage: React.FC = () => {
       fabricCanvas.renderAll();
     }
     
+    // State will be saved automatically by canvas object:modified event
   };
 
   const handleToggleVisible = (id: number) => {
@@ -204,16 +446,20 @@ const EditPage: React.FC = () => {
       },
     }));
     
+    // State will be saved automatically by canvas object:modified event
   };
   const isVisible = useCallback((id: number) => itemStates[id]?.visible !== false, [itemStates]);
 
   const handleReorderItems = (newOrder: CanvasAnyItem[]) => {
     setCanvasItems(newOrder);
     
+    // State will be saved automatically by canvas object:modified event
   };
   const handleAlign = (id: number, position: string) => {
     if (product) {
       canvasAreaRef.current?.alignItem(id, position, product);
+      
+      // State will be saved automatically by canvas object:modified event
     }
     
   };
@@ -335,7 +581,23 @@ const EditPage: React.FC = () => {
         </div>
       )}
       {mode === "edit" ? (
-        <NavBar onSave={handleNavBarSave} />
+        <>
+          {console.log('🔍 NavBar Debug:', {
+            activeStateIndex,
+            undoStatesLength: undoStates.length,
+            canUndo: activeStateIndex > 0,
+            canRedo: activeStateIndex < undoStates.length - 1,
+            canvasItemsLength: canvasItems.length,
+            selectedBgIdx
+          })}
+          <NavBar 
+            onSave={handleNavBarSave} 
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={activeStateIndex > 0}
+            canRedo={activeStateIndex < undoStates.length - 1}
+          />
+        </>
       ) : mode === "confirm" ? (
         <div className="flex flex-col w-full p-14">
           <div className="flex gap-6">
@@ -405,7 +667,7 @@ const EditPage: React.FC = () => {
         >
           <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
           {activeTab === "product" && <ProductSelector onSelect={setProductIdx} />}
-          {activeTab === "fondos" && <BgSelector onSelect={setSelectedBgIdx} />}
+          {activeTab === "fondos" && <BgSelector onSelect={handleBackgroundSelection} />}
           {activeTab === "elements" && <ElementSelector onSelect={handleAddElement} />}
           {activeTab === "text" && (
             <TextTools

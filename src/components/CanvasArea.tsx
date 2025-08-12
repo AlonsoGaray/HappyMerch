@@ -265,7 +265,7 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
               const newFontSize = txt.fontSize ?? DEFAULT_SIZE;
               const newScaleX = txt.scaleX ?? 1;
               const newScaleY = txt.scaleY ?? 1;
-              itemStatesRef.current = {
+              const updatedItemStates = {
                 ...itemStatesRef.current,
                 [item.id]: {
                   x: txt.left ?? 0,
@@ -279,9 +279,11 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
                   flipX: itemState.flipX ?? false,
                 },
               };
+              itemStatesRef.current = updatedItemStates;
+              
               if (onUpdateItems) {
                 onUpdateItems(items.map(it =>
-                  it.id === item.id ? { ...it, size: newFontSize } : it
+                  it.id === item.id ? { ...it, size: newFontSize, x: txt.left ?? 0, y: txt.top ?? 0 } : it
                 ));
               }
             });
@@ -340,7 +342,7 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           }
           if (!readOnly) {
             img.on('modified', () => {
-              itemStatesRef.current = {
+              const updatedItemStates = {
                 ...itemStatesRef.current,
                 [item.id]: {
                   x: img.left ?? 0,
@@ -354,6 +356,18 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
                   flipX: img.flipX ?? false,
                 },
               };
+              itemStatesRef.current = updatedItemStates;
+              
+              // Update items to trigger history save
+              if (onUpdateItems) {
+                const updatedItems = items.map(it => {
+                  if (it.id === item.id) {
+                    return { ...it, x: img.left ?? 0, y: img.top ?? 0 };
+                  }
+                  return it;
+                });
+                onUpdateItems(updatedItems);
+              }
             });
           }
         }
