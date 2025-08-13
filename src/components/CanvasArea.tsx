@@ -1,3 +1,4 @@
+// CanvasArea.tsx
 import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { Canvas, Image, IText, Point } from 'fabric';
 import type { CanvasItem } from '../types';
@@ -13,6 +14,20 @@ export type CanvasTextItem = {
   y: number;
 };
 export type CanvasAnyItem = CanvasItem | CanvasTextItem;
+
+export type ItemStates = {
+  [id: number]: {
+    x: number;
+    y: number;
+    size: number;
+    rotation: number;
+    locked: boolean;
+    visible: boolean;
+    scaleX: number;
+    scaleY: number;
+    flipX: boolean;
+  };
+};
 
 export type CanvasAreaHandle = {
   rotateItem: (id: number, angle: number) => void;
@@ -33,7 +48,11 @@ type CanvasAreaProps = {
   onUpdateItems?: (updatedItems: CanvasAnyItem[]) => void;
   showDashedBorder?: boolean;
   isVisible: (id: number) => boolean;
-  setItemStates?: React.Dispatch<React.SetStateAction<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } }>>;
+  setItemStates?: React.Dispatch<React.SetStateAction<ItemStates>>;
+  /** NEW: canonical item states from parent (Edit) */
+  itemStates?: ItemStates;
+  /** NEW: called BEFORE user-initiated changes to push history */
+  onWillChange?: () => void;
   readOnly?: boolean;
 };
 
@@ -51,6 +70,8 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
   showDashedBorder, 
   isVisible, 
   setItemStates, 
+  itemStates,             // NEW
+  onWillChange,           // NEW
   readOnly = false
 }, ref) => {
   if (!product) return <div>Cargando</div>
@@ -64,9 +85,17 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  const itemStatesRef = useRef<{ [id: number]: { x: number; y: number; size: number; rotation: number; locked: boolean; visible: boolean; scaleX: number; scaleY: number; flipX: boolean } }>({});
+  const itemStatesRef = useRef<ItemStates>({});
   const isSelectionFromCanvas = useRef(false);
+  const pushedForTransformRef = useRef(false);
 
+  // Keep internal states in sync with parent
+  useEffect(() => {
+    if (itemStates) {
+      // shallow copy to avoid accidental mutation of parent state
+      itemStatesRef.current = { ...itemStates };
+    }
+  }, [itemStates]);
 
   useEffect(() => {
     setPan({ x: 0, y: 0 });
@@ -136,10 +165,30 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
     fabricRef.current = fabricCanvas;
     fabricCanvas.backgroundColor = 'rgba(0,0,0,0)';
     fabricCanvas.renderAll();
+
+    // Push history at the beginning of any transform gesture
+    const handleBeforeTransform = () => {
+      if (!readOnly && !pushedForTransformRef.current) {
+        onWillChange?.();
+        pushedForTransformRef.current = true;
+      }
+    };
+    const handleTransformEndish = () => {
+      pushedForTransformRef.current = false;
+    };
+    fabricCanvas.on('before:transform', handleBeforeTransform);
+    fabricCanvas.on('object:modified', handleTransformEndish);
+    fabricCanvas.on('selection:cleared', handleTransformEndish);
+    fabricCanvas.on('mouse:up', handleTransformEndish);
+
     return () => {
+      fabricCanvas.off('before:transform', handleBeforeTransform);
+      fabricCanvas.off('object:modified', handleTransformEndish);
+      fabricCanvas.off('selection:cleared', handleTransformEndish);
+      fabricCanvas.off('mouse:up', handleTransformEndish);
       fabricCanvas.dispose();
     };
-  }, [product, fabricRef]);
+  }, [product, fabricRef, onWillChange, readOnly]);
 
   useEffect(() => {
     (async () => {
@@ -257,36 +306,40 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
             fabricCanvas.setActiveObject(txt);
           }
           if (!readOnly) {
-            txt.on('mousedblclick', () => {
-              (txt as any).enterEditing();
-              (txt as any).selectAll();
+            // *** push history when text editing begins
+            (txt as any).on('editing:entered', () => {
+              onWillChange?.();
             });
+
             txt.on('modified', () => {
               const newFontSize = txt.fontSize ?? DEFAULT_SIZE;
               const newScaleX = txt.scaleX ?? 1;
               const newScaleY = txt.scaleY ?? 1;
-              const updatedItemStates = {
-                ...itemStatesRef.current,
-                [item.id]: {
-                  x: txt.left ?? 0,
-                  y: txt.top ?? 0,
-                  size: newFontSize,
-                  rotation: txt.angle ?? 0,
-                  locked: itemState.locked ?? false,
-                  visible: itemState.visible ?? true,
-                  scaleX: newScaleX,
-                  scaleY: newScaleY,
-                  flipX: itemState.flipX ?? false,
-                },
+              const payload = {
+                x: txt.left ?? 0,
+                y: txt.top ?? 0,
+                size: newFontSize,
+                rotation: txt.angle ?? 0,
+                locked: itemState.locked ?? false,
+                visible: itemState.visible ?? true,
+                scaleX: newScaleX,
+                scaleY: newScaleY,
+                flipX: itemState.flipX ?? false,
               };
-              itemStatesRef.current = updatedItemStates;
-              
+              itemStatesRef.current = {
+                ...itemStatesRef.current,
+                [item.id]: payload,
+              };
+              if (typeof setItemStates === 'function') {
+                setItemStates((s) => ({ ...s, [item.id]: payload }));
+              }
               if (onUpdateItems) {
                 onUpdateItems(items.map(it =>
-                  it.id === item.id ? { ...it, size: newFontSize, x: txt.left ?? 0, y: txt.top ?? 0 } : it
+                  it.id === item.id ? { ...it, size: newFontSize } : it
                 ));
               }
             });
+
             (txt as any).on('editing:exited', () => {
               const updatedItems = items.map(item => {
                 if (item.id === textItem.id) {
@@ -306,8 +359,8 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           img.set({
             left: itemState.x ?? (item as any).x,
             top: itemState.y ?? (item as any).y,
-            scaleX: scale,
-            scaleY: scale,
+            scaleX: itemState.scaleX ?? scale,
+            scaleY: itemState.scaleY ?? scale,
             angle: itemState.rotation ?? 0,
             selectable: readOnly ? false : !(itemState.locked),
             hasControls: readOnly ? false : !(itemState.locked),
@@ -342,31 +395,23 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           }
           if (!readOnly) {
             img.on('modified', () => {
-              const updatedItemStates = {
-                ...itemStatesRef.current,
-                [item.id]: {
-                  x: img.left ?? 0,
-                  y: img.top ?? 0,
-                  size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)),
-                  rotation: img.angle ?? 0,
-                  locked: itemState.locked ?? false,
-                  visible: itemState.visible ?? true,
-                  scaleX: img.scaleX ?? 1,
-                  scaleY: img.scaleY ?? 1,
-                  flipX: img.flipX ?? false,
-                },
+              const payload = {
+                x: img.left ?? 0,
+                y: img.top ?? 0,
+                size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)),
+                rotation: img.angle ?? 0,
+                locked: itemState.locked ?? false,
+                visible: itemState.visible ?? true,
+                scaleX: img.scaleX ?? 1,
+                scaleY: img.scaleY ?? 1,
+                flipX: img.flipX ?? false,
               };
-              itemStatesRef.current = updatedItemStates;
-              
-              // Update items to trigger history save
-              if (onUpdateItems) {
-                const updatedItems = items.map(it => {
-                  if (it.id === item.id) {
-                    return { ...it, x: img.left ?? 0, y: img.top ?? 0 };
-                  }
-                  return it;
-                });
-                onUpdateItems(updatedItems);
+              itemStatesRef.current = {
+                ...itemStatesRef.current,
+                [item.id]: payload,
+              };
+              if (typeof setItemStates === 'function') {
+                setItemStates((s) => ({ ...s, [item.id]: payload }));
               }
             });
           }
@@ -376,6 +421,12 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
         const obj = fabricCanvas.getObjects().find(o => (o as any).id === actualSelectedId);
         if (obj) {
           fabricCanvas.setActiveObject(obj);
+          const flipXState = itemStatesRef.current[actualSelectedId]?.flipX;
+          if (typeof flipXState === 'boolean' && obj.flipX !== flipXState) {
+            obj.set('flipX', flipXState);
+          }
+        } else {
+          fabricCanvas.discardActiveObject();
         }
       }
       fabricCanvas.setZoom(1);
@@ -386,7 +437,8 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
       fabricCanvas.absolutePan(new Point(-center.x, -center.y));
       fabricCanvas.renderAll();
     })();
-  }, [items, selectedBg, product, scale, isVisible, fabricRef, readOnly]);
+  // also recompose when itemStates change so undo/redo updates canvas
+  }, [items, selectedBg, product, scale, isVisible, fabricRef, readOnly, itemStates]);
 
   useEffect(() => {
     const fabricCanvas = fabricRef.current;
@@ -463,8 +515,8 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
     items.forEach(item => {
       if (!updated[item.id]) {
         updated[item.id] = {
-          x: item.x,
-          y: item.y,
+          x: (item as any).x,
+          y: (item as any).y,
           size: DEFAULT_SIZE,
           rotation: 0,
           locked: false,
@@ -510,6 +562,9 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           ...itemStatesRef.current[id],
           rotation: newAngle,
         };
+        if (typeof setItemStates === 'function') {
+          setItemStates((s) => ({ ...s, [id]: { ...s[id], rotation: newAngle } }));
+        }
         fabricCanvas.renderAll();
       }
     },
@@ -529,6 +584,9 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           scaleX,
           scaleY,
         };
+        if (typeof setItemStates === 'function') {
+          setItemStates((s) => ({ ...s, [id]: { ...s[id], size: newSize, scaleX, scaleY } }));
+        }
         fabricCanvas.renderAll();
       }
     },
@@ -566,6 +624,9 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
         x,
         y,
       };
+      if (typeof setItemStates === 'function') {
+        setItemStates((s) => ({ ...s, [id]: { ...s[id], x, y } }));
+      }
       fabricCanvas.renderAll();
     },
     flipItem: (id: number) => {
@@ -611,7 +672,7 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
         fabricCanvas.renderAll();
       }
     },
-  }), [fabricRef, product]);
+  }), [fabricRef, product, setItemStates]);
 
   return (
       <div
@@ -684,4 +745,4 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
   );
 });
 
-export default React.memo(CanvasArea); 
+export default React.memo(CanvasArea);
