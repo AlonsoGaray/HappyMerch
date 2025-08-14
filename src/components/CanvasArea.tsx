@@ -1,6 +1,6 @@
 // CanvasArea.tsx
 import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
-import { Canvas, Image, IText, Point } from 'fabric';
+import { Canvas, Image, IText } from 'fabric';
 import type { CanvasItem } from '../types';
 import type { Product } from './ProductSelector';
 
@@ -260,7 +260,6 @@ const applyInteractivity = (obj: any, locked: boolean, readOnly: boolean) => {
   
       // --- 2c) Compute visible items and sync each one (add or update) ---
       const visibleItems = items.filter(item => isVisible(item.id));
-      const visibleIds = new Set<number>(visibleItems.map(i => i.id));
   
       for (const item of visibleItems) {
         const currentState = {
@@ -402,8 +401,8 @@ const applyInteractivity = (obj: any, locked: boolean, readOnly: boolean) => {
               hasBorders: true,
               objectCaching: false,
               flipX: currentState.flipX,
-              scaleX: currentState.scaleX ?? initialScale,
-              scaleY: currentState.scaleY ?? initialScale,
+              scaleX: initialScale,
+              scaleY: initialScale,
             });
             (img as any).id = item.id;
             img.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false, tl: true, tr: true, bl: true, br: true });
