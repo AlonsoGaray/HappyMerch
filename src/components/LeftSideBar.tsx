@@ -1,4 +1,4 @@
-import { Grid3x3, RefreshCcw, RotateCw, MoveUpLeft, MoveUpRight, MoveDownLeft, MoveDownRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Circle, ZoomIn, ZoomOut, SquareSplitHorizontal, Undo2, Redo2 } from 'lucide-react';
+import { Grid3x3, RefreshCcw, RotateCw, MoveUpLeft, MoveUpRight, MoveDownLeft, MoveDownRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Circle, ZoomIn, ZoomOut, SquareSplitHorizontal } from 'lucide-react';
 import React, { useRef, useState, useEffect } from 'react';
 
 interface LeftSidebarProps {
