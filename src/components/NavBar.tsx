@@ -30,11 +30,6 @@ const NavBar = ({ onSave }: NavBarProps) => {
           Nuevo
         </button>
 
-        {/* Undo/Redo buttons */}
-        <div className="flex items-center space-x-2">
-          
-        </div>
-
         <button
           onClick={() => onSave({ name: "", email: "", comment: "", rating: 0 })}
           className={`bg-gray-100 rounded-md px-4 py-2 text-base hover:bg-gray-200 transition ${data.config?.nav_button_font}`}
