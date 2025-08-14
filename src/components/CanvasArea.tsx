@@ -359,8 +359,8 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
           img.set({
             left: itemState.x ?? (item as any).x,
             top: itemState.y ?? (item as any).y,
-            scaleX: itemState.scaleX ?? scale,
-            scaleY: itemState.scaleY ?? scale,
+            scaleX: scale,
+            scaleY: scale,
             angle: itemState.rotation ?? 0,
             selectable: readOnly ? false : !(itemState.locked),
             hasControls: readOnly ? false : !(itemState.locked),
