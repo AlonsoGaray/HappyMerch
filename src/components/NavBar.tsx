@@ -4,13 +4,9 @@ import { useGlobalData } from "@/contexts/AdminDataContext";
 
 type NavBarProps = {
   onSave: (data: { name: string; email: string; comment: string; rating: number }) => void;
-  onUndo?: () => void;
-  onRedo?: () => void;
-  canUndo?: boolean;
-  canRedo?: boolean;
 };
 
-const NavBar = ({ onSave, onUndo, onRedo, canUndo = false, canRedo = false }: NavBarProps) => {
+const NavBar = ({ onSave }: NavBarProps) => {
   const { data } = useGlobalData();
   const navigate = useNavigate();
 
@@ -36,36 +32,7 @@ const NavBar = ({ onSave, onUndo, onRedo, canUndo = false, canRedo = false }: Na
 
         {/* Undo/Redo buttons */}
         <div className="flex items-center space-x-2">
-          <button
-            onClick={onUndo}
-            disabled={!canUndo}
-            className="rounded-md px-3 py-2 text-base transition"
-            style={{
-              backgroundColor: canUndo
-                ? data.config?.nav_btn_bg_color || "#f3f4f6"
-                : "#d1d5db",
-              color: data.config?.nav_btn_text_color || "#374151",
-              cursor: canUndo ? "pointer" : "not-allowed",
-            }}
-            title="Deshacer (Ctrl+Z)"
-          >
-            ↶
-          </button>
-          <button
-            onClick={onRedo}
-            disabled={!canRedo}
-            className="rounded-md px-3 py-2 text-base transition"
-            style={{
-              backgroundColor: canRedo
-                ? data.config?.nav_btn_bg_color || "#f3f4f6"
-                : "#d1d5db",
-              color: data.config?.nav_btn_text_color || "#374151",
-              cursor: canRedo ? "pointer" : "not-allowed",
-            }}
-            title="Rehacer (Ctrl+Y)"
-          >
-            ↷
-          </button>
+          
         </div>
 
         <button

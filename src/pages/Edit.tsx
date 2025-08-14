@@ -441,10 +441,6 @@ const EditPage: React.FC = () => {
       {mode === "edit" ? (
         <NavBar
         onSave={handleNavBarSave}
-        onUndo={undo}
-        onRedo={redo}
-        canUndo={canUndo}
-        canRedo={canRedo}
       />
       ) : mode === "confirm" ? (
         <div className="flex flex-col w-full p-14">
@@ -491,6 +487,10 @@ const EditPage: React.FC = () => {
                 onToggleDashedBorder={() => setShowDashedBorder((v) => !v)}
                 onToggleLayers={() => setShowLayers((v) => !v)}
                 onZoom={handleZoom}
+                onUndo={undo}
+                onRedo={redo}
+                canUndo={canUndo}
+                canRedo={canRedo}
               />
             )}
           </div>

@@ -1,14 +1,18 @@
-import { Layers, SquareDashed, ZoomIn, ZoomOut } from 'lucide-react';
+import { Layers, Redo, SquareDashed, Undo, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface BottomBarProps {
   selectedId: number | null;
   onToggleDashedBorder: () => void;
   onToggleLayers: () => void;
   onZoom: (factor: number) => void; // Nueva prop para zoom global
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
   
 
-const BottomBar: React.FC<BottomBarProps> = ({ onToggleDashedBorder, onToggleLayers, onZoom }) => (
+const BottomBar: React.FC<BottomBarProps> = ({ onToggleDashedBorder, onToggleLayers, onZoom, onUndo, onRedo, canUndo = false, canRedo = false  }) => (
   <div
     className="gap-16 flex justify-around z-50]"
   >
@@ -34,6 +38,28 @@ const BottomBar: React.FC<BottomBarProps> = ({ onToggleDashedBorder, onToggleLay
       title="Reducir"
     >
       <ZoomOut color='white'/>
+    </button>
+    <button
+      onClick={onUndo}
+      disabled={!canUndo}
+      className="rounded-full p-2 transition"
+      style={{
+        backgroundColor: canUndo ? "black" : "gray",
+      }}
+      title="Deshacer (Ctrl+Z)"
+    >
+      <Undo color='white'/>
+    </button>
+    <button
+      onClick={onRedo}
+      disabled={!canRedo}
+      className="rounded-full p-2 transition"
+      style={{
+        backgroundColor: canRedo ? "black" : "gray",
+      }}
+      title="Rehacer (Ctrl+Y)"
+    >
+      <Redo color='white'/>
     </button>
   </div>
 );
