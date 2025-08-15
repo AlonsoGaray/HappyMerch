@@ -380,15 +380,9 @@ const applyInteractivity = (obj: any, locked: boolean, readOnly: boolean) => {
                 }
                 if (onUpdateItems) {
                   onUpdateItems(items.map(it =>
-                    it.id === item.id ? { ...it, size: newFontSize } : it
+                    it.id === item.id ? { ...it, size: newFontSize, text: txt.text || '' } : it
                   ));
                 }
-              });
-              (txt as any).on('editing:exited', () => {
-                const updatedItems = items.map(it =>
-                  it.id === textItem.id ? { ...it, text: txt.text || '' } : it
-                );
-                if (onUpdateItems) onUpdateItems(updatedItems);
               });
             }
           } else {
