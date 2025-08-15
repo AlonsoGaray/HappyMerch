@@ -223,13 +223,15 @@ const applyInteractivity = (obj: any, locked: boolean, readOnly: boolean) => {
         if (needNewBg) {
           if (existingBg) fabricCanvas.remove(existingBg);
           const bgImg = await Image.fromURL(selectedBg.url, { crossOrigin: 'anonymous' });
-          const scaleX = product.width / (bgImg.width ?? 1);
-          const scaleY = product.height / (bgImg.height ?? 1);
+          const scale = Math.max(
+            product.width / (bgImg.width ?? 1),
+            product.height / (bgImg.height ?? 1)
+          );
           bgImg.set({
-            left: 0,
-            top: 0,
-            scaleX,
-            scaleY,
+            left: (product.width - (bgImg.width ?? 0) * scale) / 2,
+            top: (product.height - (bgImg.height ?? 0) * scale) / 2,
+            scaleX: scale,
+            scaleY: scale,
             selectable: false,
             evented: false,
             hasControls: false,
