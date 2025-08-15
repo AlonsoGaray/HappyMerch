@@ -555,7 +555,7 @@ const EditPage: React.FC = () => {
               <img src="/happy_face.svg" alt="Carita feliz" className="w-full h-full object-contain" />
             </div>
           </div>
-          <div className="flex flex-col items-center justify-center w-full pb-28 gap-10">
+          <div className="flex flex-col items-center justify-center w-full pb-20 gap-10 mt-10">
             <h2 className="text-4xl font-bold text-center" style={{ color: data.config?.main_color }}>¡A UN PASO DE SER TUYO!</h2>
             <p className="text-center text-xl max-w-xl">
               Revisa los detalles finales, confirma tu creación y prepárate para recibir tu merch personalizado.

@@ -4,7 +4,7 @@ interface BottomBarProps {
   selectedId: number | null;
   onToggleDashedBorder: () => void;
   onToggleLayers: () => void;
-  onZoom: (factor: number) => void;
+  onZoom: (factor: number) => void; // Nueva prop para zoom global
   onUndo?: () => void;
   onRedo?: () => void;
   canUndo?: boolean;
@@ -12,7 +12,7 @@ interface BottomBarProps {
 }
   
 
-const BottomBar: React.FC<BottomBarProps> = ({ onToggleDashedBorder, onToggleLayers, onZoom, onUndo, onRedo, canUndo = false, canRedo = false }) => (
+const BottomBar: React.FC<BottomBarProps> = ({ onToggleDashedBorder, onToggleLayers, onZoom, onUndo, onRedo, canUndo = false, canRedo = false  }) => (
   <div
     className="gap-16 flex justify-around z-50]"
   >

@@ -1,6 +1,6 @@
 // CanvasArea.tsx
 import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
-import { Canvas, Image, IText, Point } from 'fabric';
+import { Canvas, Image, IText } from 'fabric';
 import type { CanvasItem } from '../types';
 import type { Product } from './ProductSelector';
 
@@ -88,6 +88,23 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
   const itemStatesRef = useRef<ItemStates>({});
   const isSelectionFromCanvas = useRef(false);
   const pushedForTransformRef = useRef(false);
+  // Always keep objects clickable/selectable even when "locked"
+const applyInteractivity = (obj: any, locked: boolean, readOnly: boolean) => {
+  obj.set({
+    // ← ALWAYS selectable & evented in edit mode
+    selectable: !readOnly,
+    evented: !readOnly,
+
+    // Controls/movement honor "locked", but still selectable
+    hasControls: readOnly ? false : !locked,
+    lockMovementX: readOnly ? true : locked,
+    lockMovementY: readOnly ? true : locked,
+    lockScalingX: readOnly ? true : locked,
+    lockScalingY: readOnly ? true : locked,
+    lockRotation: readOnly ? true : locked,
+  });
+};
+
 
   // Keep internal states in sync with parent
   useEffect(() => {
@@ -194,16 +211,18 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
     (async () => {
       const fabricCanvas = fabricRef.current;
       if (!fabricCanvas) return;
-      fabricCanvas.clear();
-      fabricCanvas.backgroundColor = 'rgba(0,0,0,0)';
-      fabricCanvas.renderAll();
-
-      const bgObj = fabricCanvas.getObjects().find(obj => (obj as any).id === 'background');
-      if (bgObj) {
-        fabricCanvas.remove(bgObj);
-      }
+  
+      // --- 2a) Background sync (no clear) ---
+      const existingBg = fabricCanvas.getObjects().find(o => (o as any).id === 'background');
       if (selectedBg) {
-        await Image.fromURL(selectedBg.url, {crossOrigin: 'anonymous'}).then((bgImg) => {
+        const needNewBg =
+          !existingBg ||
+          // @ts-ignore internal src tracking varies by fabric version
+          (existingBg as any)._element?.src !== selectedBg.url;
+  
+        if (needNewBg) {
+          if (existingBg) fabricCanvas.remove(existingBg);
+          const bgImg = await Image.fromURL(selectedBg.url, { crossOrigin: 'anonymous' });
           const scaleX = product.width / (bgImg.width ?? 1);
           const scaleY = product.height / (bgImg.height ?? 1);
           bgImg.set({
@@ -212,6 +231,7 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
             scaleX,
             scaleY,
             selectable: false,
+            evented: false,
             hasControls: false,
             hasBorders: false,
             lockMovementX: true,
@@ -219,259 +239,257 @@ const CanvasArea = forwardRef<CanvasAreaHandle, CanvasAreaProps>(({
             lockScalingX: true,
             lockScalingY: true,
             lockRotation: true,
-            objectCaching: false,
             originX: 'left',
             originY: 'top',
-          }), {crossOrigin: 'anonymous'};
+            objectCaching: false,
+          });
           (bgImg as any).id = 'background';
           fabricCanvas.add(bgImg);
-          const lastObj = fabricCanvas._objects.pop();
-          if (lastObj) fabricCanvas._objects.unshift(lastObj);
-          fabricCanvas.renderAll();
-        });
+          // bgImg.sendToBack();
+        }
+      } else if (existingBg) {
+        fabricCanvas.remove(existingBg);
       }
-
+  
+      // --- 2b) Build a map of existing objects by id (number) ---
+      const existing = new Map<number, any>();
+      fabricCanvas.getObjects().forEach(o => {
+        const id = (o as any).id;
+        if (typeof id === 'number') existing.set(id, o);
+      });
+  
+      // --- 2c) Compute visible items and sync each one (add or update) ---
       const visibleItems = items.filter(item => isVisible(item.id));
+  
       for (const item of visibleItems) {
-        const itemState = itemStatesRef.current[item.id] || {};
-        if ((item as any).type === 'text') {
-          const textItem = item as any;
-          let fontFamily = textItem.font;
-          if (fontFamily === 'font-pacifico') fontFamily = 'Pacifico';
-          else if (fontFamily === 'font-anton') fontFamily = 'Anton';
-          else if (fontFamily === 'font-lobster') fontFamily = 'Lobster';
-          else if (fontFamily === 'font-oswald') fontFamily = 'Oswald';
-          else if (fontFamily === 'font-shadow') fontFamily = 'Shadows Into Light';
-          else if (fontFamily === 'font-playfair') fontFamily = 'Playfair Display';
-          else if (fontFamily === 'font-montserrat') fontFamily = 'Montserrat';
-          else if (fontFamily === 'font-verdana') fontFamily = 'Verdana';
-          else if (fontFamily === 'font-courier') fontFamily = 'Courier';
-          else if (fontFamily === 'font-georgia') fontFamily = 'Georgia';
-          else if (fontFamily === 'font-genty') fontFamily = 'Genty';
-          else if (fontFamily === 'font-great-vibes') fontFamily = 'Great Vibes';
-          else if (fontFamily === 'font-fredoka') fontFamily = 'Fredoka';
-          else if (fontFamily === 'font-league-spartan') fontFamily = 'League Spartan';
-          else if (fontFamily === 'font-bebas-neue') fontFamily = 'Bebas Neue';
-          else if (fontFamily === 'font-baloo-2') fontFamily = 'Baloo 2';
-          else if (fontFamily === 'font-chewy') fontFamily = 'Chewy';
-          else if (fontFamily === 'font-bubblegum-sans') fontFamily = 'Bubblegum Sans';
-          else if (fontFamily === 'font-luckiest-guy') fontFamily = 'Luckiest Guy';
-          else if (fontFamily === 'font-comic-neue') fontFamily = 'Comic Neue';
-          else if (fontFamily === 'font-gloria-hallelujah') fontFamily = 'Gloria Hallelujah';
-          else if (fontFamily === 'font-bungee') fontFamily = 'Bungee';
-          else if (fontFamily === 'font-spicy-rice') fontFamily = 'Spicy Rice';
-          else if (fontFamily === 'font-henny-penny') fontFamily = 'Henny Penny';
-          else if (fontFamily === 'font-apricotsy') fontFamily = 'Apricotsy';
-          else if (fontFamily === 'font-brittany-signature') fontFamily = 'Brittany Signature';
-          else if (fontFamily === 'font-clementine-sketch') fontFamily = 'Clementine Sketch';
-          else if (fontFamily === 'font-hello-honey') fontFamily = 'Hello Honey';
-          else if (fontFamily === 'font-junglefe') fontFamily = 'Junglefe';
-          else if (fontFamily === 'font-lovelo') fontFamily = 'Lovelo';
-          else if (fontFamily === 'font-magilio') fontFamily = 'Magilio';
-          else if (fontFamily === 'font-neon-tubes') fontFamily = 'Neon Tubes';
-          else if (fontFamily === 'font-playlist-script') fontFamily = 'Playlist Script';
-          else if (fontFamily === 'font-selima') fontFamily = 'Selima';
-          else if (fontFamily === 'font-sunset-club') fontFamily = 'Sunset Club';
-          else if (fontFamily === 'font-wedges') fontFamily = 'Wedges';
-
-          const txt = new IText(textItem.text, {
-            left: itemState.x ?? textItem.x,
-            top: itemState.y ?? textItem.y,
-            fontFamily: fontFamily,
-            fill: textItem.color,
-            fontSize: itemState.size ?? DEFAULT_SIZE,
-            angle: itemState.rotation ?? 0,
-            selectable: readOnly ? false : !(itemState.locked),
-            hasControls: readOnly ? false : !(itemState.locked),
-            lockMovementX: readOnly ? true : !!itemState.locked,
-            lockMovementY: readOnly ? true : !!itemState.locked,
-            lockScalingX: readOnly ? true : !!itemState.locked,
-            lockScalingY: readOnly ? true : !!itemState.locked,
-            lockRotation: readOnly ? true : !!itemState.locked,
-            hasBorders: true,
-            objectCaching: false,
+        const currentState = {
+      
+      
+          // merge from parent state (canonical)
+          ...(itemStatesRef.current[item.id] || {}),
+        };
+  
+        const already = existing.get(item.id);
+  
+        if (already) {
+          // UPDATE in place
+          already.set({
+            left: currentState.x,
+            top: currentState.y,
+            angle: currentState.rotation,
+            scaleX: currentState.scaleX,
+            scaleY: currentState.scaleY,
+            flipX: currentState.flipX,
             originX: 'center',
             originY: 'center',
-            editable: readOnly ? false : true,
-            cornerStyle: 'circle',
-            cornerColor: '#fff',
-            cornerStrokeColor: '#fff',
-            scaleX: itemState.scaleX ?? 1,
-            scaleY: itemState.scaleY ?? 1,
-            flipX: itemState.flipX ?? false,
           });
-          (txt as any).id = item.id;
-          fabricCanvas.add(txt);
-          if (!readOnly && actualSelectedId === item.id) {
-            fabricCanvas.setActiveObject(txt);
-          }
-          if (!readOnly) {
-            // *** push history when text editing begins
-            (txt as any).on('editing:entered', () => {
-              onWillChange?.();
-            });
-
-            txt.on('modified', () => {
-              const newFontSize = txt.fontSize ?? DEFAULT_SIZE;
-              const newScaleX = txt.scaleX ?? 1;
-              const newScaleY = txt.scaleY ?? 1;
-              const payload = {
-                x: txt.left ?? 0,
-                y: txt.top ?? 0,
-                size: newFontSize,
-                rotation: txt.angle ?? 0,
-                locked: itemState.locked ?? false,
-                visible: itemState.visible ?? true,
-                scaleX: newScaleX,
-                scaleY: newScaleY,
-                flipX: itemState.flipX ?? false,
-              };
-              itemStatesRef.current = {
-                ...itemStatesRef.current,
-                [item.id]: payload,
-              };
-              if (typeof setItemStates === 'function') {
-                setItemStates((s) => ({ ...s, [item.id]: payload }));
-              }
-              if (onUpdateItems) {
-                onUpdateItems(items.map(it =>
-                  it.id === item.id ? { ...it, size: newFontSize } : it
-                ));
-              }
-            });
-
-            (txt as any).on('editing:exited', () => {
-              const updatedItems = items.map(item => {
-                if (item.id === textItem.id) {
-                  return { ...item, text: txt.text || '' };
-                }
-                return item;
-              });
-              if (onUpdateItems) {
-                onUpdateItems(updatedItems);
-              }
-            });
-          }
+          applyInteractivity(already, !!currentState.locked, !!readOnly);
+          existing.delete(item.id);
         } else {
-          const img = await Image.fromURL((item as any).src, {crossOrigin: 'anonymous'});
-          const baseSize = img.width ?? DEFAULT_SIZE;
-          const scale = (itemState.size ?? DEFAULT_SIZE) / baseSize;
-          img.set({
-            left: itemState.x ?? (item as any).x,
-            top: itemState.y ?? (item as any).y,
-            scaleX: scale,
-            scaleY: scale,
-            angle: itemState.rotation ?? 0,
-            selectable: readOnly ? false : !(itemState.locked),
-            hasControls: readOnly ? false : !(itemState.locked),
-            lockMovementX: readOnly ? true : !!itemState.locked,
-            lockMovementY: readOnly ? true : !!itemState.locked,
-            lockScalingX: readOnly ? true : !!itemState.locked,
-            lockScalingY: readOnly ? true : !!itemState.locked,
-            lockRotation: readOnly ? true : !!itemState.locked,
-            hasBorders: true,
-            objectCaching: false,
-            originX: 'center',
-            originY: 'center',
-            cornerStyle: 'circle',
-            cornerColor: '#fff',
-            cornerStrokeColor: '#fff',
-            flipX: itemState.flipX ?? false,
-          }), {crossOrigin: 'anonymous'};
-          img.setControlsVisibility({
-            mt: false,
-            mb: false,
-            ml: false,
-            mr: false,
-            tl: true,
-            tr: true,
-            bl: true,
-            br: true,
-          });
-          (img as any).id = item.id;
-          fabricCanvas.add(img);
-          if (!readOnly && actualSelectedId === item.id) {
-            fabricCanvas.setActiveObject(img);
-          }
-          if (!readOnly) {
-            img.on('modified', () => {
-              const payload = {
-                x: img.left ?? 0,
-                y: img.top ?? 0,
-                size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)),
-                rotation: img.angle ?? 0,
-                locked: itemState.locked ?? false,
-                visible: itemState.visible ?? true,
-                scaleX: img.scaleX ?? 1,
-                scaleY: img.scaleY ?? 1,
-                flipX: img.flipX ?? false,
-              };
-              itemStatesRef.current = {
-                ...itemStatesRef.current,
-                [item.id]: payload,
-              };
-              if (typeof setItemStates === 'function') {
-                setItemStates((s) => ({ ...s, [item.id]: payload }));
-              }
+          // CREATE
+          if ((item as any).type === 'text') {
+            const textItem = item as any;
+  
+            // font mapping (your existing chain kept intact)
+            let fontFamily = textItem.font;
+            if (fontFamily === 'font-pacifico') fontFamily = 'Pacifico';
+            else if (fontFamily === 'font-anton') fontFamily = 'Anton';
+            else if (fontFamily === 'font-lobster') fontFamily = 'Lobster';
+            else if (fontFamily === 'font-oswald') fontFamily = 'Oswald';
+            else if (fontFamily === 'font-shadow') fontFamily = 'Shadows Into Light';
+            else if (fontFamily === 'font-playfair') fontFamily = 'Playfair Display';
+            else if (fontFamily === 'font-montserrat') fontFamily = 'Montserrat';
+            else if (fontFamily === 'font-verdana') fontFamily = 'Verdana';
+            else if (fontFamily === 'font-courier') fontFamily = 'Courier';
+            else if (fontFamily === 'font-georgia') fontFamily = 'Georgia';
+            else if (fontFamily === 'font-genty') fontFamily = 'Genty';
+            else if (fontFamily === 'font-great-vibes') fontFamily = 'Great Vibes';
+            else if (fontFamily === 'font-fredoka') fontFamily = 'Fredoka';
+            else if (fontFamily === 'font-league-spartan') fontFamily = 'League Spartan';
+            else if (fontFamily === 'font-bebas-neue') fontFamily = 'Bebas Neue';
+            else if (fontFamily === 'font-baloo-2') fontFamily = 'Baloo 2';
+            else if (fontFamily === 'font-chewy') fontFamily = 'Chewy';
+            else if (fontFamily === 'font-bubblegum-sans') fontFamily = 'Bubblegum Sans';
+            else if (fontFamily === 'font-luckiest-guy') fontFamily = 'Luckiest Guy';
+            else if (fontFamily === 'font-comic-neue') fontFamily = 'Comic Neue';
+            else if (fontFamily === 'font-gloria-hallelujah') fontFamily = 'Gloria Hallelujah';
+            else if (fontFamily === 'font-bungee') fontFamily = 'Bungee';
+            else if (fontFamily === 'font-spicy-rice') fontFamily = 'Spicy Rice';
+            else if (fontFamily === 'font-henny-penny') fontFamily = 'Henny Penny';
+            else if (fontFamily === 'font-apricotsy') fontFamily = 'Apricotsy';
+            else if (fontFamily === 'font-brittany-signature') fontFamily = 'Brittany Signature';
+            else if (fontFamily === 'font-clementine-sketch') fontFamily = 'Clementine Sketch';
+            else if (fontFamily === 'font-hello-honey') fontFamily = 'Hello Honey';
+            else if (fontFamily === 'font-junglefe') fontFamily = 'Junglefe';
+            else if (fontFamily === 'font-lovelo') fontFamily = 'Lovelo';
+            else if (fontFamily === 'font-magilio') fontFamily = 'Magilio';
+            else if (fontFamily === 'font-neon-tubes') fontFamily = 'Neon Tubes';
+            else if (fontFamily === 'font-playlist-script') fontFamily = 'Playlist Script';
+            else if (fontFamily === 'font-selima') fontFamily = 'Selima';
+            else if (fontFamily === 'font-sunset-club') fontFamily = 'Sunset Club';
+            else if (fontFamily === 'font-wedges') fontFamily = 'Wedges';
+            else if (fontFamily === 'font-boribon') fontFamily = 'Boribon';
+            else if (fontFamily === 'font-sink') fontFamily = 'Sink';
+  
+            const txt = new IText(textItem.text, {
+              left: currentState.x,
+              top: currentState.y,
+              fontFamily,
+              fill: textItem.color,
+              fontSize: currentState.size,
+              angle: currentState.rotation,
+              originX: 'center',
+              originY: 'center',
+              hasBorders: true,
+              objectCaching: false,
+              editable: !readOnly,
+              cornerStyle: 'circle',
+              cornerColor: '#fff',
+              cornerStrokeColor: '#fff',
+              scaleX: currentState.scaleX,
+              scaleY: currentState.scaleY,
+              flipX: currentState.flipX,
             });
+            (txt as any).id = item.id;
+            applyInteractivity(txt, !!currentState.locked, !!readOnly);
+            fabricCanvas.add(txt);
+  
+            if (!readOnly) {
+              // Keep your history push behavior
+              (txt as any).on('editing:entered', () => onWillChange?.());
+              txt.on('modified', () => {
+                const newFontSize = txt.fontSize ?? DEFAULT_SIZE;
+                const newScaleX = txt.scaleX ?? 1;
+                const newScaleY = txt.scaleY ?? 1;
+                const payload = {
+                  x: txt.left ?? 0,
+                  y: txt.top ?? 0,
+                  size: newFontSize,
+                  rotation: txt.angle ?? 0,
+                  locked: currentState.locked ?? false,
+                  visible: currentState.visible ?? true,
+                  scaleX: newScaleX,
+                  scaleY: newScaleY,
+                  flipX: txt.flipX ?? false,
+                };
+                itemStatesRef.current = { ...itemStatesRef.current, [item.id]: payload };
+                if (typeof setItemStates === 'function') {
+                  setItemStates(s => ({ ...s, [item.id]: payload }));
+                }
+                if (onUpdateItems) {
+                  onUpdateItems(items.map(it =>
+                    it.id === item.id ? { ...it, size: newFontSize } : it
+                  ));
+                }
+              });
+              (txt as any).on('editing:exited', () => {
+                const updatedItems = items.map(it =>
+                  it.id === textItem.id ? { ...it, text: txt.text || '' } : it
+                );
+                if (onUpdateItems) onUpdateItems(updatedItems);
+              });
+            }
+          } else {
+            const img = await Image.fromURL((item as any).src, { crossOrigin: 'anonymous' });
+            const baseW = img.width ?? DEFAULT_SIZE;
+            const initialScale = (currentState.size ?? DEFAULT_SIZE) / baseW;
+  
+            img.set({
+              left: currentState.x,
+              top: currentState.y,
+              angle: currentState.rotation,
+              originX: 'center',
+              originY: 'center',
+              hasBorders: true,
+              objectCaching: false,
+              flipX: currentState.flipX,
+              scaleX: initialScale,
+              scaleY: initialScale,
+            });
+            (img as any).id = item.id;
+            img.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false, tl: true, tr: true, bl: true, br: true });
+            applyInteractivity(img, !!currentState.locked, !!readOnly);
+            fabricCanvas.add(img);
+  
+            if (!readOnly) {
+              img.on('modified', () => {
+                const payload = {
+                  x: img.left ?? 0,
+                  y: img.top ?? 0,
+                  size: ((img.scaleX ?? 1) * (img.width ?? DEFAULT_SIZE)),
+                  rotation: img.angle ?? 0,
+                  locked: currentState.locked ?? false,
+                  visible: currentState.visible ?? true,
+                  scaleX: img.scaleX ?? 1,
+                  scaleY: img.scaleY ?? 1,
+                  flipX: img.flipX ?? false,
+                };
+                itemStatesRef.current = { ...itemStatesRef.current, [item.id]: payload };
+                if (typeof setItemStates === 'function') {
+                  setItemStates(s => ({ ...s, [item.id]: payload }));
+                }
+              });
+            }
           }
         }
       }
+  
+      // --- 2d) Remove any stale objects (not visible anymore) ---
+      for (const [id, obj] of existing) {
+        // keep background only
+        if (id !== (undefined as any)) {
+          fabricCanvas.remove(obj);
+        }
+      }
+  
+      // --- 2e) Restore active object if any ---
       if (!readOnly && actualSelectedId != null) {
         const obj = fabricCanvas.getObjects().find(o => (o as any).id === actualSelectedId);
-        if (obj) {
-          fabricCanvas.setActiveObject(obj);
-          const flipXState = itemStatesRef.current[actualSelectedId]?.flipX;
-          if (typeof flipXState === 'boolean' && obj.flipX !== flipXState) {
-            obj.set('flipX', flipXState);
-          }
-        } else {
-          fabricCanvas.discardActiveObject();
-        }
+        if (obj) fabricCanvas.setActiveObject(obj);
       }
-      fabricCanvas.setZoom(1);
-      const center = {
-        x: (fabricCanvas.getWidth() / 2) - (fabricCanvas.getWidth() / 2),
-        y: (fabricCanvas.getHeight() / 2) - (fabricCanvas.getHeight() / 2),
-      };
-      fabricCanvas.absolutePan(new Point(-center.x, -center.y));
+  
       fabricCanvas.renderAll();
     })();
-  // also recompose when itemStates change so undo/redo updates canvas
-  }, [items, selectedBg, product, scale, isVisible, fabricRef, readOnly, itemStates]);
-
+  }, [items, selectedBg, product, isVisible, fabricRef, readOnly, itemStates, onUpdateItems, onWillChange]);
+  
   useEffect(() => {
     const fabricCanvas = fabricRef.current;
     if (!fabricCanvas) return;
+  
     if (readOnly) {
       fabricCanvas.discardActiveObject();
       fabricCanvas.selection = false;
       fabricCanvas.skipTargetFind = true;
       fabricCanvas.renderAll();
       return;
-    } else {
-      fabricCanvas.selection = true;
-      fabricCanvas.skipTargetFind = false;
     }
+  
+    // Always allow picking targets in edit mode
+    fabricCanvas.selection = true;
+    fabricCanvas.skipTargetFind = false;
+  
     if (!isSelectionFromCanvas.current) {
       if (actualSelectedId != null) {
         const obj = fabricCanvas.getObjects().find(o => (o as any).id === actualSelectedId);
         if (obj) {
           fabricCanvas.setActiveObject(obj);
           const flipXState = itemStatesRef.current[actualSelectedId]?.flipX;
-          if (typeof flipXState === 'boolean' && obj.flipX !== flipXState) {
-            obj.set('flipX', flipXState);
+          if (typeof flipXState === 'boolean' && (obj as any).flipX !== flipXState) {
+            (obj as any).set('flipX', flipXState);
           }
         } else {
           fabricCanvas.discardActiveObject();
         }
       } else {
+        // nothing selected — keep canvas interactive
         fabricCanvas.discardActiveObject();
       }
       fabricCanvas.renderAll();
     }
+  
     isSelectionFromCanvas.current = false;
-  }, [actualSelectedId, fabricRef, itemStatesRef.current, readOnly]);
+  }, [actualSelectedId, fabricRef, readOnly, itemStates]); // <- avoid itemStatesRef.current in deps
+  
   
   useEffect(() => {
     const fabricCanvas = fabricRef.current;
