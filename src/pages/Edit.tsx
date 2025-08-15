@@ -18,6 +18,7 @@ import { useGlobalData } from "../contexts/AdminDataContext";
 import { saveDesignWithFeedback } from "../lib/supabase";
 import FeedbackDialog from "../components/FeedbackDialog";
 import Done from "../components/Done";
+import Bubble from "@/components/Bubble";
 
 const DEFAULT_SIZE = 60;
 
@@ -426,12 +427,13 @@ const EditPage: React.FC = () => {
 
   const canUndo = undoStack.current.length > 0;
   const canRedo = redoStack.current.length > 0;
+  const actualStep = canvasItems.length === 0 && selectedBgIdx === -1 ? 1 : 2;
 
   return (
     <div className="min-h-dvh flex flex-col max-h-dvh items-center" style={{ background: mode === "done" ? data.config?.main_color : "#f3f4f6" }}>
       {mode === "edit" && (
         <div className="w-full absolute top-14 z-30">
-          <StepBar step={canvasItems.length === 0 && selectedBgIdx === -1 ? 1 : 2} />
+          <StepBar step={actualStep} />
         </div>
       )}
       {mode === "confirm" && (
@@ -532,25 +534,21 @@ const EditPage: React.FC = () => {
               onUpdateTextItem={handleUpdateTextItem}
             />
           )}
+          <div className="fixed right-1 top-1/2 transform mt-5 -translate-y-1/2 flex flex-col items-end z-50">
+            {showBubble && (
+              <Bubble normalText={`${actualStep === 1 ? "¡YA QUIERO VER TU" : "¡YA CASI LO TIENES!"}`} boldText={actualStep === 1 ? "OBRA DE ARTE!" : "SIGUE ASÍ"} setShowBubble={setShowBubble} />
+            )}
+            <div className="w-16 h-16 flex items-center justify-center cursor-pointer" onClick={() => setShowBubble(true)}>
+              <img src="/happy_face.svg" alt="Carita feliz" className="w-full h-full object-contain" />
+            </div>
+          </div>
         </div>
       )}
       {mode === "confirm" && (
         <>
           <div className="fixed right-8 top-1/2 transform -translate-y-1/2 flex flex-col items-end z-50">
             {showBubble && (
-              <div className="relative">
-                <div className="absolute z-50">
-                  <button
-                    className="w-6 h-6 bg-pink-500 text-white rounded-full flex items-center justify-center text-lg font-bold shadow focus:outline-none"
-                    onClick={() => setShowBubble(false)}
-                  >
-                    ×
-                  </button>
-                </div>
-                <div className="bg-white border border-black rounded-full px-5 py-4 text-center max-w-[140px] min-w-[120px] relative flex items-center justify-center" style={{ aspectRatio: '1/1' }}>
-                  <span className="block text-xs font-bold leading-tight">¡QUEDÓ<br/>INCREÍBLE!<br/><span className="font-black">YA QUEREMOS<br/>VERLO</span></span>
-                </div>
-              </div>
+              <Bubble normalText="¡QUEDÓ INCREÍBLE!" boldText="YA QUEREMOS VERLO" setShowBubble={setShowBubble} />
             )}
             <div className="w-16 h-16 flex items-center justify-center cursor-pointer" onClick={() => setShowBubble(true)}>
               <img src="/happy_face.svg" alt="Carita feliz" className="w-full h-full object-contain" />
