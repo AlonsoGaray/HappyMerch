@@ -322,6 +322,7 @@ const EditPage: React.FC = () => {
     email: string;
     comment: string;
     rating: number;
+    designName: string;
   }) => {
     if (!fabricRef.current) return;
     try {
@@ -338,7 +339,7 @@ const EditPage: React.FC = () => {
         typeof error?.message === "string" &&
         error.message.includes("The resource already exists")
       ) {
-        alert("Ya existe un diseño con ese correo. Por favor, usa otro correo.");
+        alert("Ya existe un diseño con ese nombre. Por favor, usa otro nombre.");
       } else {
         const fabricCanvas = fabricRef.current;
         if (fabricCanvas) {

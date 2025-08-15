@@ -113,13 +113,13 @@ export default function AdminPanel() {
 
           <div className="flex items-center space-x-4">
             <button
-              className={`bg-blue-400 rounded-md px-4 py-2 text-base hover:bg-blue-700 transition cursor-pointer`}
+              className={`bg-[#9F9F9F] rounded-md px-4 py-2 text-base text-white`}
               onClick={() => window.open("/edit", "_blank")}
             >
               Preview Edit
             </button>
             <button
-              className={`bg-[#707070] text-white rounded-md px-4 py-2 text-base cursor-pointer`}
+              className={`bg-[#707070] text-white rounded-md px-4 py-2 text-base`}
               onClick={async () => {
                 await signOut();
                 navigate("/");

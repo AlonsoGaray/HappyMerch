@@ -13,6 +13,7 @@ type FeedbackDialogProps = {
     email: string;
     comment: string;
     rating: number;
+    designName: string;
   }) => void;
 };
 
@@ -21,16 +22,17 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ isOpen, onClose, onSubm
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [email, setEmail] = useState('');
+  const [designName, setDesignName] = useState('');
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
 
   const handleSubmit = () => {
     if (name && surname && email && rating > 0) {
-      onSubmit({ name: name + ' ' + surname, email, comment, rating });
+      onSubmit({ name: name + ' ' + surname, email, comment, rating, designName });
     }
   };
 
-  const isFormValid = name && surname && email && rating > 0;
+  const isFormValid = name && surname && email && rating > 0 && designName;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -60,13 +62,22 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ isOpen, onClose, onSubm
               style={{backgroundColor:data.config?.main_color}}
             />
           </div>
-          <Input
-            id="email"
-            placeholder="Correo Electrónico*"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{backgroundColor:data.config?.main_color}}
-          />
+          <div className="flex gap-2">
+            <Input
+              id="email"
+              placeholder="Correo Electrónico*"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{backgroundColor:data.config?.main_color}}
+            />
+            <Input
+              id="designName"
+              placeholder="Nombre del Diseño*"
+              value={designName}
+              onChange={(e) => setDesignName(e.target.value)}
+              style={{backgroundColor:data.config?.main_color}}
+            />
+          </div>
           <textarea
             id="comment"
             placeholder="Comentario*"

@@ -117,7 +117,7 @@ export async function deleteTableRowAndFile<T = any>(
   // 1. First, get the row data to extract the file name (or email if isDesign)
   const { data: rowData, error: fetchError } = await supabase
     .from(tableName)
-    .select(isDesign ? "email" : "name")
+    .select(isDesign ? "design_name" : "name")
     .eq("id", id)
     .single();
 
@@ -125,7 +125,7 @@ export async function deleteTableRowAndFile<T = any>(
 
   let fileKey: string | undefined;
   if (isDesign) {
-    fileKey = rowData && "email" in rowData ? `${rowData.email}-design.png` : undefined;
+    fileKey = rowData && "design_name" in rowData ? `${rowData.design_name}.png` : undefined;
   } else {
     fileKey = rowData && "name" in rowData ? rowData.name : undefined;
   }
@@ -438,10 +438,11 @@ export async function saveDesignWithFeedback(
     email: string;
     comment: string;
     rating: number;
+    designName: string;
   }
 ): Promise<any> {
   // Upload to Supabase
-  const fileName = `${feedback.email}-design.png`;
+  const fileName = `${feedback.email}-${feedback.designName}.png`;
   const { data: uploadData, error: uploadError } = await supabase.storage
     .from("client-products")
     .upload(fileName, designBlob);
@@ -453,7 +454,7 @@ export async function saveDesignWithFeedback(
   const { data: urlData } = supabase.storage.from("client-products").getPublicUrl(uploadData.path);
 
   // Save to database
-  const { name, email, comment, rating } = feedback;
+  const { name, email, comment, rating, designName } = feedback;
   const [firstName, ...lastNameParts] = name.split(" ");
   const lastName = lastNameParts.join(" ");
 
@@ -466,7 +467,8 @@ export async function saveDesignWithFeedback(
       comment,
       rating,
       design: urlData.publicUrl,
-    })
+      design_name: email + "-" + designName,
+    })  
     .select()
     .single();
 
