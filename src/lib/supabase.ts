@@ -332,13 +332,10 @@ export async function updateBrandingConfig(
     inactive_btn_text_color: string;
     active_btn_bg_color: string;
     active_btn_text_color: string;
-    nav_btn_text_color: string;
-    nav_btn_bg_color: string;
     welcome_title_font: string;
     welcome_subtitle_font: string;
     welcome_button_font: string;
     tab_button_font: string;
-    nav_button_font: string;
     user_id: string | null;
     welcome_button_color: string;
     welcome_button_text_color: string;
@@ -504,13 +501,10 @@ export async function createBrandingConfig(brandName: string): Promise<any> {
       inactive_btn_text_color: null,
       active_btn_bg_color: null,
       active_btn_text_color: null,
-      nav_btn_text_color: null,
-      nav_btn_bg_color: null,
       welcome_title_font: null,
       welcome_subtitle_font: null,
       welcome_button_font: null,
       tab_button_font: null,
-      nav_button_font: null,
     })
     .select()
     .single();

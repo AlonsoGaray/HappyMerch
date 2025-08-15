@@ -328,6 +328,8 @@ const applyInteractivity = (obj: any, locked: boolean, readOnly: boolean) => {
             else if (fontFamily === 'font-selima') fontFamily = 'Selima';
             else if (fontFamily === 'font-sunset-club') fontFamily = 'Sunset Club';
             else if (fontFamily === 'font-wedges') fontFamily = 'Wedges';
+            else if (fontFamily === 'font-boribon') fontFamily = 'Boribon';
+            else if (fontFamily === 'font-sink') fontFamily = 'Sink';
   
             const txt = new IText(textItem.text, {
               left: currentState.x,

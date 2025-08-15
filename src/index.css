@@ -89,6 +89,16 @@
   src: url('/fonts/Wedges.ttf');
 }
 
+@font-face {
+  font-family: 'Sink';
+  src: url('/fonts/Sink.ttf');
+}
+
+@font-face {
+  font-family: 'Boribon';
+  src: url('/fonts/BoriboonDemoMedium-YzRWL.otf');
+}
+
 @import "tailwindcss";
 
 @import "tw-animate-css";
@@ -133,6 +143,8 @@
   --font-selima: Selima, sans-serif;
   --font-sunset-club: 'Sunset Club', sans-serif;
   --font-wedges: Wedges, sans-serif;
+  --font-boribon: Boribon, sans-serif;
+  --font-sink: Sink, sans-serif;
 }
 
 @theme inline {

@@ -70,8 +70,6 @@ export function ConfigsAdminPanel() {
   const [activeBtnText, setActiveBtnText] = useState<string>(
     data.config?.active_btn_text_color || "#fff"
   );
-  const [navBtnBg, setNavBtnBg] = useState<string>(data.config?.nav_btn_bg_color || "#fff");
-  const [navBtnText, setNavBtnText] = useState<string>(data.config?.nav_btn_text_color || "#fff");
   const [welcomeBtnColor, setWelcomeBtnColor] = useState<string>(data.config?.welcome_button_color || "#fff");
   const [welcomeBtnTextColor, setWelcomeBtnTextColor] = useState<string>(data.config?.welcome_button_text_color || "#000");
   const [welcomeTitleColor, setWelcomeTitleColor] = useState<string>(data.config?.welcome_title_color || "#000");
@@ -84,20 +82,17 @@ export function ConfigsAdminPanel() {
     welcome_subtitle_font: string;
     welcome_button_font: string;
     tab_button_font: string;
-    nav_button_font: string;
   }>({
     welcome_title_font: "",
     welcome_subtitle_font: "",
     welcome_button_font: "",
     tab_button_font: "",
-    nav_button_font: "",
   });
   const [initialFontSelections, setInitialFontSelections] = useState({
     welcome_title_font: "",
     welcome_subtitle_font: "",
     welcome_button_font: "",
     tab_button_font: "",
-    nav_button_font: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedConfigId, setSelectedConfigId] = useState<string>(data.config?.id || "");
@@ -182,14 +177,12 @@ export function ConfigsAdminPanel() {
       welcome_subtitle_font: data.config?.welcome_subtitle_font || "",
       welcome_button_font: data.config?.welcome_button_font || "",
       tab_button_font: data.config?.tab_button_font || "",
-      nav_button_font: data.config?.nav_button_font || "",
     });
     setInitialFontSelections({
       welcome_title_font: data.config?.welcome_title_font || "",
       welcome_subtitle_font: data.config?.welcome_subtitle_font || "",
       welcome_button_font: data.config?.welcome_button_font || "",
       tab_button_font: data.config?.tab_button_font || "",
-      nav_button_font: data.config?.nav_button_font || "",
     });
   }, [data.config, data.logos]);
 
@@ -320,8 +313,6 @@ export function ConfigsAdminPanel() {
         inactive_btn_text_color: inactiveBtnText,
         active_btn_bg_color: activeBtnBg,
         active_btn_text_color: activeBtnText,
-        nav_btn_text_color: navBtnText,
-        nav_btn_bg_color: navBtnBg,
         welcome_button_color: welcomeBtnColor,
         welcome_button_text_color: welcomeBtnTextColor,
         welcome_title_color: welcomeTitleColor,
@@ -917,64 +908,6 @@ export function ConfigsAdminPanel() {
                     </div>
                   </AccordionContent>
                 </AccordionItem>
-                {/* Botones de navegacion */}
-                <AccordionItem value="nav-editing">
-                  <AccordionTrigger>
-                    <span>Botones barra navegacion</span>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    {/* Fondo */}
-                    <AccordionItem value="nav-btn-bg" className="ml-4">
-                      <AccordionTrigger>
-                        <div className="flex items-center gap-3">
-                          <span>Fondo</span>
-                          <span
-                            className="w-6 h-6 rounded border ml-2"
-                            style={{ background: navBtnBg }}
-                          />
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <SketchPicker
-                          color={navBtnBg}
-                          onChange={handleColorChange(setNavBtnBg)}
-                          presetColors={[]}
-                        />
-                      </AccordionContent>
-                    </AccordionItem>
-                    {/* Text */}
-                    <AccordionItem value="nav-btn-text" className="ml-4">
-                      <AccordionTrigger>
-                        <div className="flex items-center gap-3">
-                          <span>Texto</span>
-                          <span
-                            className="w-6 h-6 rounded border ml-2"
-                            style={{ background: navBtnText }}
-                          />
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <SketchPicker
-                          color={navBtnText}
-                          onChange={handleColorChange(setNavBtnText)}
-                          presetColors={[]}
-                        />
-                      </AccordionContent>
-                    </AccordionItem>
-                    <div className="mt-4 ml-4">
-                      <button
-                        className="px-5 min-h-9 rounded-lg font-bold text-base border-2 border-black"
-                        style={{
-                          background: navBtnBg,
-                          color: navBtnText,
-                        }}
-                        disabled
-                      >
-                        Ejemplo activo
-                      </button>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
               </Accordion>
               <div className="flex items-center gap-3 mt-8 justify-start">
                 <Button
@@ -1000,7 +933,6 @@ export function ConfigsAdminPanel() {
                   { id: "welcome_subtitle_font", label: "Subtítulo de bienvenida" },
                   { id: "welcome_button_font", label: "Botón de bienvenida" },
                   { id: "tab_button_font", label: "Botones de pestaña" },
-                  { id: "nav_button_font", label: "Botones de navegación" },
                 ].map(({ id, label }) => (
                   <div key={id} className="flex items-center gap-3">
                     <label htmlFor={id} className="font-semibold">
@@ -1033,7 +965,6 @@ export function ConfigsAdminPanel() {
                           welcome_subtitle_font: fontSelections.welcome_subtitle_font,
                           welcome_button_font: fontSelections.welcome_button_font,
                           tab_button_font: fontSelections.tab_button_font,
-                          nav_button_font: fontSelections.nav_button_font,
                         };
                         await updateBrandingConfig(
                           data.config.id,

@@ -20,29 +20,18 @@ const NavBar = ({ onSave }: NavBarProps) => {
       </div>
 
       <div className="flex items-center space-x-4">
-        <button
-          className={`bg-gray-100 rounded-md px-4 py-2 text-base hover:bg-gray-200 transition ${data.config?.nav_button_font}`}
-          style={{
-            backgroundColor: data.config?.nav_btn_bg_color,
-            color: data.config?.nav_btn_text_color,
-          }}
-        >
+        <button className={`bg-[#9F9F9F] text-white rounded-md px-4 py-2 text-base cursor-pointer`}>
           Nuevo
         </button>
 
-        <button
-          onClick={() => onSave({ name: "", email: "", comment: "", rating: 0 })}
-          className={`bg-gray-100 rounded-md px-4 py-2 text-base hover:bg-gray-200 transition ${data.config?.nav_button_font}`}
-          style={{
-            backgroundColor: data.config?.nav_btn_bg_color,
-            color: data.config?.nav_btn_text_color,
-          }}
+        <button onClick={() => onSave({ name: "", email: "", comment: "", rating: 0 })}
+          className={`bg-[#9F9F9F] text-white rounded-md px-4 py-2 text-base cursor-pointer`}
         >
           Guardar
         </button>
 
         <button
-          className={`bg-red-600 rounded-md px-4 py-2 text-base hover:bg-red-700 transition ${data.config?.nav_button_font}`}
+          className={`bg-[#707070] rounded-md px-4 py-2 text-base cursor-pointer text-white ml-6`}
           onClick={async () => {
             await signOut();
             navigate("/");
